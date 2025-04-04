@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <title>Área do Cliente - Mercúrio</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="icon" href="images/favicon.ico">
+  <link rel="shortcut icon" href="images/favicon.ico">
+  <style>
+    /* RESET E ESTILOS GERAIS */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+    
+    .clear {
+      clear: both;
+    }
+    
+    /* CABEÇALHO */
+    header {
+      background-color: #333;
+      color: white;
+      padding: 15px 0;
+      position: relative;
+    }
+    
+    .container_12 {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 15px;
+    }
+    
+    .titulo-principal {
+      font-size: 2em;
+      margin: 10px 0;
+      padding-right: 50px;
+    }
+    
+    .color1 { color: #f0a500; }
+    .color0 { color: white; }
+    
+    /* MENU PRINCIPAL */
+    .sf-menu {
+      display: flex;
+      list-style: none;
+      margin: 15px 0 0 0;
+      padding: 0;
+    }
+    
+    .sf-menu li {
+      margin: 0 10px;
+    }
+    
+    .sf-menu a {
+      color: white;
+      text-decoration: none;
+      padding: 8px 12px;
+      display: block;
+      transition: all 0.3s;
+    }
+    
+    .sf-menu a:hover {
+      background-color: #f0a500;
+      color: #333;
+    }
+    
+    /* BOTÃO MENU MOBILE */
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      z-index: 1000;
+    }
+    
+    /* CONTEÚDO PRINCIPAL */
+    .content {
+      padding: 30px 0;
+    }
+    
+    .grid_6 {
+      width: 100%;
+      padding: 0 15px;
+    }
+    
+    /* INFO DO USUÁRIO */
+    .user-info-container {
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .user-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+    }
+    
+    .info-item {
+      margin-bottom: 10px;
+    }
+    
+    .info-item strong {
+      color: #f0a500;
+    }
+    
+    .address-section {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px dashed #ddd;
+      grid-column: 1 / -1;
+    }
+    
+    .address-line {
+      margin-bottom: 5px;
+    }
+    
+    /* BOTÕES */
+    .btn-exit {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #1b6222;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      text-align: center;
+      transition: background-color 0.3s;
+    }
+    
+    .btn-exit:hover {
+      background-color: #e21b1b;
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #1b6222;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+    
+    .btn:hover {
+      background-color: #f0a500;
+    }
+    
+    .btn2 {
+      display: inline-block;
+      padding: 8px 15px;
+      background-color: #333;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    
+    .btn2:hover {
+      background-color: #f0a500;
+    }
+    
+    /* PEDIDOS */
+    .pedido-item {
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+    
+    .pedido-item h4 {
+      margin-top: 0;
+      color: #f0a500;
+    }
+    
+    /* RODAPÉ */
+    footer {
+      background-color: #333;
+      color: white;
+      text-align: center;
+      padding: 30px 0;
+      margin-top: 30px;
+    }
+    
+    .socials a {
+      color: white;
+      margin: 0 10px;
+      font-size: 1.5em;
+    }
+    
+    /* RESPONSIVIDADE */
+    @media (max-width: 768px) {
+      /* MENU MOBILE */
+      .menu-toggle {
+        display: block;
+      }
+      
+      .sf-menu {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        background-color: #444;
+        position: absolute;
+        top: 80px;
+        left: 0;
+        padding: 20px 0;
+        margin-top: 0;
+      }
+      
+      .sf-menu.active {
+        display: flex;
+      }
+      
+      .sf-menu li {
+        margin: 5px 0;
+        text-align: center;
+      }
+      
+      /* TÍTULO */
+      .titulo-principal {
+        font-size: 1.5em;
+        padding-right: 0;
+      }
+      
+      .user-info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .titulo-principal {
+        font-size: 1.3em;
+      }
+      
+      .btn, .btn-exit {
+        width: 100%;
+        box-sizing: border-box;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- CABEÇALHO -->
+  <header>
+    <div class="container_12">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      
+      <h1 class="titulo-principal">
+        <span class="color1">MERCÚRIO </span>
+        <span class="color0">Seu Espaço, Nosso Mobiliário</span>
+      </h1>
+      
+      <nav id="mainNav">
+        <ul class="sf-menu">
+          <li><a href="index.html">Início</a></li>
+          <li><a href="index-1.html">Sobre</a></li>
+          <li class="current"><a href="customer_area.html">Área do Cliente</a></li>
+          <li><a href="index-2.html">Produtos</a></li>
+          <li><a href="index-3.html">Serviços</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <div class="content">
+    <div class="container_12">
+      <div class="grid_6">
+        <h3>Bem-vindo(a) à Área do Cliente</h3>
+        
+        <!-- Seção de Informações do Usuário -->
+        <div class="user-info-container">
+          <h3 style="margin-top: 0; margin-bottom: 15px; color: #f0a500;">Meus Dados</h3>
+          <div class="user-info-grid" id="userInfo"></div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+          <a href="encomendar.html" class="btn">Fazer Locação</a>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+          <a href="#" id="logout" class="btn-exit">Sair</a>
+        </div>
+
+        <!-- Seção para Estoque Atual -->
+        <div style="margin-top: 30px;">
+          <h3>Estoque Atual</h3>
+          <div id="estoqueAtual"></div>
+        </div>
+
+        <!-- Seção para Pedidos Realizados -->
+        <div style="margin-top: 30px;">
+          <h3>Meus Pedidos Realizados</h3>
+          <div id="meusPedidos"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RODAPÉ -->
+  <footer>
+    <div class="container_12">
+      <div style="margin-bottom: 20px;">
+        <i class="fa fa-phone"></i> <span>Ligue para nós:</span> 19 99999-5555
+      </div>
+      
+      <div class="socials" style="margin-bottom: 20px;">
+        <a href="https://api.whatsapp.com/" class="fa fa-whatsapp"></a>
+        <a href="https://www.facebook.com/" class="fa fa-facebook"></a>
+        <a href="https://www.instagram.com/" class="fa fa-instagram"></a>
+        <a href="https://twitter.com/" class="fa fa-twitter"></a>
+      </div>
+      
+      <div>
+        <div style="margin-bottom: 10px;">
+          <span style="font-weight: bold; color: #f0a500;">MERCÚRIO</span>
+          &copy; 2025 | <a href="#" style="color: #f0a500;">Política de Privacidade</a>
+        </div>
+        <div>
+          <a href="group-members.html" style="color: #aaa; font-size: 0.8em;">Site desenvolvido por DRP04-PJI310-SALA-004GRUPO-009 - PROJETO INTEGRADOR III - UNIVESP</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT -->
+  <script>
+    // CONTROLE DO MENU MOBILE
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuToggle = document.getElementById('menuToggle');
+      const mainNav = document.querySelector('.sf-menu');
+      
+      // Verifica se é mobile no carregamento
+      if (window.innerWidth <= 768) {
+        mainNav.style.display = 'none';
+      }
+      
+      // Controle do clique no botão
+      menuToggle.addEventListener('click', function() {
+        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+      
+      // Atualiza ao redimensionar a tela
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+
+      // Código para exibir informações do usuário
+      const loggedInUserEmail = localStorage.getItem('loggedInUser');
+      if (loggedInUserEmail) {
+        const userData = JSON.parse(localStorage.getItem(loggedInUserEmail));
+        
+        if (userData) {
+          const userInfoDiv = document.getElementById('userInfo');
+          
+          // Formatando a data de cadastro
+          const registrationDate = new Date(userData.registrationDate);
+          const formattedDate = registrationDate.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          
+          // Montando o endereço completo
+          let enderecoHTML = '';
+          if (userData.rua || userData.cep) {
+            enderecoHTML = `
+              <div class="address-section">
+                <div class="info-item"><strong>Endereço:</strong></div>
+                ${userData.rua ? `<div class="address-line">${userData.rua}, ${userData.numero || 'S/N'} ${userData.complemento ? '(' + userData.complemento + ')' : ''}</div>` : ''}
+                ${userData.bairro ? `<div class="address-line">${userData.bairro}</div>` : ''}
+                ${userData.cidade || userData.estado ? `<div class="address-line">${userData.cidade || ''}${userData.cidade && userData.estado ? ' - ' : ''}${userData.estado || ''}</div>` : ''}
+                ${userData.cep ? `<div class="address-line">CEP: ${userData.cep}</div>` : ''}
+                ${userData.pais ? `<div class="address-line">${userData.pais}</div>` : ''}
+              </div>
+            `;
+          } else {
+            enderecoHTML = '<div class="info-item"><strong>Endereço:</strong> Não informado</div>';
+          }
+
+          userInfoDiv.innerHTML = `
+            <div class="info-item"><strong>Nome:</strong> ${userData.firstname} ${userData.lastname}</div>
+            <div class="info-item"><strong>Nome de Usuário:</strong> ${userData.username}</div>
+            <div class="info-item"><strong>E-mail:</strong> ${userData.email}</div>
+            <div class="info-item"><strong>Telefone:</strong> ${userData.phone || 'Não informado'}</div>
+            <div class="info-item"><strong>Idade:</strong> ${userData.age} anos</div>
+            <div class="info-item"><strong>Gênero:</strong> ${userData.gender}</div>
+            
+            ${enderecoHTML}
+            
+            <div class="info-item"><strong>Cadastrado em:</strong> ${formattedDate}</div>
+            <div class="info-item"><strong>Status:</strong> ${userData.isActive ? 'Ativo' : 'Inativo'}</div>
+          `;
+        } else {
+          alert('Usuário não encontrado. Por favor, faça login.');
+          window.location.href = "login.html";
+        }
+      } else {
+        alert('Nenhum usuário logado. Por favor, faça login.');
+        window.location.href = "login.html";
+      }
+
+      // Exibir estoque
+      const estoqueAtual = JSON.parse(localStorage.getItem('estoque')) || { mesas: 500, cadeiras: 500, bancos: 500 };
+      const estoqueContainer = document.getElementById('estoqueAtual');
+      estoqueContainer.innerHTML = `
+        <p><strong>Mesas disponíveis:</strong> ${estoqueAtual.mesas}</p>
+        <p><strong>Cadeiras disponíveis:</strong> ${estoqueAtual.cadeiras}</p>
+        <p><strong>Bancos disponíveis:</strong> ${estoqueAtual.bancos}</p>
+      `;
+
+      // Exibir pedidos realizados
+      const pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
+      const pedidosContainer = document.getElementById('meusPedidos');
+      
+      if (pedidos.length > 0) {
+        pedidos.forEach((pedido, index) => {
+          pedidosContainer.innerHTML += `
+            <div class="pedido-item">
+              <h4>Pedido ${index + 1}</h4>
+              <p><strong>Data de Retirada:</strong> ${pedido.dataInicio || 'Não especificada'}</p>
+              <p><strong>Data de Devolução:</strong> ${pedido.dataRetorno || 'Não especificada'}</p>
+              <p><strong>Quantidade de Dias:</strong> ${pedido.dias || 'Não especificada'}</p>
+              <p><strong>Endereço de Entrega:</strong> ${pedido.endereco}</p>
+              <p><strong>Quantidade de Mesas:</strong> ${pedido.mesas}</p>
+              <p><strong>Quantidade de Cadeiras:</strong> ${pedido.cadeiras}</p>
+              <p><strong>Quantidade de Bancos:</strong> ${pedido.bancos}</p>
+              <p><strong>Valor Diário dos Produtos:</strong> R$${parseFloat(pedido.totalDiario).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+              <p><strong>Valor Total dos Produtos (sem frete):</strong> R$${parseFloat(pedido.totalSemFrete).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+              <p><strong>Frete:</strong> R$${parseFloat(pedido.frete).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+              <p><strong>Total a Pagar:</strong> R$${parseFloat(pedido.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+              <button onclick="devolverEstoque(${index})" class="btn2">Devolver Estoque</button>
+            </div>
+          `;
+        });
+      } else {
+        pedidosContainer.innerHTML = "<p>Você ainda não realizou nenhum pedido.</p>";
+      }
+
+      // Função de Logout
+      document.getElementById('logout').addEventListener('click', function(event) {
+        event.preventDefault();
+        localStorage.removeItem('loggedInUser');
+        window.location.href = "login.html";
+      });
+    });
+
+    // Função para devolver o estoque
+    function devolverEstoque(index) {
+      let pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
+      const estoqueAtual = JSON.parse(localStorage.getItem('estoque')) || { mesas: 500, cadeiras: 500, bancos: 500 };
+
+      const pedido = pedidos[index];
+      if (pedido) {
+        estoqueAtual.mesas += pedido.mesas;
+        estoqueAtual.cadeiras += pedido.cadeiras;
+        estoqueAtual.bancos += pedido.bancos;
+        
+        // Atualiza o estoque no Local Storage
+        localStorage.setItem('estoque', JSON.stringify(estoqueAtual));
+
+        // Remove o pedido do histórico
+        pedidos.splice(index, 1);
+        localStorage.setItem('pedidos', JSON.stringify(pedidos));
+        location.reload(); // Recarrega a página para atualizar as informações
+      }
+    }
+  </script>
+</body>
+</html>

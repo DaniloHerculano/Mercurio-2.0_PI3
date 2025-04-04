@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <title>Mercúrio - Seu Espaço, Nosso Mobiliário</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="icon" href="images/favicon.ico">
+  <link rel="shortcut icon" href="images/favicon.ico">
+  <style>
+    /* RESET E ESTILOS GERAIS */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+    
+    .clear {
+      clear: both;
+    }
+    
+    /* CABEÇALHO */
+    header {
+      background-color: #333;
+      color: white;
+      padding: 15px 0;
+      position: relative;
+    }
+    
+    .container_12 {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 15px;
+    }
+    
+    .titulo-principal {
+      font-size: 2em;
+      margin: 10px 0;
+      padding-right: 50px;
+    }
+    
+    .color1 { color: #f0a500; }
+    .color0 { color: white; }
+    
+    /* MENU PRINCIPAL */
+    .sf-menu {
+      display: flex;
+      list-style: none;
+      margin: 15px 0 0 0;
+      padding: 0;
+    }
+    
+    .sf-menu li {
+      margin: 0 10px;
+    }
+    
+    .sf-menu a {
+      color: white;
+      text-decoration: none;
+      padding: 8px 12px;
+      display: block;
+      transition: all 0.3s;
+    }
+    
+    .sf-menu a:hover {
+      background-color: #f0a500;
+      color: #333;
+    }
+    
+    /* BOTÃO MENU MOBILE */
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      z-index: 1000;
+    }
+    
+    /* SLIDER/BANNER */
+    .slider_wrapper {
+      width: 100%;
+      overflow: hidden;
+    }
+    
+    .banner img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    
+    /* PRODUTOS */
+    .produtos {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      padding: 30px 0;
+    }
+    
+    .grid_4 {
+      width: 32%;
+      margin-bottom: 20px;
+    }
+    
+    .banner {
+      border: 1px solid #ddd;
+      padding: 15px;
+      height: 100%;
+    }
+    
+    .banner_title {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .banner_title img {
+      max-width: 50px;
+      margin-right: 10px;
+    }
+    
+    /* RODAPÉ */
+    footer {
+      background-color: #333;
+      color: white;
+      text-align: center;
+      padding: 30px 0;
+      margin-top: 30px;
+    }
+    
+    .socials a {
+      color: white;
+      margin: 0 10px;
+      font-size: 1.5em;
+    }
+    
+    /* RESPONSIVIDADE */
+    @media (max-width: 992px) {
+      .grid_4 {
+        width: 48%;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      /* MENU MOBILE */
+      .menu-toggle {
+        display: block;
+      }
+      
+      .sf-menu {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        background-color: #444;
+        position: absolute;
+        top: 80px;
+        left: 0;
+        padding: 20px 0;
+        margin-top: 0;
+      }
+      
+      .sf-menu.active {
+        display: flex;
+      }
+      
+      .sf-menu li {
+        margin: 5px 0;
+        text-align: center;
+      }
+      
+      /* LAYOUT */
+      .grid_4 {
+        width: 100%;
+      }
+      
+      .titulo-principal {
+        font-size: 1.5em;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .titulo-principal {
+        font-size: 1.3em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- CABEÇALHO -->
+  <header>
+    <div class="container_12">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      
+      <h1 class="titulo-principal">
+        <span class="color1">MERCÚRIO </span>
+        <span class="color0">Seu Espaço, Nosso Mobiliário</span>
+      </h1>
+      
+      <nav id="mainNav">
+        <ul class="sf-menu">
+          <li class="current"><a href="index.html">Início</a></li>
+          <li><a href="index-1.html">Sobre</a></li>
+          <li><a href="login.html">Área do Cliente</a></li>
+          <li><a href="index-2.html">Produtos</a></li>
+          <li><a href="index-3.html">Serviços</a></li>
+          <li><a href="index-4.html">Contatos</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- SLIDER -->
+  <div class="slider_wrapper">
+    <img src="images/slide.jpg" alt="Banner principal" class="banner">
+  </div>
+
+  <!-- PRODUTOS/SERVIÇOS -->
+  <div class="container_12">
+    <div class="produtos">
+      <div class="grid_4">
+        <div class="banner">
+          <div class="banner_title">
+            <img src="images/icon1.png" alt="Conforto">
+            <div class="extra_wrapper">Conforto
+              <div class="color1">Estilo</div>
+            </div>
+          </div>
+          Mesas e cadeiras que combinam conforto e estilo para criar o ambiente perfeito em qualquer ocasião.
+          <a href="index-2.html" class="fa fa-share-square"></a>
+        </div>
+      </div>
+      
+      <div class="grid_4">
+        <div class="banner">
+          <div class="banner_title">
+            <img src="images/icon2.png" alt="Preços">
+            <div class="extra_wrapper">Bons
+              <div class="color1">Preços</div>
+            </div>
+          </div>
+          Oferecemos mesas e cadeiras de qualidade com preços acessíveis, garantindo conforto e estilo sem comprometer o seu orçamento.
+          <a href="index-2.html" class="fa fa-share-square"></a>
+        </div>
+      </div>
+      
+      <div class="grid_4">
+        <div class="banner">
+          <div class="banner_title">
+            <img src="images/icon4.jpg" alt="Aluguel">
+            <div class="extra_wrapper">Alugue
+              <div class="color1">Já!</div>
+            </div>
+          </div>
+          Quer conforto e estilo por um preço acessível? Cadastre-se agora e faça parte da nossa família de clientes satisfeitos!
+          <a href="index-2.html" class="fa fa-share-square"></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELEFONE -->
+  <div class="container_12">
+    <div style="text-align: center; padding: 20px 0; background: #f0a500; color: #333; margin: 20px 0;">
+      <i class="fa fa-phone"></i> Vinhedo e Região 19 99999-5555
+      <span style="font-weight: bold;">RESERVE AGORA!</span>
+    </div>
+  </div>
+
+  <!-- CONTEÚDO -->
+  <div class="container_12" style="padding: 30px 0;">
+    <div style="margin-bottom: 30px;">
+      <p>O Mercúrio: Seu espaço, nosso mobiliário têm como objetivo permitir aos clientes realizar a locação de mobiliários de maneira autônoma.</p>
+      <p>Nós percebemos a necessidade de otimizar o processo de aluguel de itens, como mesas e cadeiras, e então reduzimos a dependência da interação direta com os funcionários da empresa.</p>
+    </div>
+    
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between;">
+      <a href="index-2.html" style="width: 32%; margin-bottom: 20px;">
+        <img src="images/page1_img1.jpg" alt="Conforto" style="width: 100%;">
+        <span style="display: block; text-align: center; margin-top: 10px;">Conforto</span>
+      </a>
+      <a href="index-2.html" style="width: 32%; margin-bottom: 20px;">
+        <img src="images/page1_img2.jpg" alt="Médio" style="width: 100%;">
+        <span style="display: block; text-align: center; margin-top: 10px;">Médio</span>
+      </a>
+      <a href="index-2.html" style="width: 32%; margin-bottom: 20px;">
+        <img src="images/page1_img3.jpg" alt="Executivo" style="width: 100%;">
+        <span style="display: block; text-align: center; margin-top: 10px;">Executivo</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- RODAPÉ -->
+  <footer>
+    <div class="container_12">
+      <div style="margin-bottom: 20px;">
+        <i class="fa fa-phone"></i> <span>Ligue para nós:</span> 19 99999-5555
+      </div>
+      
+      <div class="socials" style="margin-bottom: 20px;">
+        <a href="https://api.whatsapp.com/" class="fa fa-whatsapp"></a>
+        <a href="https://www.facebook.com/" class="fa fa-facebook"></a>
+        <a href="https://www.instagram.com/" class="fa fa-instagram"></a>
+        <a href="https://twitter.com/" class="fa fa-twitter"></a>
+      </div>
+      
+      <div>
+        <div style="margin-bottom: 10px;">
+          <span style="font-weight: bold; color: #f0a500;">MERCÚRIO</span>
+          &copy; 2025 | <a href="#" style="color: #f0a500;">Política de Privacidade</a>
+        </div>
+        <div>
+          <a href="group-members.html" style="color: #aaa; font-size: 0.8em;">Site desenvolvido por DRP04-PJI310-SALA-004GRUPO-009 - PROJETO INTEGRADOR III - UNIVESP</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT -->
+  <script>
+    // CONTROLE DO MENU MOBILE - VERSÃO GARANTIDA
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuToggle = document.getElementById('menuToggle');
+      const mainNav = document.querySelector('.sf-menu');
+      
+      // Verifica se é mobile no carregamento
+      if (window.innerWidth <= 768) {
+        mainNav.style.display = 'none';
+      }
+      
+      // Controle do clique no botão
+      menuToggle.addEventListener('click', function() {
+        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+      
+      // Atualiza ao redimensionar a tela
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

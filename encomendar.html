@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <title>Encomendar - Mercúrio</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <link rel="icon" href="images/favicon.ico">
+  <link rel="shortcut icon" href="images/favicon.ico">
+  <style>
+    /* RESET E ESTILOS GERAIS */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f5f5f5;
+    }
+    
+    .clear {
+      clear: both;
+    }
+    
+    /* CABEÇALHO */
+    header {
+      background-color: #333;
+      color: white;
+      padding: 15px 0;
+      position: relative;
+    }
+    
+    .container_12 {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 15px;
+    }
+    
+    .titulo-principal {
+      font-size: 2em;
+      margin: 10px 0;
+      padding-right: 50px;
+    }
+    
+    .color1 { color: #f0a500; }
+    .color0 { color: white; }
+    
+    /* MENU PRINCIPAL */
+    .sf-menu {
+      display: flex;
+      list-style: none;
+      margin: 15px 0 0 0;
+      padding: 0;
+    }
+    
+    .sf-menu li {
+      margin: 0 10px;
+    }
+    
+    .sf-menu a {
+      color: white;
+      text-decoration: none;
+      padding: 8px 12px;
+      display: block;
+      transition: all 0.3s;
+    }
+    
+    .sf-menu a:hover {
+      background-color: #f0a500;
+      color: #333;
+    }
+    
+    /* BOTÃO MENU MOBILE */
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      z-index: 1000;
+    }
+    
+    /* CONTEÚDO PRINCIPAL */
+    .content {
+      padding: 30px 0;
+    }
+    
+    h5, h6 {
+      margin: 15px 0;
+      color: #333;
+    }
+    
+    h5 {
+      font-size: 1.2em;
+    }
+    
+    h6 {
+      font-size: 1em;
+      font-weight: bold;
+    }
+    
+    /* FORMULÁRIO */
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0 15px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    input[type="radio"] {
+      margin-right: 5px;
+    }
+    
+    .address-section {
+      display: none;
+      margin-top: 15px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    
+    /* BOTÕES */
+    .btn2, .btn3 {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #1b6222;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px 0;
+      transition: background-color 0.3s;
+    }
+    
+    .btn2:hover, .btn3:hover {
+      background-color: #f0a500;
+    }
+    
+    /* ESTOQUE */
+    #estoqueMesas, #estoqueCadeiras, #estoqueBancos {
+      margin: 5px 0;
+    }
+    
+    /* MODAL */
+    #fade {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.6);
+      z-index: 5;
+    }
+    
+    #modal {
+      display: none;
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+      max-width: 500px;
+      background-color: white;
+      padding: 20px;
+      border-radius: 5px;
+      z-index: 10;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    /* RODAPÉ */
+    footer {
+      background-color: #333;
+      color: white;
+      text-align: center;
+      padding: 30px 0;
+      margin-top: 30px;
+    }
+    
+    .socials a {
+      color: white;
+      margin: 0 10px;
+      font-size: 1.5em;
+    }
+    
+    /* RESPONSIVIDADE */
+    @media (max-width: 768px) {
+      /* MENU MOBILE */
+      .menu-toggle {
+        display: block;
+      }
+      
+      .sf-menu {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        background-color: #444;
+        position: absolute;
+        top: 80px;
+        left: 0;
+        padding: 20px 0;
+        margin-top: 0;
+      }
+      
+      .sf-menu.active {
+        display: flex;
+      }
+      
+      .sf-menu li {
+        margin: 5px 0;
+        text-align: center;
+      }
+      
+      /* TÍTULO */
+      .titulo-principal {
+        font-size: 1.5em;
+        padding-right: 0;
+      }
+      
+      /* FORMULÁRIO */
+      .radio-group {
+        display: flex;
+        flex-direction: column;
+      }
+      
+      input[type="radio"] {
+        margin: 5px 0;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .titulo-principal {
+        font-size: 1.3em;
+      }
+      
+      .btn2, .btn3 {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- CABEÇALHO -->
+  <header>
+    <div class="container_12">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      
+      <h1 class="titulo-principal">
+        <span class="color1">MERCÚRIO </span>
+        <span class="color0">Seu Espaço, Nosso Mobiliário</span>
+      </h1>
+      
+      <nav id="mainNav">
+        <ul class="sf-menu">
+          <li><a href="index.html">Início</a></li>
+          <li><a href="customer_area.html">Usuário identificado</a></li>
+          <li class="current"><a href="encomendar.html">Encomendar</a></li>
+          <li><a href="index-2.html">Produtos</a></li>
+          <li><a href="index-3.html">Serviços</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <div class="content">
+    <div class="container_12">
+      <h5>Precisa de mesas e cadeiras para seu evento? <br>Faça já o seu pedido:</h5>
+
+      <!-- Controle de Estoque -->
+      <div style="margin-top: 20px;">
+        <h4>Estoque Disponível</h4>
+        <p id="estoqueMesas">Mesas: </p>
+        <p id="estoqueCadeiras">Cadeiras: </p>
+        <p id="estoqueBancos">Bancos: </p>
+      </div>
+
+      <h6>Para qual data você vai precisar?</h6>
+      <input type="text" id="datepicker-start" placeholder="Data de Início (dd/mm/aaaa)">
+      
+      <h6>Data de devolução</h6>
+      <input type="text" id="datepicker-end" placeholder="Data de Retorno (dd/mm/aaaa)">
+
+      <h6>Escolha o modelo:</h6>
+      <div class="radio-group">
+        <label><input type="radio" name="opcao" id="conforto" value="1" onclick="change1()"> CONFORTO</label>
+        <label><input type="radio" name="opcao" id="medio" value="2" onclick="change2()"> MÉDIO</label>
+        <label><input type="radio" name="opcao" id="executivo" value="3" onclick="change3()"> EXECUTIVO</label>
+      </div>
+      
+      <div id="change" style="margin: 15px 0;"></div>
+      
+      <h6>Escolha a quantidade de bancos:</h6>
+      <input type="number" id="quantidadebancos" name="quantidadebancos" min="0" max="50" value="0"> 
+      <span>R$<span id="resbancos">--</span></span>
+      
+      <h6>Escolha a quantidade de cadeiras:</h6>
+      <input type="number" id="quantidadecadeiras" name="quantidadecadeiras" min="0" max="200" value="0"> 
+      <span>R$<span id="rescadeiras">--</span></span>
+      
+      <h6>Escolha a quantidade de mesas:</h6>
+      <input type="number" id="quantidademesas" name="quantidademesas" min="0" max="50" value="0"> 
+      <span>R$<span id="resmesas">--</span></span>
+      
+      <div style="margin: 20px 0;">
+        <p><b>VALOR DIÁRIA: R$ <span id="totaldiaria">0.00</span></b></p>
+        <p><b>VALOR TOTAL (SEM FRETE): R$ <span id="totalpedido_nfrete">0.00</span></b></p>
+        <p id="frete-section" style="display: none;"><b>FRETE: R$ <span id="valor-frete">0.00</span></b></p>
+        <p><b>VALOR TOTAL (COM FRETE): R$ <span id="totalpedido">0.00</span></b></p>
+      </div>
+      
+      <button type="button" class="btn3" id="btn3" onclick="valor()">Calcular Total</button>
+
+      <!-- Nova seção para escolha de entrega/retirada -->
+      <h6>Forma de recebimento:</h6>
+      <div class="radio-group">
+        <label><input type="radio" name="entrega" id="retirada" value="retirada" checked onclick="toggleAddress(false)"> Retirar na loja</label>
+        <label><input type="radio" name="entrega" id="entrega" value="entrega" onclick="toggleAddress(true)"> Receber em casa</label>
+      </div>
+
+      <!-- Seção de endereço (aparece apenas quando "Receber em casa" está selecionado) -->
+      <div id="address-section" style="display: none;">
+        <h6>Endereço de entrega:</h6>
+        <div class="radio-group">
+          <label><input type="radio" name="endereco_opcao" id="endereco_cadastrado" value="cadastrado" checked onclick="toggleAddressFields(false)"> Usar endereço cadastrado</label>
+          <label><input type="radio" name="endereco_opcao" id="endereco_novo" value="novo" onclick="toggleAddressFields(true)"> Usar novo endereço</label>
+        </div>
+
+        <!-- Campos para novo endereço (aparecem apenas quando "Usar novo endereço" está selecionado) -->
+        <div id="novo-endereco-section" class="address-section">
+          <h6>Novo endereço:</h6>
+          <input type="text" id="novo-cep" maxlength="9" placeholder="CEP (00000-000)" onblur="buscarCEP()">
+          <button type="button" class="btn3" onclick="buscarCEP()">Buscar CEP</button>
+          <input type="text" id="novo-rua" placeholder="Rua">
+          <input type="text" id="novo-numero" placeholder="Número">
+          <input type="text" id="novo-complemento" placeholder="Complemento">
+          <input type="text" id="novo-bairro" placeholder="Bairro">
+          <input type="text" id="novo-cidade" placeholder="Cidade">
+          <input type="text" id="novo-estado" placeholder="Estado" maxlength="2">
+        </div>
+      </div>
+
+      <div id="loja-info" style="margin: 15px 0; padding: 10px; background-color: #f9f9f9; border-radius: 5px;">
+        <h6>Endereço para retirada:</h6>
+        <p>Av. Independência, 5110 - Barra Funda, Vinhedo - SP, 13280-000</p>
+      </div>
+      
+      <button id="open-modal" class="btn2" onclick="fim()">Finalizar Pedido</button>
+      
+      <!-- MODAL DE CONFIRMAÇÃO -->
+      <div id="fade"></div>
+      <div id="modal">
+        <div class="modal-header" id="titulo">
+          <h5>Pedidos</h5>
+          <button id="close-modal" class="btn2">Fechar</button>
+        </div>
+        <div class="modal-body" id="corpo">
+          Preencha todas as informações para que seu pedido seja concluído. 
+          <br>Em caso de dúvidas entre em contato pelo Whatsapp.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RODAPÉ -->
+  <footer>
+    <div class="container_12">
+      <div style="margin-bottom: 20px;">
+        <i class="fa fa-phone"></i> <span>Ligue para nós:</span> 19 99999-5555
+      </div>
+      
+      <div class="socials" style="margin-bottom: 20px;">
+        <a href="https://api.whatsapp.com/" class="fa fa-whatsapp"></a>
+        <a href="https://www.facebook.com/" class="fa fa-facebook"></a>
+        <a href="https://www.instagram.com/" class="fa fa-instagram"></a>
+        <a href="https://twitter.com/" class="fa fa-twitter"></a>
+      </div>
+      
+      <div>
+        <div style="margin-bottom: 10px;">
+          <span style="font-weight: bold; color: #f0a500;">MERCÚRIO</span>
+          &copy; 2025 | <a href="#" style="color: #f0a500;">Política de Privacidade</a>
+        </div>
+        <div>
+          <a href="group-members.html" style="color: #aaa; font-size: 0.8em;">Site desenvolvido por DRP04-PJI310-SALA-004GRUPO-009 - PROJETO INTEGRADOR III - UNIVESP</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script>
+    // CONTROLE DO MENU MOBILE
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuToggle = document.getElementById('menuToggle');
+      const mainNav = document.querySelector('.sf-menu');
+      
+      // Verifica se é mobile no carregamento
+      if (window.innerWidth <= 768) {
+        mainNav.style.display = 'none';
+      }
+      
+      // Controle do clique no botão
+      menuToggle.addEventListener('click', function() {
+        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+      
+      // Atualiza ao redimensionar a tela
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+
+      // Datepicker
+      $("#datepicker-start").datepicker({
+        dateFormat: "dd/mm/yy",
+        minDate: 0,
+        onSelect: function() {
+          let startDate = $("#datepicker-start").datepicker("getDate");
+          startDate.setDate(startDate.getDate() + 1);
+          $("#datepicker-end").datepicker("option", "minDate", startDate);
+        }
+      });
+      
+      $("#datepicker-end").datepicker({
+        dateFormat: "dd/mm/yy",
+        minDate: 1
+      });
+      
+      // Inicializa estoque
+      exibirEstoque();
+      
+      // Configura o modal
+      const closeModalBtn = document.getElementById("close-modal");
+      closeModalBtn.addEventListener("click", () => {
+        document.getElementById("fade").style.display = "none";
+        document.getElementById("modal").style.display = "none";
+        window.location.href = "customer_area.html";
+      });
+
+      // Mostra/oculta seção de endereço baseado na escolha inicial
+      toggleAddress(false);
+    });
+
+    // FUNÇÕES DE CONTROLE DE ENDEREÇO
+    function toggleAddress(show) {
+      document.getElementById('address-section').style.display = show ? 'block' : 'none';
+      document.getElementById('loja-info').style.display = show ? 'none' : 'block';
+      document.getElementById('frete-section').style.display = show ? 'block' : 'none';
+      if (!show) {
+        toggleAddressFields(false);
+      }
+    }
+
+    function toggleAddressFields(show) {
+      document.getElementById('novo-endereco-section').style.display = show ? 'block' : 'none';
+    }
+
+    // FUNÇÃO PARA BUSCAR CEP
+    function buscarCEP() {
+      const cep = document.getElementById('novo-cep').value.replace(/\D/g, '');
+      
+      if (cep.length !== 8) {
+        alert('CEP inválido. Digite os 8 números do CEP');
+        return;
+      }
+      
+      fetch(`https://viacep.com.br/ws/${cep}/json/`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.erro) {
+            alert('CEP não encontrado!');
+            return;
+          }
+          
+          // Preenche os campos com os dados da API
+          document.getElementById('novo-rua').value = data.logradouro || '';
+          document.getElementById('novo-bairro').value = data.bairro || '';
+          document.getElementById('novo-cidade').value = data.localidade || '';
+          document.getElementById('novo-estado').value = data.uf || '';
+          
+          // Foca no campo de número
+          document.getElementById('novo-numero').focus();
+        })
+        .catch(error => {
+          console.error('Erro ao buscar CEP:', error);
+          alert('Erro ao buscar CEP. Tente novamente mais tarde.');
+        });
+    }
+
+    // FUNÇÕES DE EXIBIÇÃO DOS MODELOS
+    function change1() {
+      document.getElementById("change").innerHTML = 
+        "<img src='images/page1_img1.jpg' style='max-width:100%;height:auto;'><br>" +
+        "<b>CONFORTO</b><br>Mesa R$15,00 /dia<br>Cadeira R$5,00 /dia<br>Banco R$3,00 /dia";
+    }
+
+    function change2() {
+      document.getElementById("change").innerHTML = 
+        "<img src='images/page1_img2.jpg' style='max-width:100%;height:auto;'><br>" +
+        "<b>MÉDIO</b><br>Mesa R$25,00 /dia<br>Cadeira R$8,00 /dia<br>Banco R$5,00 /dia";
+    }
+
+    function change3() {
+      document.getElementById("change").innerHTML = 
+        "<img src='images/page1_img3.jpg' style='max-width:100%;height:auto;'><br>" +
+        "<b>EXECUTIVO</b><br>Mesa R$40,00 /dia<br>Cadeira R$12,00 /dia<br>Banco R$8,00 /dia";
+    }
+
+    // FUNÇÃO DE CÁLCULO DO VALOR TOTAL
+    function valor() {
+      const startDate = $("#datepicker-start").datepicker("getDate");
+      const endDate = $("#datepicker-end").datepicker("getDate");
+      
+      if (!startDate || !endDate) {
+        alert("Por favor, selecione as datas de início e término");
+        return;
+      }
+
+      const diffTime = Math.abs(endDate - startDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      const bancos = parseInt(document.getElementById("quantidadebancos").value) || 0;
+      const cadeiras = parseInt(document.getElementById("quantidadecadeiras").value) || 0;
+      const mesas = parseInt(document.getElementById("quantidademesas").value) || 0;
+      
+      let valorBanco, valorCadeira, valorMesa;
+      
+      if (document.getElementById("conforto").checked) {
+        valorBanco = 3;
+        valorCadeira = 5;
+        valorMesa = 15;
+      } else if (document.getElementById("medio").checked) {
+        valorBanco = 5;
+        valorCadeira = 8;
+        valorMesa = 25;
+      } else if (document.getElementById("executivo").checked) {
+        valorBanco = 8;
+        valorCadeira = 12;
+        valorMesa = 40;
+      } else {
+        alert("Por favor, selecione um modelo");
+        return;
+      }
+      
+      const totalBancos = bancos * valorBanco * diffDays;
+      const totalCadeiras = cadeiras * valorCadeira * diffDays;
+      const totalMesas = mesas * valorMesa * diffDays;
+      
+      document.getElementById("resbancos").innerHTML = totalBancos.toFixed(2);
+      document.getElementById("rescadeiras").innerHTML = totalCadeiras.toFixed(2);
+      document.getElementById("resmesas").innerHTML = totalMesas.toFixed(2);
+      
+      const totalDiaria = (bancos * valorBanco) + (cadeiras * valorCadeira) + (mesas * valorMesa);
+      const totalSemFrete = totalBancos + totalCadeiras + totalMesas;
+      
+      document.getElementById("totaldiaria").innerHTML = totalDiaria.toFixed(2);
+      document.getElementById("totalpedido_nfrete").innerHTML = totalSemFrete.toFixed(2);
+      
+      // Se for retirada, zera o frete
+      if (document.getElementById('retirada').checked) {
+        document.getElementById("frete-section").style.display = "none";
+        document.getElementById("totalpedido").innerHTML = totalSemFrete.toFixed(2);
+      } else {
+        // Mostra a seção de frete e calcula
+        document.getElementById("frete-section").style.display = "block";
+        calcularFrete(totalSemFrete);
+      }
+    }
+
+    // FUNÇÃO PARA CALCULAR FRETE
+    function calcularFrete(totalSemFrete) {
+      const isEntrega = document.getElementById('entrega').checked;
+      
+      if (!isEntrega) {
+        document.getElementById("valor-frete").innerHTML = "0.00";
+        document.getElementById("totalpedido").innerHTML = totalSemFrete.toFixed(2);
+        return;
+      }
+      
+      // Verifica se é endereço cadastrado ou novo
+      const usarEnderecoCadastrado = document.getElementById('endereco_cadastrado').checked;
+      let cep = '';
+      
+      if (usarEnderecoCadastrado) {
+        const loggedInUserEmail = localStorage.getItem('loggedInUser');
+        if (loggedInUserEmail) {
+          const userData = JSON.parse(localStorage.getItem(loggedInUserEmail));
+          if (userData && userData.cep) {
+            cep = userData.cep.replace(/\D/g, '');
+          }
+        }
+      } else {
+        cep = document.getElementById('novo-cep').value.replace(/\D/g, '');
+      }
+      
+      // Se não tem CEP, usa um valor padrão
+      if (!cep || cep.length !== 8) {
+        const fretePadrao = 50.00;
+        document.getElementById("valor-frete").innerHTML = fretePadrao.toFixed(2);
+        document.getElementById("totalpedido").innerHTML = (totalSemFrete + fretePadrao).toFixed(2);
+        return;
+      }
+      
+      // Simulação de cálculo de frete (substituir por API real)
+      const frete = Math.floor(Math.random() * 50) + 20; // Valor aleatório entre 20 e 70
+      document.getElementById("valor-frete").innerHTML = frete.toFixed(2);
+      document.getElementById("totalpedido").innerHTML = (totalSemFrete + frete).toFixed(2);
+    }
+
+    // FUNÇÃO DE FINALIZAÇÃO DO PEDIDO
+    function fim() {
+      // Verifica se todos os campos estão preenchidos
+      const requiredFields = [
+        'datepicker-start', 'datepicker-end', 'quantidadebancos', 
+        'quantidadecadeiras', 'quantidademesas'
+      ];
+      
+      for (const fieldId of requiredFields) {
+        const field = document.getElementById(fieldId);
+        if (!field.value || parseInt(field.value) < 0) {
+          alert(`Por favor, preencha corretamente o campo ${fieldId.replace('-', ' ')}`);
+          return;
+        }
+      }
+      
+      if (!document.querySelector('input[name="opcao"]:checked')) {
+        alert("Por favor, selecione um modelo");
+        return;
+      }
+
+      // Verifica estoque
+      const estoque = JSON.parse(localStorage.getItem('estoque')) || { mesas: 500, cadeiras: 500, bancos: 500 };
+      const bancos = parseInt(document.getElementById("quantidadebancos").value);
+      const cadeiras = parseInt(document.getElementById("quantidadecadeiras").value);
+      const mesas = parseInt(document.getElementById("quantidademesas").value);
+      
+      if (bancos > estoque.bancos || cadeiras > estoque.cadeiras || mesas > estoque.mesas) {
+        alert("Quantidade solicitada maior que o estoque disponível");
+        return;
+      }
+
+      // Verifica se é entrega e tem endereço válido
+      const isEntrega = document.getElementById('entrega').checked;
+      let enderecoEntrega = '';
+      
+      if (isEntrega) {
+        const usarEnderecoCadastrado = document.getElementById('endereco_cadastrado').checked;
+        
+        if (usarEnderecoCadastrado) {
+          const loggedInUserEmail = localStorage.getItem('loggedInUser');
+          if (!loggedInUserEmail) {
+            alert('Usuário não logado. Faça login para usar o endereço cadastrado.');
+            return;
+          }
+          
+          const userData = JSON.parse(localStorage.getItem(loggedInUserEmail));
+          if (!userData) {
+            alert('Dados do usuário não encontrados.');
+            return;
+          }
+          
+          enderecoEntrega = `${userData.rua}, ${userData.numero || 'S/N'}${userData.complemento ? ' - ' + userData.complemento : ''} - ${userData.bairro}, ${userData.cidade} - ${userData.estado}, CEP: ${userData.cep}`;
+        } else {
+          // Verifica campos do novo endereço
+          const novoCep = document.getElementById('novo-cep').value;
+          const novoRua = document.getElementById('novo-rua').value;
+          const novoNumero = document.getElementById('novo-numero').value;
+          const novoCidade = document.getElementById('novo-cidade').value;
+          const novoEstado = document.getElementById('novo-estado').value;
+          
+          if (!novoCep || !novoRua || !novoNumero || !novoCidade || !novoEstado) {
+            alert('Por favor, preencha todos os campos do endereço');
+            return;
+          }
+          
+          enderecoEntrega = `${novoRua}, ${novoNumero}${document.getElementById('novo-complemento').value ? ' - ' + document.getElementById('novo-complemento').value : ''} - ${document.getElementById('novo-bairro').value}, ${novoCidade} - ${novoEstado}, CEP: ${novoCep}`;
+        }
+      } else {
+        enderecoEntrega = 'Av. Independência, 5110 - Barra Funda, Vinhedo - SP, 13280-000 (Retirada na loja)';
+      }
+      
+      // Coleta todos os dados do pedido
+      const pedido = {
+        dataInicio: document.getElementById("datepicker-start").value,
+        dataRetorno: document.getElementById("datepicker-end").value,
+        modelo: document.querySelector('input[name="opcao"]:checked').value,
+        bancos: bancos,
+        cadeiras: cadeiras,
+        mesas: mesas,
+        endereco: enderecoEntrega,
+        tipoEntrega: isEntrega ? 'entrega' : 'retirada',
+        totalDiario: parseFloat(document.getElementById("totaldiaria").innerHTML),
+        totalSemFrete: parseFloat(document.getElementById("totalpedido_nfrete").innerHTML),
+        frete: isEntrega ? parseFloat(document.getElementById("valor-frete").innerHTML) || 0 : 0,
+        total: parseFloat(document.getElementById("totalpedido").innerHTML),
+        status: 'pendente',
+        dataPedido: new Date().toLocaleString()
+      };
+      
+      // Calcula dias (para exibição)
+      const startDate = $("#datepicker-start").datepicker("getDate");
+      const endDate = $("#datepicker-end").datepicker("getDate");
+      const diffTime = Math.abs(endDate - startDate);
+      pedido.dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      // Salva no LocalStorage
+      let pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
+      pedido.numero = pedidos.length + 1;
+      pedidos.push(pedido);
+      localStorage.setItem('pedidos', JSON.stringify(pedidos));
+      
+      // Atualiza estoque
+      estoque.mesas -= pedido.mesas;
+      estoque.cadeiras -= pedido.cadeiras;
+      estoque.bancos -= pedido.bancos;
+      localStorage.setItem('estoque', JSON.stringify(estoque));
+      
+      // Exibe mensagem de sucesso
+      document.getElementById("corpo").innerHTML = `
+        <h4 style="color: #1b6222;">Pedido realizado com sucesso!</h4>
+        <p><strong>Número do Pedido:</strong> ${pedido.numero}</p>
+        <p><strong>Total a Pagar:</strong> R$${pedido.total.toFixed(2)}</p>
+        <p><strong>${pedido.tipoEntrega === 'retirada' ? 'Local de Retirada' : 'Endereço de Entrega'}:</strong> ${pedido.endereco}</p>
+        <p><strong>Data de Retirada:</strong> ${pedido.dataInicio}</p>
+        <p><strong>Data de Devolução:</strong> ${pedido.dataRetorno}</p>
+        <p>Em breve entraremos em contato para confirmar os detalhes.</p>
+      `;
+      
+      // Mostra o modal
+      document.getElementById("fade").style.display = "block";
+      document.getElementById("modal").style.display = "block";
+      
+      // Atualiza exibição do estoque
+      exibirEstoque();
+    }
+
+    // FUNÇÃO PARA EXIBIR ESTOQUE
+    function exibirEstoque() {
+      const estoque = JSON.parse(localStorage.getItem('estoque')) || { mesas: 500, cadeiras: 500, bancos: 500 };
+      document.getElementById('estoqueMesas').innerText = `Mesas: ${estoque.mesas}`;
+      document.getElementById('estoqueCadeiras').innerText = `Cadeiras: ${estoque.cadeiras}`;
+      document.getElementById('estoqueBancos').innerText = `Bancos: ${estoque.bancos}`;
+    }
+  </script>
+</body>
+</html>

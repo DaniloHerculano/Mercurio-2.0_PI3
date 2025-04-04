@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <title>Cadastro - Mercúrio</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="icon" href="images/favicon.ico">
+  <link rel="shortcut icon" href="images/favicon.ico">
+  <style>
+    /* RESET E ESTILOS GERAIS */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f5f5f5;
+    }
+    
+    .clear {
+      clear: both;
+    }
+    
+    /* CABEÇALHO */
+    header {
+      background-color: #333;
+      color: white;
+      padding: 15px 0;
+      position: relative;
+    }
+    
+    .container_12 {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 15px;
+    }
+    
+    .titulo-principal {
+      font-size: 2em;
+      margin: 10px 0;
+      padding-right: 50px;
+    }
+    
+    .color1 { color: #f0a500; }
+    .color0 { color: white; }
+    
+    /* MENU PRINCIPAL */
+    .sf-menu {
+      display: flex;
+      list-style: none;
+      margin: 15px 0 0 0;
+      padding: 0;
+    }
+    
+    .sf-menu li {
+      margin: 0 10px;
+    }
+    
+    .sf-menu a {
+      color: white;
+      text-decoration: none;
+      padding: 8px 12px;
+      display: block;
+      transition: all 0.3s;
+    }
+    
+    .sf-menu a:hover {
+      background-color: #f0a500;
+      color: #333;
+    }
+    
+    /* BOTÃO MENU MOBILE */
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      z-index: 1000;
+    }
+    
+    /* FORMULÁRIO DE REGISTRO */
+    .content {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: calc(100vh - 300px);
+      padding: 30px 0;
+    }
+    
+    .form-bubble {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 500px;
+    }
+    
+    .form-bubble h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    .form-group input, 
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    
+    .form-row {
+      display: flex;
+      gap: 15px;
+    }
+    
+    .form-row .form-group {
+      flex: 1;
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #f0a500;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 10px;
+    }
+    
+    .btn:hover {
+      background-color: #e69500;
+    }
+    
+    .btn-cep {
+      width: 100%;
+      padding: 10px;
+      background-color: #1b6222;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 5px;
+      transition: background-color 0.3s;
+    }
+    
+    .btn-cep:hover {
+      background-color: #15803d;
+    }
+    
+    .login-link {
+      margin-top: 20px;
+      text-align: center;
+    }
+    
+    .login-link a {
+      color: #f0a500;
+      text-decoration: none;
+    }
+    
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+    
+    /* RODAPÉ */
+    footer {
+      background-color: #333;
+      color: white;
+      text-align: center;
+      padding: 30px 0;
+      margin-top: 30px;
+    }
+    
+    .socials a {
+      color: white;
+      margin: 0 10px;
+      font-size: 1.5em;
+    }
+    
+    /* RESPONSIVIDADE */
+    @media (max-width: 768px) {
+      .menu-toggle {
+        display: block;
+      }
+      
+      .sf-menu {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        background-color: #444;
+        position: absolute;
+        top: 80px;
+        left: 0;
+        padding: 20px 0;
+        margin-top: 0;
+      }
+      
+      .sf-menu.active {
+        display: flex;
+      }
+      
+      .sf-menu li {
+        margin: 5px 0;
+        text-align: center;
+      }
+      
+      .titulo-principal {
+        font-size: 1.5em;
+      }
+      
+      .form-row {
+        flex-direction: column;
+        gap: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- CABEÇALHO -->
+  <header>
+    <div class="container_12">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      
+      <h1 class="titulo-principal">
+        <span class="color1">MERCÚRIO </span>
+        <span class="color0">Seu Espaço, Nosso Mobiliário</span>
+      </h1>
+      
+      <nav id="mainNav">
+        <ul class="sf-menu">
+          <li><a href="index.html">Início</a></li>
+          <li><a href="index-1.html">Sobre</a></li>
+          <li><a href="login.html">Área do Cliente</a></li>
+          <li><a href="index-2.html">Produtos</a></li>
+          <li><a href="index-3.html">Serviços</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO (REGISTRO) -->
+  <div class="content">
+    <div class="form-bubble">
+      <h2>Criar Conta</h2>
+      <form id="registerForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstname">Nome</label>
+            <input type="text" id="firstname" placeholder="Digite seu nome" required>
+          </div>
+          <div class="form-group">
+            <label for="lastname">Sobrenome</label>
+            <input type="text" id="lastname" placeholder="Digite seu sobrenome" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="username">Nome de Usuário</label>
+          <input type="text" id="username" placeholder="Escolha um nome de usuário" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" placeholder="Digite seu e-mail" required>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="password">Senha</label>
+            <input type="password" id="password" placeholder="Crie uma senha" required>
+          </div>
+          <div class="form-group">
+            <label for="confirm-password">Confirmar Senha</label>
+            <input type="password" id="confirm-password" placeholder="Repita a senha" required>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="age">Idade</label>
+            <input type="number" id="age" placeholder="Sua idade" min="18" max="120" required>
+          </div>
+          <div class="form-group">
+            <label for="gender">Gênero</label>
+            <select id="gender" required>
+              <option value="">Selecione</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Feminino">Feminino</option>
+              <option value="Outro">Outro</option>
+              <option value="Prefiro não dizer">Prefiro não dizer</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- Seção de Endereço com CEP -->
+        <div class="form-group">
+          <label for="cep">CEP</label>
+          <input type="text" id="cep" placeholder="Digite seu CEP" maxlength="9" 
+                 onblur="pesquisarCEP()" onkeyup="formatarCEP(this)">
+          <button type="button" class="btn-cep" onclick="pesquisarCEP()">Procurar CEP</button>
+        </div>
+        
+        <div class="form-group">
+          <label for="rua">Rua</label>
+          <input type="text" id="rua" placeholder="Sua rua">
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="numero">Número</label>
+            <input type="text" id="numero" placeholder="Número">
+          </div>
+          <div class="form-group">
+            <label for="complemento">Complemento</label>
+            <input type="text" id="complemento" placeholder="Complemento">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="bairro">Bairro</label>
+            <input type="text" id="bairro" placeholder="Seu bairro">
+          </div>
+          <div class="form-group">
+            <label for="cidade">Cidade</label>
+            <input type="text" id="cidade" placeholder="Sua cidade">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="estado">Estado</label>
+            <input type="text" id="estado" placeholder="UF" maxlength="2">
+          </div>
+          <div class="form-group">
+            <label for="pais">País</label>
+            <input type="text" id="pais" placeholder="Seu país" value="Brasil" readonly>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="phone">Telefone</label>
+          <input type="tel" id="phone" placeholder="(DDD) 99999-9999">
+        </div>
+        
+        <button type="submit" class="btn">Cadastrar</button>
+      </form>
+      <div class="login-link">
+        Já tem uma conta? <a href="login.html">Faça login</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- RODAPÉ -->
+  <footer>
+    <div class="container_12">
+      <div style="margin-bottom: 20px;">
+        <i class="fa fa-phone"></i> <span>Ligue para nós:</span> 19 99999-5555
+      </div>
+      
+      <div class="socials" style="margin-bottom: 20px;">
+        <a href="https://api.whatsapp.com/" class="fa fa-whatsapp"></a>
+        <a href="https://www.facebook.com/" class="fa fa-facebook"></a>
+        <a href="https://www.instagram.com/" class="fa fa-instagram"></a>
+        <a href="https://twitter.com/" class="fa fa-twitter"></a>
+      </div>
+      
+      <div>
+        <div style="margin-bottom: 10px;">
+          <span style="font-weight: bold; color: #f0a500;">MERCÚRIO</span>
+          &copy; 2025 | <a href="#" style="color: #f0a500;">Política de Privacidade</a>
+        </div>
+        <div>
+          <a href="group-members.html" style="color: #aaa; font-size: 0.8em;">Site desenvolvido por DRP04-PJI310-SALA-004GRUPO-009 - PROJETO INTEGRADOR III - UNIVESP</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Controle do Menu Mobile
+      const menuToggle = document.getElementById('menuToggle');
+      const mainNav = document.querySelector('.sf-menu');
+      
+      if (window.innerWidth <= 768) {
+        mainNav.style.display = 'none';
+      }
+      
+      menuToggle.addEventListener('click', function() {
+        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+      
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+
+      // Função de Registro
+      document.getElementById('registerForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        // Validação de senha
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        
+        if (password !== confirmPassword) {
+          alert('As senhas não coincidem!');
+          return;
+        }
+        
+        // Verificar se o e-mail já está cadastrado
+        const email = document.getElementById('email').value;
+        if (localStorage.getItem(email)) {
+          alert('Este e-mail já está cadastrado. Por favor, faça login ou use outro e-mail.');
+          return;
+        }
+        
+        // Criar objeto com todos os campos necessários
+        const userData = {
+          firstname: document.getElementById('firstname').value,
+          lastname: document.getElementById('lastname').value,
+          username: document.getElementById('username').value,
+          email: email,
+          password: password, // Em produção, usar hash!
+          age: document.getElementById('age').value,
+          gender: document.getElementById('gender').value,
+          cep: document.getElementById('cep').value,
+          rua: document.getElementById('rua').value,
+          numero: document.getElementById('numero').value,
+          complemento: document.getElementById('complemento').value,
+          bairro: document.getElementById('bairro').value,
+          cidade: document.getElementById('cidade').value,
+          estado: document.getElementById('estado').value,
+          pais: document.getElementById('pais').value,
+          phone: document.getElementById('phone').value,
+          registrationDate: new Date().toISOString(),
+          lastLogin: null,
+          isActive: true
+        };
+        
+        // Salvar no Local Storage usando o email como chave
+        localStorage.setItem(email, JSON.stringify(userData));
+        
+        // Feedback e redirecionamento
+        alert('Cadastro realizado com sucesso! Você será redirecionado para a página de login.');
+        window.location.href = 'login.html';
+      });
+    });
+
+    // Formatar CEP (adiciona o traço automaticamente)
+    function formatarCEP(input) {
+      // Remove tudo que não é dígito
+      let cep = input.value.replace(/\D/g, '');
+      
+      // Formata o CEP com traço
+      if (cep.length > 5) {
+        cep = cep.substring(0, 5) + '-' + cep.substring(5, 8);
+      }
+      
+      // Atualiza o campo
+      input.value = cep;
+    }
+
+    // Pesquisar CEP usando ViaCEP
+    function pesquisarCEP() {
+      const cep = document.getElementById('cep').value.replace(/\D/g, '');
+      
+      if (cep.length !== 8) {
+        alert('CEP inválido! Digite os 8 dígitos.');
+        return;
+      }
+
+      // Mostra mensagem de carregamento
+      const btnCep = document.querySelector('.btn-cep');
+      btnCep.textContent = 'Buscando...';
+      btnCep.disabled = true;
+
+      fetch(`https://viacep.com.br/ws/${cep}/json/`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.erro) {
+            alert('CEP não encontrado!');
+            return;
+          }
+          
+          // Preenche os campos com os dados da API
+          document.getElementById('rua').value = data.logradouro || '';
+          document.getElementById('bairro').value = data.bairro || '';
+          document.getElementById('cidade').value = data.localidade || '';
+          document.getElementById('estado').value = data.uf || '';
+          
+          // Foca no campo de número se a rua foi preenchida
+          if (data.logradouro) {
+            document.getElementById('numero').focus();
+          }
+        })
+        .catch(error => {
+          console.error('Erro ao buscar CEP:', error);
+          alert('Erro ao buscar CEP. Tente novamente mais tarde.');
+        })
+        .finally(() => {
+          btnCep.textContent = 'Procurar CEP';
+          btnCep.disabled = false;
+        });
+    }
+  </script>
+</body>
+</html>

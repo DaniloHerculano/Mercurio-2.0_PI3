@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <title>Contatos - Mercúrio</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="icon" href="images/favicon.ico">
+  <link rel="shortcut icon" href="images/favicon.ico">
+  <style>
+    /* RESET E ESTILOS GERAIS */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+    
+    .clear {
+      clear: both;
+    }
+    
+    /* CABEÇALHO */
+    header {
+      background-color: #333;
+      color: white;
+      padding: 15px 0;
+      position: relative;
+    }
+    
+    .container_12 {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 15px;
+    }
+    
+    .titulo-principal {
+      font-size: 2em;
+      margin: 10px 0;
+      padding-right: 50px;
+    }
+    
+    .color1 { color: #f0a500; }
+    .color0 { color: white; }
+    .color2 { color: #f0a500; }
+    
+    /* MENU PRINCIPAL */
+    .sf-menu {
+      display: flex;
+      list-style: none;
+      margin: 15px 0 0 0;
+      padding: 0;
+    }
+    
+    .sf-menu li {
+      margin: 0 10px;
+    }
+    
+    .sf-menu a {
+      color: white;
+      text-decoration: none;
+      padding: 8px 12px;
+      display: block;
+      transition: all 0.3s;
+    }
+    
+    .sf-menu a:hover {
+      background-color: #f0a500;
+      color: #333;
+    }
+    
+    /* BOTÃO MENU MOBILE */
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      z-index: 1000;
+    }
+    
+    /* CONTEÚDO */
+    .content {
+      padding: 30px 0;
+    }
+    
+    h3 {
+      font-size: 1.5em;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    
+    /* MAPA */
+    .map {
+      margin-bottom: 30px;
+    }
+    
+    .map iframe {
+      width: 100%;
+      height: 400px;
+      border: none;
+      border-radius: 5px;
+    }
+    
+    /* INFORMAÇÕES DE CONTATO */
+    address {
+      font-style: normal;
+      margin-top: 20px;
+    }
+    
+    address dt {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    address dd {
+      margin-bottom: 10px;
+      padding-left: 20px;
+    }
+    
+    address span {
+      font-weight: bold;
+    }
+    
+    /* FORMULÁRIO */
+    form {
+      background: #f9f9f9;
+      padding: 20px;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 15px;
+    }
+    
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-top: 5px;
+    }
+    
+    textarea {
+      height: 120px;
+      resize: vertical;
+    }
+    
+    .btns {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #f0a500;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    
+    .btn:hover {
+      background: #e69500;
+    }
+    
+    .error-message, .empty-message {
+      color: red;
+      font-size: 0.8em;
+      display: none;
+    }
+    
+    /* RODAPÉ */
+    footer {
+      background-color: #333;
+      color: white;
+      text-align: center;
+      padding: 30px 0;
+      margin-top: 30px;
+    }
+    
+    .f_phone {
+      margin-bottom: 15px;
+    }
+    
+    .socials a {
+      color: white;
+      margin: 0 10px;
+      font-size: 1.5em;
+    }
+    
+    .copy {
+      margin-top: 20px;
+      font-size: 0.9em;
+    }
+    
+    .brand {
+      font-weight: bold;
+      color: #f0a500;
+    }
+    
+    /* RESPONSIVIDADE */
+    @media (max-width: 992px) {
+      .grid_5, .grid_6 {
+        width: 100%;
+      }
+      
+      .prefix_1 {
+        margin-left: 0;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      /* MENU MOBILE */
+      .menu-toggle {
+        display: block;
+      }
+      
+      .sf-menu {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        background-color: #444;
+        position: absolute;
+        top: 80px;
+        left: 0;
+        padding: 20px 0;
+        margin-top: 0;
+      }
+      
+      .sf-menu.active {
+        display: flex;
+      }
+      
+      .sf-menu li {
+        margin: 5px 0;
+        text-align: center;
+      }
+      
+      .titulo-principal {
+        font-size: 1.5em;
+      }
+      
+      .map iframe {
+        height: 300px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .titulo-principal {
+        font-size: 1.3em;
+      }
+      
+      .btns {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- CABEÇALHO -->
+  <header>
+    <div class="container_12">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      
+      <h1 class="titulo-principal">
+        <span class="color1">MERCÚRIO </span>
+        <span class="color0">Seu Espaço, Nosso Mobiliário</span>
+      </h1>
+      
+      <nav id="mainNav">
+        <ul class="sf-menu">
+          <li><a href="index.html">Início</a></li>
+          <li><a href="index-1.html">Sobre</a></li>
+          <li><a href="login.html">Área do Cliente</a></li>
+          <li><a href="index-2.html">Produtos</a></li>
+          <li><a href="index-3.html">Serviços</a></li>
+          <li class="current"><a href="index-4.html">Contatos</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO -->
+  <div class="content">
+    <div class="container_12">
+      <div class="grid_12">
+        <h3>Onde nós estamos</h3>
+        <div class="map">
+          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3671.8346656569106!2d-46.97416092386167!3d-23.02984204228213!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94cf2d0033d2b75f%3A0x8b73bd0f86d51c21!2sUNIVESP%20polo%20Vinhedo!5e0!3m2!1spt-BR!2sbr!4v1725495970274!5m2!1spt-BR!2sbr" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </div>
+      
+      <div class="grid_5">
+        <h3>Informações de Contato</h3>
+        <div class="text1 color2">Fique à vontade para deixar seus comentários — Sua opinião é muito importante para nós.</div>
+        <address>
+          <dl>
+            <dt>Mercúrio LTDA</dt>
+            <dd><span>Telefone:</span> 19 99999-5555</dd>
+            <dd><span>WhatsApp:</span> 19 99999-5555</dd>
+            <dd>E-mail: <a href="mailto:contato@mercurio.com.br" class="color1">contato@mercurio.com.br</a></dd>
+          </dl>
+        </address>
+      </div>
+      
+      <div class="grid_6 prefix_1">
+        <h3>Formulário de contato</h3>
+        <form id="form">
+          <div class="success_wrapper" style="display: none;">
+            <div class="success-message">Formulário de contato enviado</div>
+          </div>
+          <label class="name">
+            <input type="text" placeholder="Nome:" required>
+            <span class="empty-message">*Este campo é obrigatório.</span>
+          </label>
+          <label class="email">
+            <input type="email" placeholder="E-mail:" required>
+            <span class="empty-message">*Este campo é obrigatório.</span>
+            <span class="error-message">*Esse e-mail não é válido.</span>
+          </label>
+          <label class="phone">
+            <input type="tel" placeholder="Telefone:" required>
+            <span class="empty-message">*Este campo é obrigatório.</span>
+          </label>
+          <label class="message">
+            <textarea placeholder="Mensagem:" required minlength="20"></textarea>
+            <span class="empty-message">*Este campo é obrigatório.</span>
+            <span class="error-message">*A mensagem é muito breve.</span>
+          </label>
+          <div class="btns">
+            <button type="submit" class="btn">Enviar</button>
+            <button type="reset" class="btn">Limpar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+   <!-- RODAPÉ -->
+  <footer>
+    <div class="container_12">
+      <div style="margin-bottom: 20px;">
+        <i class="fa fa-phone"></i> <span>Ligue para nós:</span> 19 99999-5555
+      </div>
+      
+      <div class="socials" style="margin-bottom: 20px;">
+        <a href="https://api.whatsapp.com/" class="fa fa-whatsapp"></a>
+        <a href="https://www.facebook.com/" class="fa fa-facebook"></a>
+        <a href="https://www.instagram.com/" class="fa fa-instagram"></a>
+        <a href="https://twitter.com/" class="fa fa-twitter"></a>
+      </div>
+      
+      <div>
+        <div style="margin-bottom: 10px;">
+          <span style="font-weight: bold; color: #f0a500;">MERCÚRIO</span>
+          &copy; 2025 | <a href="#" style="color: #f0a500;">Política de Privacidade</a>
+        </div>
+        <div>
+          <a href="group-members.html" style="color: #aaa; font-size: 0.8em;">Site desenvolvido por DRP04-PJI310-SALA-004GRUPO-009 - PROJETO INTEGRADOR III - UNIVESP</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT -->
+  <script>
+    // CONTROLE DO MENU MOBILE - VERSÃO GARANTIDA
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuToggle = document.getElementById('menuToggle');
+      const mainNav = document.querySelector('.sf-menu');
+      
+      // Verifica se é mobile no carregamento
+      if (window.innerWidth <= 768) {
+        mainNav.style.display = 'none';
+      }
+      
+      // Controle do clique no botão
+      menuToggle.addEventListener('click', function() {
+        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+      
+      // Atualiza ao redimensionar a tela
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+
+      // Validação do formulário
+      const form = document.getElementById('form');
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        let isValid = true;
+        const inputs = form.querySelectorAll('input, textarea');
+        
+        inputs.forEach(input => {
+          const errorMsg = input.nextElementSibling;
+          
+          if (input.validity.valueMissing) {
+            errorMsg.style.display = 'block';
+            isValid = false;
+          } else if (input.type === 'email' && !input.validity.valid) {
+            input.nextElementSibling.nextElementSibling.style.display = 'block';
+            isValid = false;
+          } else if (input.tagName === 'TEXTAREA' && input.value.length < 20) {
+            input.nextElementSibling.nextElementSibling.style.display = 'block';
+            isValid = false;
+          } else {
+            errorMsg.style.display = 'none';
+            if (input.nextElementSibling.nextElementSibling) {
+              input.nextElementSibling.nextElementSibling.style.display = 'none';
+            }
+          }
+        });
+        
+        if (isValid) {
+          form.querySelector('.success_wrapper').style.display = 'block';
+          form.reset();
+          setTimeout(() => {
+            form.querySelector('.success_wrapper').style.display = 'none';
+          }, 3000);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

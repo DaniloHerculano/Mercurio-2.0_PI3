@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <title>Sobre - Mercúrio</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="icon" href="images/favicon.ico">
+  <link rel="shortcut icon" href="images/favicon.ico">
+  <style>
+    /* RESET E ESTILOS GERAIS */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+    
+    .clear {
+      clear: both;
+    }
+    
+    /* CABEÇALHO */
+    header {
+      background-color: #333;
+      color: white;
+      padding: 15px 0;
+      position: relative;
+    }
+    
+    .container_12 {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 15px;
+    }
+    
+    .titulo-principal {
+      font-size: 2em;
+      margin: 10px 0;
+      padding-right: 50px;
+    }
+    
+    .color1 { color: #f0a500; }
+    .color0 { color: white; }
+    .color2 { color: #f0a500; }
+    
+    /* MENU PRINCIPAL */
+    .sf-menu {
+      display: flex;
+      list-style: none;
+      margin: 15px 0 0 0;
+      padding: 0;
+    }
+    
+    .sf-menu li {
+      margin: 0 10px;
+    }
+    
+    .sf-menu a {
+      color: white;
+      text-decoration: none;
+      padding: 8px 12px;
+      display: block;
+      transition: all 0.3s;
+    }
+    
+    .sf-menu a:hover {
+      background-color: #f0a500;
+      color: #333;
+    }
+    
+    /* BOTÃO MENU MOBILE */
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      z-index: 1000;
+    }
+    
+    /* CONTEÚDO */
+    .content {
+      padding: 30px 0;
+    }
+    
+    .grid_7, .grid_4 {
+      margin-bottom: 30px;
+    }
+    
+    .img_inner {
+      max-width: 100%;
+      height: auto;
+      margin-right: 20px;
+      margin-bottom: 15px;
+    }
+    
+    .fleft {
+      float: left;
+    }
+    
+    .extra_wrapper {
+      overflow: hidden;
+    }
+    
+    .text1 {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    h3 {
+      font-size: 1.5em;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    
+    /* LISTA NUMERADA */
+    .list {
+      list-style: none;
+      margin-bottom: 20px;
+    }
+    
+    .list_count {
+      float: left;
+      width: 30px;
+      height: 30px;
+      background: #f0a500;
+      color: white;
+      text-align: center;
+      line-height: 30px;
+      border-radius: 50%;
+      margin-right: 15px;
+    }
+    
+    /* DEPOIMENTOS */
+    .grid_4 blockquote {
+      background: #f9f9f9;
+      border-left: 3px solid #f0a500;
+      padding: 15px;
+      margin: 0 0 20px;
+    }
+    
+    /* RODAPÉ */
+    footer {
+      background-color: #333;
+      color: white;
+      text-align: center;
+      padding: 30px 0;
+      margin-top: 30px;
+    }
+    
+    .f_phone {
+      margin-bottom: 15px;
+    }
+    
+    .socials a {
+      color: white;
+      margin: 0 10px;
+      font-size: 1.5em;
+    }
+    
+    .copy {
+      margin-top: 20px;
+      font-size: 0.9em;
+    }
+    
+    .brand {
+      font-weight: bold;
+      color: #f0a500;
+    }
+    
+    /* RESPONSIVIDADE */
+    @media (max-width: 992px) {
+      .grid_7, .grid_4 {
+        width: 100%;
+      }
+      
+      .prefix_1 {
+        margin-left: 0;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      /* MENU MOBILE */
+      .menu-toggle {
+        display: block;
+      }
+      
+      .sf-menu {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        background-color: #444;
+        position: absolute;
+        top: 80px;
+        left: 0;
+        padding: 20px 0;
+        margin-top: 0;
+      }
+      
+      .sf-menu.active {
+        display: flex;
+      }
+      
+      .sf-menu li {
+        margin: 5px 0;
+        text-align: center;
+      }
+      
+      .titulo-principal {
+        font-size: 1.5em;
+      }
+      
+      .img_inner {
+        float: none;
+        margin-right: 0;
+        width: 100%;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .titulo-principal {
+        font-size: 1.3em;
+      }
+      
+      .list_count {
+        margin-right: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- CABEÇALHO -->
+  <header>
+    <div class="container_12">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      
+      <h1 class="titulo-principal">
+        <span class="color1">MERCÚRIO </span>
+        <span class="color0">Seu Espaço, Nosso Mobiliário</span>
+      </h1>
+      
+      <nav id="mainNav">
+        <ul class="sf-menu">
+          <li><a href="index.html">Início</a></li>
+          <li class="current"><a href="index-1.html">Sobre</a></li>
+          <li><a href="login.html">Área do Cliente</a></li>
+          <li><a href="index-2.html">Produtos</a></li>
+          <li><a href="index-3.html">Serviços</a></li>
+          <li><a href="index-4.html">Contatos</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO -->
+  <div class="content">
+    <div class="container_12">
+      <div class="grid_7">
+        <h3>Sobre nós</h3>
+        <img src="images/page2_img1.jpg" alt="Sobre a Mercúrio" class="img_inner fleft">
+        <div class="extra_wrapper">
+          <div class="text1 color2">
+            <a href="#">Mobilhamos sua Festa com Estilo e Praticidade</a>
+          </div>
+          <p>Na Mercúrio, somos especialistas em locação de cadeiras, mesas e mobiliário para eventos de todos os tipos.</p>
+          <p>Oferecemos uma ampla variedade de produtos de qualidade, adaptados ao seu estilo e tema, garantindo que seu evento seja um sucesso.</p>
+        </div>
+        <div class="clear cl1"></div>
+        <p>Nosso compromisso é com a satisfação do cliente, oferecendo serviços de entrega, montagem e retirada, além de suporte personalizado.</p>
+        <p>Conte conosco para transformar seu evento em uma experiência memorável!</p>
+      </div>
+      
+      <div class="grid_4 prefix_1">
+        <h3>Por que Alugar Conosco?</h3>
+        <ul class="list">
+          <li class="list_count">1</li>
+          <li class="extra_wrapper">
+            <div class="text1 color2"><a href="#">Variedade de Cadeiras e Mesas para Todos os Eventos</a></div>
+            Oferecemos uma ampla variedade de cadeiras e mesas para atender a todos os tipos de eventos
+          </li>
+        </ul>
+        <ul class="list">
+          <li class="list_count">2</li>
+          <li class="extra_wrapper">
+            <div class="text1 color2"><a href="#">Excelentes preços</a></div>
+            Preços competitivos, os melhores da região.
+          </li>
+        </ul>
+        <ul class="list">
+          <li class="list_count">3</li>
+          <li class="extra_wrapper">
+            <div class="text1 color2"><a href="#">Serviço de personalização</a></div>
+            Personalização de cadeiras e mesas com capas, almofadas e acessórios decorativos para combinar com o tema do evento
+          </li>
+        </ul>
+        <ul class="list">
+          <li class="list_count">4</li>
+          <li class="extra_wrapper">
+            <div class="text1 color2"><a href="#">Entrega e Retirada</a></div>
+            Serviço de entrega e retirada de cadeiras e mesas no local do evento, garantindo conveniência e tranquilidade para você
+          </li>
+        </ul>
+      </div>
+      
+      <div class="clear"></div>
+      
+      <div class="grid_12">
+        <h3>Opiniões</h3>
+      </div>
+      
+      <div class="grid_4">
+        <blockquote>
+          <p><i>Doutor eu não me engano... Locação de mesas e cadeiras é na Mercúrio! Recomendadíssimo!</i></p>
+          <div class="color2">Silvio Santos</div>
+        </blockquote>
+      </div>
+      
+      <div class="grid_4">
+        <blockquote>
+          <p><i>O louco meu!!! Que plataforma de aluguel excelente! Já recomendei para meu amigo Caçulinha!!!</i></p>
+          <div class="color2">Fausto Silva</div>
+        </blockquote>
+      </div>
+      
+      <div class="grid_4">
+        <blockquote>
+          <p><i>Tudo foi muito rápido (como eu)! Desde o acesso ao site e o atendimento, até o tempo de entrega das cadeiras e mesas no local do evento. A Mercúrio é excelente!</i></p>
+          <div class="color2">Ayrton Senna</div>
+        </blockquote>
+      </div>
+    </div>
+  </div>
+
+  <!-- RODAPÉ -->
+  <footer>
+    <div class="container_12">
+      <div style="margin-bottom: 20px;">
+        <i class="fa fa-phone"></i> <span>Ligue para nós:</span> 19 99999-5555
+      </div>
+      
+      <div class="socials" style="margin-bottom: 20px;">
+        <a href="https://api.whatsapp.com/" class="fa fa-whatsapp"></a>
+        <a href="https://www.facebook.com/" class="fa fa-facebook"></a>
+        <a href="https://www.instagram.com/" class="fa fa-instagram"></a>
+        <a href="https://twitter.com/" class="fa fa-twitter"></a>
+      </div>
+      
+      <div>
+        <div style="margin-bottom: 10px;">
+          <span style="font-weight: bold; color: #f0a500;">MERCÚRIO</span>
+          &copy; 2025 | <a href="#" style="color: #f0a500;">Política de Privacidade</a>
+        </div>
+        <div>
+          <a href="group-members.html" style="color: #aaa; font-size: 0.8em;">Site desenvolvido por DRP04-PJI310-SALA-004GRUPO-009 - PROJETO INTEGRADOR III - UNIVESP</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- JAVASCRIPT -->
+  <script>
+    // CONTROLE DO MENU MOBILE - VERSÃO GARANTIDA
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuToggle = document.getElementById('menuToggle');
+      const mainNav = document.querySelector('.sf-menu');
+      
+      // Verifica se é mobile no carregamento
+      if (window.innerWidth <= 768) {
+        mainNav.style.display = 'none';
+      }
+      
+      // Controle do clique no botão
+      menuToggle.addEventListener('click', function() {
+        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+      
+      // Atualiza ao redimensionar a tela
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

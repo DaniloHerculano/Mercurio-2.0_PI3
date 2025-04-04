@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <title>Mercúrio - Projeto e Grupo</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="icon" href="images/favicon.ico">
+  <link rel="shortcut icon" href="images/favicon.ico">
+  <style>
+    /* RESET E ESTILOS GERAIS */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+    
+    .clear {
+      clear: both;
+    }
+    
+    /* CABEÇALHO */
+    header {
+      background-color: #333;
+      color: white;
+      padding: 15px 0;
+      position: relative;
+    }
+    
+    .container_12 {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 15px;
+    }
+    
+    .titulo-principal {
+      font-size: 2em;
+      margin: 10px 0;
+      padding-right: 50px;
+    }
+    
+    .color1 { color: #f0a500; }
+    .color0 { color: white; }
+    
+    /* MENU PRINCIPAL */
+    .sf-menu {
+      display: flex;
+      list-style: none;
+      margin: 15px 0 0 0;
+      padding: 0;
+    }
+    
+    .sf-menu li {
+      margin: 0 10px;
+    }
+    
+    .sf-menu a {
+      color: white;
+      text-decoration: none;
+      padding: 8px 12px;
+      display: block;
+      transition: all 0.3s;
+    }
+    
+    .sf-menu a:hover {
+      background-color: #f0a500;
+      color: #333;
+    }
+    
+    /* BOTÃO MENU MOBILE */
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      z-index: 1000;
+    }
+    
+    /* CONTEÚDO */
+    .content {
+      padding: 30px 0;
+    }
+    
+    h2 {
+      font-size: 1.2em;  /* Diminuí de 1.5em para 1.2em */
+      margin-bottom: 12px;
+      color: #333;
+      font-weight: normal;  /* Removi o negrito padrão */
+    }
+    
+    h3 {
+      font-size: 1.1em;  /* Diminuí um pouco também */
+      margin: 18px 0 8px 0;
+      color: #f0a500;
+    }
+    
+    .grid_6 {
+      width: 48%;
+      float: left;
+      margin-bottom: 25px;
+    }
+    
+    /* RODAPÉ */
+    footer {
+      background-color: #333;
+      color: white;
+      text-align: center;
+      padding: 30px 0;
+      margin-top: 30px;
+    }
+    
+    .socials a {
+      color: white;
+      margin: 0 10px;
+      font-size: 1.5em;
+    }
+    
+    /* RESPONSIVIDADE */
+    @media (max-width: 768px) {
+      /* MENU MOBILE */
+      .menu-toggle {
+        display: block;
+      }
+      
+      .sf-menu {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        background-color: #444;
+        position: absolute;
+        top: 80px;
+        left: 0;
+        padding: 20px 0;
+        margin-top: 0;
+      }
+      
+      .sf-menu.active {
+        display: flex;
+      }
+      
+      .sf-menu li {
+        margin: 5px 0;
+        text-align: center;
+      }
+      
+      /* LAYOUT */
+      .grid_6 {
+        width: 100%;
+        float: none;
+      }
+      
+      .titulo-principal {
+        font-size: 1.5em;
+      }
+
+      h2 {
+        font-size: 1.1em;  /* Tamanho menor em mobile */
+      }
+      
+      h3 {
+        font-size: 1em;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .titulo-principal {
+        font-size: 1.3em;
+      }
+      
+      h2 {
+        font-size: 1em;  /* Tamanho ainda menor em telas pequenas */
+      }
+      
+      h3 {
+        font-size: 0.9em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- CABEÇALHO -->
+  <header>
+    <div class="container_12">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      
+      <h1 class="titulo-principal">
+        <span class="color1">MERCÚRIO </span>
+        <span class="color0">Seu Espaço, Nosso Mobiliário</span>
+      </h1>
+      
+      <nav id="mainNav">
+        <ul class="sf-menu">
+          <li><a href="index.html">Início</a></li>
+          <li><a href="index-1.html">Sobre</a></li>
+          <li><a href="login.html">Área do Cliente</a></li>
+          <li class="current"><a href="group-members.html">Projeto e Grupo</a></li>
+          <li><a href="index-3.html">Serviços</a></li>
+          <li><a href="index-4.html">Contatos</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO -->
+  <div class="content">
+    <div class="container_12">
+      <div class="grid_6">
+        <h3>Disciplina</h3>
+        <h2>DRP04-Projeto Integrador em Computação II-Turma 005.</h2>
+
+        <h3>Grupo</h3>
+        <h2>DRP04-PJI310-SALA-004GRUPO-009</h2>
+        
+        <h3>Tema escolhido</h3>
+        <h2>Criar uma interface intuitiva, em forma de site, no qual o cliente tenha autonomia para se cadastrar, realizar pedidos e verificar disponibilidade dos produtos.</h2>
+        <h2>Melhorias: aprimorando o design visual, a acessibilidade e o desempenho técnico para oferecer uma experiência do usuário mais fluida e envolvente.</h2>
+
+        <h3>Título provisório do trabalho</h3>
+        <h2>Mercúrio: Seu espaço, nosso mobiliário.</h2>
+
+        <h3>Problema</h3>
+        <h2>Dificuldade em gerenciar o grande número de pedidos de reservas, que atualmente são feitas pelos clientes através do Whatsapp e registradas pelos funcionários da empresa.</h2>
+        <h2>Melhorias: Implementação de hospedagem, aprimoramento do armazenamento de dados para além do navegador e otimização da interface para melhor adaptação a telas menores (smartphones).</h2>	
+
+        <h3>Objetivo</h3>
+        <h2>Desenvolver um site que possibilite ao usuário realizar a reserva do que deseja alugar sem a necessidade de entrar em contato com o estabelecimento, podendo escolher os produtos e datas no próprio site, concluir o pedido e realizar o pagamento.</h2>
+        <h2>Melhorias: Implementar a hospedagem em nuvem para viabilizar o uso do website pela empresa, integrar um banco de dados para garantir a persistência dos registros e otimizar a responsividade da interface, assegurando uma experiência acessível em dispositivos móveis.</h2>
+
+        <h3>Pólo</h3>
+        <h2>UNIVESP - Vinhedo/ SP.</h2>
+
+        <h3>Orientador</h3>
+        <h2>Pedro Miguel Camargo da Cunha Rego </h2>		
+      </div>
+
+      <div class="grid_6">
+        <h3>Membros do grupo</h3>
+        <h2>2209460 - Cristina Miss de Jesus</h2>
+        <h2>2232562 - Danilo Valentim Herculano</h2>
+        <h2>2202369 - Fernanda Oliveira Piotto</h2>
+        <h2>2205161 - Humberto Piotto</h2>
+        <h2>2202931 - Jéssica de Godoy Barbosa</h2>
+        <h2>1703182 - Luiz Felipe e Silva Cardim de Queroz Guimarães</h2>
+        <h2>2214487 - Nicoli Rotella Sartori</h2>
+        <h2>2232924 - Suelen Turibio Lopes</h2>
+      </div>
+      <div class="clear"></div>
+    </div>
+  </div>
+
+  <!-- RODAPÉ -->
+  <footer>
+    <div class="container_12">
+      <div style="margin-bottom: 20px;">
+        <i class="fa fa-phone"></i> <span>Ligue para nós:</span> 19 99999-5555
+      </div>
+      
+      <div class="socials" style="margin-bottom: 20px;">
+        <a href="https://api.whatsapp.com/" class="fa fa-whatsapp"></a>
+        <a href="https://www.facebook.com/" class="fa fa-facebook"></a>
+        <a href="https://www.instagram.com/" class="fa fa-instagram"></a>
+        <a href="https://twitter.com/" class="fa fa-twitter"></a>
+      </div>
+      
+      <div>
+        <div style="margin-bottom: 10px;">
+          <span style="font-weight: bold; color: #f0a500;">MERCÚRIO</span>
+          &copy; 2025 | <a href="#" style="color: #f0a500;">Política de Privacidade</a>
+        </div>
+        <div>
+          <a href="group-members.html" style="color: #aaa; font-size: 0.8em;">Site desenvolvido por DRP04-PJI310-SALA-004GRUPO-009 - PROJETO INTEGRADOR III - UNIVESP</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT -->
+  <script>
+    // CONTROLE DO MENU MOBILE - VERSÃO GARANTIDA
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuToggle = document.getElementById('menuToggle');
+      const mainNav = document.querySelector('.sf-menu');
+      
+      // Verifica se é mobile no carregamento
+      if (window.innerWidth <= 768) {
+        mainNav.style.display = 'none';
+      }
+      
+      // Controle do clique no botão
+      menuToggle.addEventListener('click', function() {
+        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+      
+      // Atualiza ao redimensionar a tela
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
