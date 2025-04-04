@@ -1,7 +1,11 @@
 # Mercurio-2.0-PI3-
 Mercúrio - Projeto Integrador III - Site simples para aluguel de equipamentos
 
-Release Notes – Atualizações do Projeto
+# Resumo do projeto
+Projeto desenvolvido para aprimorar o processo de locação de móveis para uma empresa de aluguel de mobiliário. Após um levantamento de novas necessidades, foi decidido criar uma plataforma web intuitiva que permite ao cliente cadastrar-se, fazer reservas e verificar a disponibilidade dos produtos de forma autônoma, sem a necessidade de interação constante com os funcionários.
+A plataforma utiliza HTML, CSS, Javascript, e integra-se com APIs para uma experiência fluida e eficiente. A interface foi projetada com foco na acessibilidade e na experiência do usuário final, permitindo fácil navegação e segurança durante o processo de reserva e pagamento.
+
+# Release Notes – Atualizações do Projeto
 
 24 a 28/03 – Autor: Danilo Herculano  
 - Melhorias de responsividade para PC e celular nas páginas: Início, Sobre, Área do Cliente, Produtos, Serviços e Contatos.
