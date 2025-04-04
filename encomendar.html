@@ -9,7 +9,6 @@
   <link rel="icon" href="images/favicon.ico">
   <link rel="shortcut icon" href="images/favicon.ico">
   <style>
-    /* RESET E ESTILOS GERAIS */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -27,7 +26,6 @@
       clear: both;
     }
     
-    /* CABEÇALHO */
     header {
       background-color: #333;
       color: white;
@@ -51,7 +49,6 @@
     .color1 { color: #f0a500; }
     .color0 { color: white; }
     
-    /* MENU PRINCIPAL */
     .sf-menu {
       display: flex;
       list-style: none;
@@ -81,7 +78,6 @@
       color: #333;
     }
     
-    /* BOTÃO MENU MOBILE */
     .menu-toggle {
       display: none;
       background: none;
@@ -95,7 +91,6 @@
       z-index: 1000;
     }
     
-    /* CONTEÚDO PRINCIPAL */
     .content {
       padding: 30px 0;
     }
@@ -114,7 +109,6 @@
       font-weight: bold;
     }
     
-    /* FORMULÁRIO */
     input[type="text"],
     input[type="number"],
     select {
@@ -138,11 +132,9 @@
       border: 1px solid #ddd;
     }
     
-    /* BOTÕES */
     .btn2, .btn3 {
       display: inline-block;
       padding: 10px 20px;
-      background-color: #1b6222;
       color: white;
       border: none;
       border-radius: 5px;
@@ -151,16 +143,26 @@
       transition: background-color 0.3s;
     }
     
-    .btn2:hover, .btn3:hover {
-      background-color: #f0a500;
+    .btn2 {
+      background-color: #1b6222;
     }
     
-    /* ESTOQUE */
+    .btn3 {
+      background-color: #d9534f;
+    }
+    
+    .btn2:hover {
+      background-color: #0f4a16;
+    }
+    
+    .btn3:hover {
+      background-color: #c9302c;
+    }
+    
     #estoqueMesas, #estoqueCadeiras, #estoqueBancos {
       margin: 5px 0;
     }
     
-    /* MODAL */
     #fade {
       display: none;
       position: fixed;
@@ -205,7 +207,6 @@
       flex: 0 0 48%;
     }
     
-    /* RODAPÉ */
     footer {
       background-color: #333;
       color: white;
@@ -220,9 +221,7 @@
       font-size: 1.5em;
     }
     
-    /* RESPONSIVIDADE */
     @media (max-width: 768px) {
-      /* MENU MOBILE */
       .menu-toggle {
         display: block;
       }
@@ -248,13 +247,11 @@
         text-align: center;
       }
       
-      /* TÍTULO */
       .titulo-principal {
         font-size: 1.5em;
         padding-right: 0;
       }
       
-      /* FORMULÁRIO */
       .radio-group {
         display: flex;
         flex-direction: column;
@@ -286,7 +283,6 @@
   </style>
 </head>
 <body>
-  <!-- CABEÇALHO -->
   <header>
     <div class="container_12">
       <button class="menu-toggle" id="menuToggle">☰</button>
@@ -310,12 +306,10 @@
     </div>
   </header>
 
-  <!-- CONTEÚDO PRINCIPAL -->
   <div class="content">
     <div class="container_12">
       <h5>Precisa de mesas e cadeiras para seu evento? <br>Faça já o seu pedido:</h5>
 
-      <!-- Controle de Estoque -->
       <div style="margin-top: 20px;">
         <h4>Estoque Disponível</h4>
         <p id="estoqueMesas">Mesas: </p>
@@ -357,16 +351,14 @@
         <p><b>VALOR TOTAL (COM FRETE): R$ <span id="totalpedido">0.00</span></b></p>
       </div>
       
-      <button type="button" class="btn3" id="btn3" onclick="valor()">Calcular Total</button>
+      <button type="button" class="btn2" id="btn3" onclick="valor()">Calcular Total</button>
 
-      <!-- Nova seção para escolha de entrega/retirada -->
       <h6>Forma de recebimento:</h6>
       <div class="radio-group">
         <label><input type="radio" name="entrega" id="retirada" value="retirada" checked onclick="toggleAddress(false)"> Retirar na loja</label>
         <label><input type="radio" name="entrega" id="entrega" value="entrega" onclick="toggleAddress(true)"> Receber em casa</label>
       </div>
 
-      <!-- Seção de endereço (aparece apenas quando "Receber em casa" está selecionado) -->
       <div id="address-section" style="display: none;">
         <h6>Endereço de entrega:</h6>
         <div class="radio-group">
@@ -374,11 +366,10 @@
           <label><input type="radio" name="endereco_opcao" id="endereco_novo" value="novo" onclick="toggleAddressFields(true)"> Usar novo endereço</label>
         </div>
 
-        <!-- Campos para novo endereço (aparecem apenas quando "Usar novo endereço" está selecionado) -->
         <div id="novo-endereco-section" class="address-section">
           <h6>Novo endereço:</h6>
           <input type="text" id="novo-cep" maxlength="9" placeholder="CEP (00000-000)" onblur="buscarCEP()">
-          <button type="button" class="btn3" onclick="buscarCEP()">Buscar CEP</button>
+          <button type="button" class="btn2" onclick="buscarCEP()">Buscar CEP</button>
           <input type="text" id="novo-rua" placeholder="Rua">
           <input type="text" id="novo-numero" placeholder="Número">
           <input type="text" id="novo-complemento" placeholder="Complemento">
@@ -395,7 +386,6 @@
       
       <button id="open-modal" class="btn2" onclick="fim()">Finalizar Pedido</button>
       
-      <!-- MODAL DE CONFIRMAÇÃO -->
       <div id="fade"></div>
       <div id="modal">
         <div class="modal-header" id="titulo">
@@ -407,14 +397,13 @@
           <br>Em caso de dúvidas entre em contato pelo Whatsapp.
         </div>
         <div class="modal-footer">
-          <button id="return-btn" class="btn3">Retornar</button>
+          <button id="cancel-btn" class="btn3">Cancelar</button>
           <button id="confirm-btn" class="btn2">Tudo certo</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- RODAPÉ -->
   <footer>
     <div class="container_12">
       <div style="margin-bottom: 20px;">
@@ -440,21 +429,17 @@
     </div>
   </footer>
 
-  <!-- SCRIPTS -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
   <script>
-    // CONTROLE DO MENU MOBILE
     document.addEventListener('DOMContentLoaded', function() {
       const menuToggle = document.getElementById('menuToggle');
       const mainNav = document.querySelector('.sf-menu');
       
-      // Verifica se é mobile no carregamento
       if (window.innerWidth <= 768) {
         mainNav.style.display = 'none';
       }
       
-      // Controle do clique no botão
       menuToggle.addEventListener('click', function() {
         if (mainNav.style.display === 'none' || mainNav.style.display === '') {
           mainNav.style.display = 'flex';
@@ -463,7 +448,6 @@
         }
       });
       
-      // Atualiza ao redimensionar a tela
       window.addEventListener('resize', function() {
         if (window.innerWidth > 768) {
           mainNav.style.display = 'flex';
@@ -472,7 +456,6 @@
         }
       });
 
-      // Datepicker
       $("#datepicker-start").datepicker({
         dateFormat: "dd/mm/yy",
         minDate: 0,
@@ -488,19 +471,11 @@
         minDate: 1
       });
       
-      // Inicializa estoque
       exibirEstoque();
       
-      // Configura o modal
-      const closeModalBtn = document.getElementById("close-modal");
       const confirmBtn = document.getElementById("confirm-btn");
-      const returnBtn = document.getElementById("return-btn");
-
-      closeModalBtn.addEventListener("click", () => {
-        document.getElementById("fade").style.display = "none";
-        document.getElementById("modal").style.display = "none";
-        window.location.href = "customer_area.html";
-      });
+      const cancelBtn = document.getElementById("cancel-btn");
+      const closeModalBtn = document.getElementById("close-modal");
 
       confirmBtn.addEventListener("click", () => {
         document.getElementById("fade").style.display = "none";
@@ -508,16 +483,20 @@
         window.location.href = "customer_area.html";
       });
 
-      returnBtn.addEventListener("click", () => {
+      cancelBtn.addEventListener("click", () => {
         document.getElementById("fade").style.display = "none";
         document.getElementById("modal").style.display = "none";
       });
 
-      // Mostra/oculta seção de endereço baseado na escolha inicial
+      closeModalBtn.addEventListener("click", () => {
+        document.getElementById("fade").style.display = "none";
+        document.getElementById("modal").style.display = "none";
+        window.location.href = "customer_area.html";
+      });
+
       toggleAddress(false);
     });
 
-    // FUNÇÕES DE CONTROLE DE ENDEREÇO
     function toggleAddress(show) {
       document.getElementById('address-section').style.display = show ? 'block' : 'none';
       document.getElementById('loja-info').style.display = show ? 'none' : 'block';
@@ -531,7 +510,6 @@
       document.getElementById('novo-endereco-section').style.display = show ? 'block' : 'none';
     }
 
-    // FUNÇÃO PARA BUSCAR CEP
     function buscarCEP() {
       const cep = document.getElementById('novo-cep').value.replace(/\D/g, '');
       
@@ -548,13 +526,11 @@
             return;
           }
           
-          // Preenche os campos com os dados da API
           document.getElementById('novo-rua').value = data.logradouro || '';
           document.getElementById('novo-bairro').value = data.bairro || '';
           document.getElementById('novo-cidade').value = data.localidade || '';
           document.getElementById('novo-estado').value = data.uf || '';
           
-          // Foca no campo de número
           document.getElementById('novo-numero').focus();
         })
         .catch(error => {
@@ -563,7 +539,6 @@
         });
     }
 
-    // FUNÇÕES DE EXIBIÇÃO DOS MODELOS
     function change1() {
       document.getElementById("change").innerHTML = 
         "<img src='images/page1_img1.jpg' style='max-width:100%;height:auto;'><br>" +
@@ -582,7 +557,6 @@
         "<b>EXECUTIVO</b><br>Mesa R$40,00 /dia<br>Cadeira R$12,00 /dia<br>Banco R$8,00 /dia";
     }
 
-    // FUNÇÃO DE CÁLCULO DO VALOR TOTAL
     function valor() {
       const startDate = $("#datepicker-start").datepicker("getDate");
       const endDate = $("#datepicker-end").datepicker("getDate");
@@ -632,18 +606,15 @@
       document.getElementById("totaldiaria").innerHTML = totalDiaria.toFixed(2);
       document.getElementById("totalpedido_nfrete").innerHTML = totalSemFrete.toFixed(2);
       
-      // Se for retirada, zera o frete
       if (document.getElementById('retirada').checked) {
         document.getElementById("frete-section").style.display = "none";
         document.getElementById("totalpedido").innerHTML = totalSemFrete.toFixed(2);
       } else {
-        // Mostra a seção de frete e calcula
         document.getElementById("frete-section").style.display = "block";
         calcularFrete(totalSemFrete);
       }
     }
 
-    // FUNÇÃO PARA CALCULAR FRETE
     function calcularFrete(totalSemFrete) {
       const isEntrega = document.getElementById('entrega').checked;
       
@@ -653,7 +624,6 @@
         return;
       }
       
-      // Verifica se é endereço cadastrado ou novo
       const usarEnderecoCadastrado = document.getElementById('endereco_cadastrado').checked;
       let cep = '';
       
@@ -669,7 +639,6 @@
         cep = document.getElementById('novo-cep').value.replace(/\D/g, '');
       }
       
-      // Se não tem CEP, usa um valor padrão
       if (!cep || cep.length !== 8) {
         const fretePadrao = 50.00;
         document.getElementById("valor-frete").innerHTML = fretePadrao.toFixed(2);
@@ -677,20 +646,16 @@
         return;
       }
       
-      // Simulação de cálculo de frete (substituir por API real)
-      const frete = Math.floor(Math.random() * 50) + 20; // Valor aleatório entre 20 e 70
+      const frete = Math.floor(Math.random() * 50) + 20;
       document.getElementById("valor-frete").innerHTML = frete.toFixed(2);
       document.getElementById("totalpedido").innerHTML = (totalSemFrete + frete).toFixed(2);
     }
 
-    // FUNÇÃO DE FINALIZAÇÃO DO PEDIDO
     function fim() {
-      // Mostra os botões apropriados durante a validação
-      document.getElementById("confirm-btn").style.display = "none";
-      document.getElementById("return-btn").style.display = "block";
+      document.getElementById("confirm-btn").style.display = "block";
+      document.getElementById("cancel-btn").style.display = "block";
       document.getElementById("close-modal").style.display = "none";
 
-      // Verifica se todos os campos estão preenchidos
       const requiredFields = [
         'datepicker-start', 'datepicker-end', 'quantidadebancos', 
         'quantidadecadeiras', 'quantidademesas'
@@ -709,7 +674,6 @@
         return;
       }
 
-      // Verifica estoque
       const estoque = JSON.parse(localStorage.getItem('estoque')) || { mesas: 500, cadeiras: 500, bancos: 500 };
       const bancos = parseInt(document.getElementById("quantidadebancos").value);
       const cadeiras = parseInt(document.getElementById("quantidadecadeiras").value);
@@ -720,7 +684,6 @@
         return;
       }
 
-      // Verifica se é entrega e tem endereço válido
       const isEntrega = document.getElementById('entrega').checked;
       let enderecoEntrega = '';
       
@@ -742,7 +705,6 @@
           
           enderecoEntrega = `${userData.rua}, ${userData.numero || 'S/N'}${userData.complemento ? ' - ' + userData.complemento : ''} - ${userData.bairro}, ${userData.cidade} - ${userData.estado}, CEP: ${userData.cep}`;
         } else {
-          // Verifica campos do novo endereço
           const novoCep = document.getElementById('novo-cep').value;
           const novoRua = document.getElementById('novo-rua').value;
           const novoNumero = document.getElementById('novo-numero').value;
@@ -760,7 +722,6 @@
         enderecoEntrega = 'Av. Independência, 5110 - Barra Funda, Vinhedo - SP, 13280-000 (Retirada na loja)';
       }
       
-      // Coleta todos os dados do pedido
       const pedido = {
         dataInicio: document.getElementById("datepicker-start").value,
         dataRetorno: document.getElementById("datepicker-end").value,
@@ -778,25 +739,21 @@
         dataPedido: new Date().toLocaleString()
       };
       
-      // Calcula dias (para exibição)
       const startDate = $("#datepicker-start").datepicker("getDate");
       const endDate = $("#datepicker-end").datepicker("getDate");
       const diffTime = Math.abs(endDate - startDate);
       pedido.dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       
-      // Salva no LocalStorage
       let pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
       pedido.numero = pedidos.length + 1;
       pedidos.push(pedido);
       localStorage.setItem('pedidos', JSON.stringify(pedidos));
       
-      // Atualiza estoque
       estoque.mesas -= pedido.mesas;
       estoque.cadeiras -= pedido.cadeiras;
       estoque.bancos -= pedido.bancos;
       localStorage.setItem('estoque', JSON.stringify(estoque));
       
-      // Exibe mensagem de sucesso
       document.getElementById("corpo").innerHTML = `
         <h4 style="color: #1b6222;">Pedido realizado com sucesso!</h4>
         <p><strong>Número do Pedido:</strong> ${pedido.numero}</p>
@@ -807,20 +764,15 @@
         <p>Em breve entraremos em contato para confirmar os detalhes.</p>
       `;
       
-      // Mostra os botões de confirmação e oculta o de retornar
       document.getElementById("confirm-btn").style.display = "block";
-      document.getElementById("return-btn").style.display = "none";
-      document.getElementById("close-modal").style.display = "none";
+      document.getElementById("cancel-btn").style.display = "none";
 
-      // Mostra o modal
       document.getElementById("fade").style.display = "block";
       document.getElementById("modal").style.display = "block";
       
-      // Atualiza exibição do estoque
       exibirEstoque();
     }
 
-    // FUNÇÃO PARA EXIBIR ESTOQUE
     function exibirEstoque() {
       const estoque = JSON.parse(localStorage.getItem('estoque')) || { mesas: 500, cadeiras: 500, bancos: 500 };
       document.getElementById('estoqueMesas').innerText = `Mesas: ${estoque.mesas}`;
