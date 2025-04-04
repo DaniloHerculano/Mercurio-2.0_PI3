@@ -1,4 +1,4 @@
-# Mercurio-2.0-PI3-
+# Mercurio-2.0-PI3
 - Universidade: UNIVESP
 - Curso: Ciência de Dados
 - Turma: DRP04-PJI310-SALA-004GRUPO-009
@@ -54,9 +54,10 @@ A plataforma utiliza HTML, CSS, Javascript, e integra-se com APIs para uma exper
 
 
 Pendências e Correções Futuras
-- Após clicar em Fechar pedido, opçao para confirmar ou cancelar. Atualmente há apenas confirmar pedido.
-- Criar simulação de pagamento - paro de funcionar com site responsivo
+- Após clicar em 'Fechar Pedido', deve haver a opção de confirmar ou cancelar. Atualmente, apenas a confirmação está disponível.
+- Implementar uma simulação de pagamento. A funcionalidade deixou de funcionar após a aplicação do layout responsivo.
 - Corrigir exibição do valor do frete na área do usuário logado após o aluguel.  
 - Ajustar o rótulo "Endereço de Entrega" para "Endereço de Retirada" ao selecionar retirada.  
 - Criar usuário administrador para alterar valores e produtos no banco de dados.
-- Banco de dados: avaliar separação do HTML e JavaScript e centralização das edições em um único arquivo.  
+- Criação de um banco de dados "real"
+- Avaliar a separação do HTML e JavaScript e centralização das edições em um único arquivo - se necessário  
