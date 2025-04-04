@@ -109,7 +109,7 @@
       margin-bottom: 30px;
     }
     
-    /* GALERIA */
+    /* GALERIA - AJUSTES PARA ALINHAMENTO PERFEITO */
     .gallery {
       display: flex;
       flex-wrap: wrap;
@@ -119,21 +119,25 @@
     
     .gallery-item {
       width: 48%;
-      margin-bottom: 20px;
+      margin-bottom: 30px;
       position: relative;
-    }
-    
-    .gallery img {
-      width: 100%;
-      height: auto;
-      border: 1px solid #ddd;
-      transition: transform 0.3s;
+      display: flex;
+      flex-direction: column;
     }
     
     .gallery-link {
       display: block;
       overflow: hidden;
       position: relative;
+      flex-grow: 1;
+    }
+    
+    .gallery img {
+      width: 100%;
+      height: 250px; /* Altura fixa para alinhamento */
+      object-fit: cover; /* Garante que a imagem cubra o espaço sem distorcer */
+      border: 1px solid #ddd;
+      transition: transform 0.3s;
     }
     
     .gallery img:hover {
@@ -259,6 +263,10 @@
       
       .gallery-item {
         width: 100%;
+      }
+      
+      .gallery img {
+        height: 300px; /* Ajuste para mobile */
       }
     }
     
