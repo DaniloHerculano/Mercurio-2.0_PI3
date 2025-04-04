@@ -35,7 +35,7 @@ A plataforma utiliza HTML, CSS, Javascript, e integra-se com APIs para uma exper
 02/04 – Autor: Danilo Herculano  
 - Adicionado link para Instagram.  
 - Alteração no layout da recuperação de senha.  
-- Criada tela "Eventos" e incluído menu "Eventos" em todas as páginas.  
+- Implementada tela "Eventos" e incluído menu "Eventos" em todas as páginas.  
 
 03/04 – Autor: Danilo Herculano
 - Alinhamento do logo da empresa na tela inicial.
@@ -44,6 +44,7 @@ A plataforma utiliza HTML, CSS, Javascript, e integra-se com APIs para uma exper
 - Menu "Eventos" corrigido na versão mobile; agora ele não fica mais oculto atrás da imagem do evento.
 - Implementada função para destacar o botão correspondente à página ativa no menu de navegação.
 - Implementada mensagem de confirmação no formulário de contato após o envio. O botão "Limpar" agora funciona corretamente.
+- Implementada função que gera valores de frete aleatórios para simulação dinâmica.
 
 
 Pendências e Correções Futuras  
