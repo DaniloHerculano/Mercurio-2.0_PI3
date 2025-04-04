@@ -186,6 +186,17 @@
       display: none;
     }
     
+    /* MENSAGEM DE SUCESSO */
+    .success_wrapper {
+      display: none;
+      background: #4CAF50;
+      color: white;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
     /* RODAPÉ */
     footer {
       background-color: #333;
@@ -260,12 +271,6 @@
       .map iframe {
         height: 300px;
       }
-    }
-    
-    @media (max-width: 480px) {
-      .titulo-principal {
-        font-size: 1.3em;
-      }
       
       .btns {
         flex-direction: column;
@@ -273,7 +278,12 @@
       
       .btn {
         width: 100%;
-        text-align: center;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .titulo-principal {
+        font-size: 1.3em;
       }
     }
   </style>
@@ -328,38 +338,38 @@
       
       <div class="grid_6 prefix_1">
         <h3>Formulário de contato</h3>
-        <form id="form">
-          <div class="success_wrapper" style="display: none;">
-            <div class="success-message">Formulário de contato enviado</div>
+        <form id="contactForm">
+          <div class="success_wrapper" id="successMessage">
+            <div class="success-message">Formulário enviado com sucesso!</div>
           </div>
           <label class="name">
-            <input type="text" placeholder="Nome:" required>
+            <input type="text" placeholder="Nome:" id="name" required>
             <span class="empty-message">*Este campo é obrigatório.</span>
           </label>
           <label class="email">
-            <input type="email" placeholder="E-mail:" required>
+            <input type="email" placeholder="E-mail:" id="email" required>
             <span class="empty-message">*Este campo é obrigatório.</span>
             <span class="error-message">*Esse e-mail não é válido.</span>
           </label>
           <label class="phone">
-            <input type="tel" placeholder="Telefone:" required>
+            <input type="tel" placeholder="Telefone:" id="phone" required>
             <span class="empty-message">*Este campo é obrigatório.</span>
           </label>
           <label class="message">
-            <textarea placeholder="Mensagem:" required minlength="20"></textarea>
+            <textarea placeholder="Mensagem:" id="message" required minlength="20"></textarea>
             <span class="empty-message">*Este campo é obrigatório.</span>
             <span class="error-message">*A mensagem é muito breve.</span>
           </label>
           <div class="btns">
             <button type="submit" class="btn">Enviar</button>
-            <button type="reset" class="btn">Limpar</button>
+            <button type="reset" class="btn" id="resetBtn">Limpar</button>
           </div>
         </form>
       </div>
     </div>
   </div>
 
-   <!-- RODAPÉ -->
+  <!-- RODAPÉ -->
   <footer>
     <div class="container_12">
       <div style="margin-bottom: 20px;">
@@ -387,17 +397,15 @@
 
   <!-- JAVASCRIPT -->
   <script>
-    // CONTROLE DO MENU MOBILE - VERSÃO GARANTIDA
     document.addEventListener('DOMContentLoaded', function() {
+      // Controle do menu mobile
       const menuToggle = document.getElementById('menuToggle');
       const mainNav = document.querySelector('.sf-menu');
       
-      // Verifica se é mobile no carregamento
       if (window.innerWidth <= 768) {
         mainNav.style.display = 'none';
       }
       
-      // Controle do clique no botão
       menuToggle.addEventListener('click', function() {
         if (mainNav.style.display === 'none' || mainNav.style.display === '') {
           mainNav.style.display = 'flex';
@@ -406,7 +414,6 @@
         }
       });
       
-      // Atualiza ao redimensionar a tela
       window.addEventListener('resize', function() {
         if (window.innerWidth > 768) {
           mainNav.style.display = 'flex';
@@ -415,14 +422,19 @@
         }
       });
 
-      // Validação do formulário
-      const form = document.getElementById('form');
-      form.addEventListener('submit', function(e) {
+      // Controle do formulário
+      const contactForm = document.getElementById('contactForm');
+      const successMessage = document.getElementById('successMessage');
+      const resetBtn = document.getElementById('resetBtn');
+      
+      // Envio do formulário
+      contactForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
         let isValid = true;
-        const inputs = form.querySelectorAll('input, textarea');
+        const inputs = contactForm.querySelectorAll('input, textarea');
         
+        // Validação dos campos
         inputs.forEach(input => {
           const errorMsg = input.nextElementSibling;
           
@@ -443,13 +455,27 @@
           }
         });
         
+        // Se o formulário for válido
         if (isValid) {
-          form.querySelector('.success_wrapper').style.display = 'block';
-          form.reset();
+          // Mostra mensagem de sucesso
+          successMessage.style.display = 'block';
+          
+          // Limpa o formulário
+          contactForm.reset();
+          
+          // Esconde a mensagem após 3 segundos
           setTimeout(() => {
-            form.querySelector('.success_wrapper').style.display = 'none';
+            successMessage.style.display = 'none';
           }, 3000);
         }
+      });
+      
+      // Botão Limpar - limpa os campos e esconde mensagens de erro
+      resetBtn.addEventListener('click', function() {
+        const errorMessages = contactForm.querySelectorAll('.error-message, .empty-message');
+        errorMessages.forEach(msg => {
+          msg.style.display = 'none';
+        });
       });
     });
   </script>
