@@ -88,17 +88,21 @@
       z-index: 1000;
     }
     
-    /* SLIDER/BANNER */
-    .slider_wrapper {
-      width: 100%;
-      overflow: hidden;
-    }
-    
-    .banner img {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
+  /* SLIDER/BANNER */
+  .slider_wrapper {
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    background-color: #f5f5f5; /* Opcional: fundo neutro caso a imagem não cubra toda a largura */
+  }
+  
+  .banner {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto; /* Centraliza horizontalmente */
+  }
     
     /* PRODUTOS */
     .produtos {
