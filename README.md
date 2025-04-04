@@ -1,9 +1,9 @@
 # Mercurio-2.0-PI3-
-Universidade: UNIVESP
-Curso: Ciência de Dados
-Turma: DRP04-PJI310-SALA-004GRUPO-009
-Disciplina: Projeto Integrador III
-Projeto: Mercúrio - Site simples para aluguel de mobiliários
+- Universidade: UNIVESP
+- Curso: Ciência de Dados
+- Turma: DRP04-PJI310-SALA-004GRUPO-009
+- Disciplina: Projeto Integrador III
+- Projeto: Mercúrio - Site simples para aluguel de mobiliários
 
 # Resumo do projeto
 Projeto desenvolvido para aprimorar o processo de locação de móveis para uma empresa de aluguel de mobiliário. Após um levantamento de novas necessidades, foi decidido criar uma plataforma web intuitiva que permite ao cliente cadastrar-se, fazer reservas e verificar a disponibilidade dos produtos de forma autônoma, sem a necessidade de interação constante com os funcionários.
