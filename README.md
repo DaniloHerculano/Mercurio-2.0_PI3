@@ -13,7 +13,7 @@ A plataforma utiliza HTML, CSS, Javascript, e integra-se com APIs para uma exper
   
 26 a 28/03 – Autor: Danilo Herculano 
 - Melhorias de responsividade para PC e celular nas páginas: Início, Sobre, Área do Cliente, Produtos, Serviços e Contatos.
-- O código HTML, CSS e JavaScript está unificado em um único arquivo, reduzindo a quantidade de arquivos no diretório e facilitando a organização.
+- O código HTML, CSS e JavaScript está unificado em um único arquivo, reduzindo a quantidade de arquivos no diretório, facilitando a organização, eleminando requisições adicionais para CSS/JS separados, execução mais rápida e sem dependências.
 
 29/03 – Autor: Danilo Herculano  
 - Correção do rodapé nas páginas: Sobre, Área do Cliente, Produtos, Serviços e Contatos.  
