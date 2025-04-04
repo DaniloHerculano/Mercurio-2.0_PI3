@@ -195,6 +195,16 @@
       border-bottom: 1px solid #ddd;
     }
     
+    .modal-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    
+    .modal-footer button {
+      flex: 0 0 48%;
+    }
+    
     /* RODAPÉ */
     footer {
       background-color: #333;
@@ -262,6 +272,15 @@
       
       .btn2, .btn3 {
         width: 100%;
+      }
+      
+      .modal-footer {
+        flex-direction: column;
+      }
+      
+      .modal-footer button {
+        width: 100%;
+        margin-bottom: 10px;
       }
     }
   </style>
@@ -380,12 +399,16 @@
       <div id="fade"></div>
       <div id="modal">
         <div class="modal-header" id="titulo">
-          <h5>Pedidos</h5>
-          <button id="close-modal" class="btn2">Fechar</button>
+          <h5>Confirmação do Pedido</h5>
+          <button id="close-modal" class="btn2" style="display: none;">Fechar</button>
         </div>
         <div class="modal-body" id="corpo">
           Preencha todas as informações para que seu pedido seja concluído. 
           <br>Em caso de dúvidas entre em contato pelo Whatsapp.
+        </div>
+        <div class="modal-footer">
+          <button id="return-btn" class="btn3">Retornar</button>
+          <button id="confirm-btn" class="btn2">Tudo certo</button>
         </div>
       </div>
     </div>
@@ -470,10 +493,24 @@
       
       // Configura o modal
       const closeModalBtn = document.getElementById("close-modal");
+      const confirmBtn = document.getElementById("confirm-btn");
+      const returnBtn = document.getElementById("return-btn");
+
       closeModalBtn.addEventListener("click", () => {
         document.getElementById("fade").style.display = "none";
         document.getElementById("modal").style.display = "none";
         window.location.href = "customer_area.html";
+      });
+
+      confirmBtn.addEventListener("click", () => {
+        document.getElementById("fade").style.display = "none";
+        document.getElementById("modal").style.display = "none";
+        window.location.href = "customer_area.html";
+      });
+
+      returnBtn.addEventListener("click", () => {
+        document.getElementById("fade").style.display = "none";
+        document.getElementById("modal").style.display = "none";
       });
 
       // Mostra/oculta seção de endereço baseado na escolha inicial
@@ -648,6 +685,11 @@
 
     // FUNÇÃO DE FINALIZAÇÃO DO PEDIDO
     function fim() {
+      // Mostra os botões apropriados durante a validação
+      document.getElementById("confirm-btn").style.display = "none";
+      document.getElementById("return-btn").style.display = "block";
+      document.getElementById("close-modal").style.display = "none";
+
       // Verifica se todos os campos estão preenchidos
       const requiredFields = [
         'datepicker-start', 'datepicker-end', 'quantidadebancos', 
@@ -765,6 +807,11 @@
         <p>Em breve entraremos em contato para confirmar os detalhes.</p>
       `;
       
+      // Mostra os botões de confirmação e oculta o de retornar
+      document.getElementById("confirm-btn").style.display = "block";
+      document.getElementById("return-btn").style.display = "none";
+      document.getElementById("close-modal").style.display = "none";
+
       // Mostra o modal
       document.getElementById("fade").style.display = "block";
       document.getElementById("modal").style.display = "block";
