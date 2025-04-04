@@ -30,7 +30,10 @@ Release Notes – Atualizações do Projeto
 - Criada tela "Eventos" e incluído menu "Eventos" em todas as páginas.  
 
 03/04 – Autor: Danilo Herculano
-- Alinhamento do logo da empresa na tela inicial.  
+- Alinhamento do logo da empresa na tela inicial.
+
+04/04 – Autor: Danilo Herculano
+- Menu "Eventos" corrigido na versão mobile; agora ele não fica mais oculto atrás da imagem do evento. 
 
 
 Pendências e Correções Futuras  
@@ -38,6 +41,5 @@ Pendências e Correções Futuras
 - Corrigir exibição do valor do frete na área do usuário logado após o aluguel.  
 - Ajustar o rótulo "Endereço de Entrega" para "Endereço de Retirada" ao selecionar retirada.  
 - Formulário de contato: incluir mensagem de confirmação e botão limpar.  
-- Corrigir menu "Eventos" no celular (fica atrás da foto).
 - Criar usuário administrador para alterar valores e produtos no banco de dados.
 - Banco de dados: avaliar separação do HTML e JavaScript e centralização das edições em um único arquivo.  
