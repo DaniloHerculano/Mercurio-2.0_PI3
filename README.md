@@ -47,7 +47,8 @@ A plataforma utiliza HTML, CSS, Javascript, e integra-se com APIs para uma exper
 - Implementada função que gera valores de frete aleatórios para simulação dinâmica.
 
 
-Pendências e Correções Futuras  
+Pendências e Correções Futuras
+- Após clicar em Fechar pedido, opçao para confirmar ou cancelar. Atualmente há apenas confirmar pedido.
 - Criar simulação de pagamento - paro de funcionar com site responsivo
 - Corrigir exibição do valor do frete na área do usuário logado após o aluguel.  
 - Ajustar o rótulo "Endereço de Entrega" para "Endereço de Retirada" ao selecionar retirada.  
