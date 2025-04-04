@@ -13,6 +13,7 @@ A plataforma utiliza HTML, CSS, Javascript, e integra-se com APIs para uma exper
 
 24 a 25/03 – Autor: Danilo Herculano 
 - Versão inicial do site, ainda sem responsividade para dispositivos móveis.
+- Melhorias na utilização do localStorage para manter os dados entre sessões do usuário.
 - Site hospedado na plataforma Netlify (https://app.netlify.com/). O link público de acesso ao site é: https://mercuriolocacoes.netlify.app/
   
 26 a 28/03 – Autor: Danilo Herculano 
