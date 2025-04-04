@@ -41,13 +41,14 @@ A plataforma utiliza HTML, CSS, Javascript, e integra-se com APIs para uma exper
 - Alinhamento do logo da empresa na tela inicial.
 
 04/04 – Autor: Danilo Herculano
-- Menu "Eventos" corrigido na versão mobile; agora ele não fica mais oculto atrás da imagem do evento. 
+- Menu "Eventos" corrigido na versão mobile; agora ele não fica mais oculto atrás da imagem do evento.
+- Implementada função para destacar o botão correspondente à página ativa no menu de navegação.
+- Implementada mensagem de confirmação no formulário de contato após o envio. O botão "Limpar" agora funciona corretamente.
 
 
 Pendências e Correções Futuras  
-- Criar simulação de pagamento.  
+- Criar simulação de pagamento - paro de funcionar com site responsivo
 - Corrigir exibição do valor do frete na área do usuário logado após o aluguel.  
 - Ajustar o rótulo "Endereço de Entrega" para "Endereço de Retirada" ao selecionar retirada.  
-- Formulário de contato: incluir mensagem de confirmação e botão limpar.  
 - Criar usuário administrador para alterar valores e produtos no banco de dados.
 - Banco de dados: avaliar separação do HTML e JavaScript e centralização das edições em um único arquivo.  
