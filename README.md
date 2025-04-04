@@ -39,12 +39,13 @@ A plataforma utiliza HTML, CSS, Javascript, e integra-se com APIs para uma exper
 
 03/04 – Autor: Danilo Herculano
 - Alinhamento do logo da empresa na tela inicial.
-
-04/04 – Autor: Danilo Herculano
 - Menu "Eventos" corrigido na versão mobile; agora ele não fica mais oculto atrás da imagem do evento.
 - Implementada função para destacar o botão correspondente à página ativa no menu de navegação.
+
+04/04 – Autor: Danilo Herculano
 - Implementada mensagem de confirmação no formulário de contato após o envio. O botão "Limpar" agora funciona corretamente.
 - Implementada função que gera valores de frete aleatórios para simulação dinâmica.
+- Código documentado com comentários para melhorar a clareza e a manutenção.
 
 
 Pendências e Correções Futuras
