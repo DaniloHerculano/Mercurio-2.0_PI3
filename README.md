@@ -4,7 +4,8 @@ Mercúrio - Projeto Integrador III - Site simples para aluguel de equipamentos
 Release Notes – Atualizações do Projeto
 
 24 a 28/03 – Autor: Danilo Herculano  
-- Melhorias de responsividade para PC e celular nas páginas: Início, Sobre, Área do Cliente, Produtos, Serviços e Contatos.  
+- Melhorias de responsividade para PC e celular nas páginas: Início, Sobre, Área do Cliente, Produtos, Serviços e Contatos.
+- O código HTML, CSS e JavaScript está unificado em um único arquivo, reduzindo a quantidade de arquivos no diretório e facilitando a organização.
 
 29/03 – Autor: Danilo Herculano  
 - Correção do rodapé nas páginas: Sobre, Área do Cliente, Produtos, Serviços e Contatos.  
@@ -28,9 +29,7 @@ Release Notes – Atualizações do Projeto
 - Alteração no layout da recuperação de senha.  
 - Criada tela "Eventos" e incluído menu "Eventos" em todas as páginas.  
 
-03/04 – Autor: Danilo Herculano  
-- Removidos CSS embutidos nos HTMLs para facilitar alterações de layout.
-- Criado arquivo CSS style.css
+03/04 – Autor: Danilo Herculano
 - Alinhamento do logo da empresa na tela inicial.  
 
 
