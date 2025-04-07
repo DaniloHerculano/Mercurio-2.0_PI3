@@ -54,6 +54,7 @@ A plataforma utiliza HTML, CSS, Javascript, e integra-se com APIs para uma exper
 
 
 Pendências e Correções Futuras
+- Melhorar a página "Eventos", caso o grupo julgue interessante fazer ajustes ou melhorias no conteúdo e visual
 - Após clicar em 'Fechar Pedido', deve haver a opção de confirmar ou cancelar. Atualmente, apenas a confirmação está disponível.
 - Implementar uma simulação de pagamento. A funcionalidade deixou de funcionar após a aplicação do layout responsivo.
 - Corrigir exibição do valor do frete na área do usuário logado após o aluguel.  
