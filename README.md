@@ -54,4 +54,4 @@ A plataforma utiliza HTML, CSS, Javascript, e integra-se com APIs para uma exper
 
 
 Pendências e Correções Futuras
-- Ver aba "Issues". 
+- Ver aba "Issues" - https://github.com/DaniloHerculano/Mercurio-2.0_PI3/issues
