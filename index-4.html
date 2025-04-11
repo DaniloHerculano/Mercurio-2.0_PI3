@@ -9,7 +9,7 @@
   <link rel="shortcut icon" href="images/favicon.ico">
   <style>
     /* --------------- CSS -------------- */
-    /* RESET E ESTILOS GERAIS */
+    /* (MANTIDO IGUAL AO SEU CÓDIGO ORIGINAL) */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -26,7 +26,6 @@
       clear: both;
     }
     
-    /* CABEÇALHO */
     header {
       background-color: #333;
       color: white;
@@ -51,7 +50,6 @@
     .color0 { color: white; }
     .color2 { color: #f0a500; }
     
-    /* MENU PRINCIPAL */
     .sf-menu {
       display: flex;
       list-style: none;
@@ -81,7 +79,6 @@
       color: #333;
     }
     
-    /* BOTÃO MENU MOBILE */
     .menu-toggle {
       display: none;
       background: none;
@@ -95,7 +92,6 @@
       z-index: 1000;
     }
     
-    /* CONTEÚDO */
     .content {
       padding: 30px 0;
     }
@@ -106,7 +102,6 @@
       color: #333;
     }
     
-    /* MAPA */
     .map {
       margin-bottom: 30px;
     }
@@ -118,7 +113,6 @@
       border-radius: 5px;
     }
     
-    /* INFORMAÇÕES DE CONTATO */
     address {
       font-style: normal;
       margin-top: 20px;
@@ -138,7 +132,6 @@
       font-weight: bold;
     }
     
-    /* FORMULÁRIO */
     form {
       background: #f9f9f9;
       padding: 20px;
@@ -192,7 +185,6 @@
       display: none;
     }
     
-    /* MENSAGEM DE SUCESSO */
     .success_wrapper {
       display: none;
       background: #4CAF50;
@@ -203,7 +195,6 @@
       text-align: center;
     }
     
-    /* RODAPÉ */
     footer {
       background-color: #333;
       color: white;
@@ -232,7 +223,6 @@
       color: #f0a500;
     }
     
-    /* RESPONSIVIDADE */
     @media (max-width: 992px) {
       .grid_5, .grid_6 {
         width: 100%;
@@ -244,7 +234,6 @@
     }
     
     @media (max-width: 768px) {
-      /* MENU MOBILE */
       .menu-toggle {
         display: block;
       }
@@ -345,31 +334,38 @@
       
       <div class="grid_6 prefix_1">
         <h3>Formulário de contato</h3>
-        <form id="contactForm">
+        <form id="contactForm" action="https://formsubmit.co/mercuriolocacoes@gmail.com" method="POST">
+          <!-- Campos ocultos do FormSubmit -->
+          <input type="hidden" name="_next" value="https://mercuriolocacoes.netlify.app/index-4.html?success=true">
+          <input type="hidden" name="_subject" value="Novo contato via site - Mercúrio Locações">
+          <input type="text" name="_honey" style="display:none">
+          <input type="hidden" name="_captcha" value="false">
+          
           <div class="success_wrapper" id="successMessage">
             <div class="success-message">Formulário enviado com sucesso!</div>
           </div>
           <label class="name">
-            <input type="text" placeholder="Nome:" id="name" required>
+            <input type="text" placeholder="Nome:" name="name" id="name" required>
             <span class="empty-message">*Este campo é obrigatório.</span>
           </label>
           <label class="email">
-            <input type="email" placeholder="E-mail:" id="email" required>
+            <input type="email" placeholder="E-mail:" name="email" id="email" required>
             <span class="empty-message">*Este campo é obrigatório.</span>
             <span class="error-message">*Esse e-mail não é válido.</span>
           </label>
           <label class="phone">
-            <input type="tel" placeholder="Telefone:" id="phone" required>
+            <input type="tel" placeholder="Telefone:" name="phone" id="phone" required>
             <span class="empty-message">*Este campo é obrigatório.</span>
           </label>
           <label class="message">
-            <textarea placeholder="Mensagem:" id="message" required minlength="20"></textarea>
+            <textarea placeholder="Mensagem:" name="message" id="message" required minlength="20"></textarea>
             <span class="empty-message">*Este campo é obrigatório.</span>
             <span class="error-message">*A mensagem é muito breve.</span>
           </label>
           <div class="btns">
             <button type="submit" class="btn">Enviar</button>
             <button type="reset" class="btn" id="resetBtn">Limpar</button>
+            <input type="text" name="_honey" style="display:none">
           </div>
         </form>
       </div>
@@ -434,6 +430,16 @@
       const successMessage = document.getElementById('successMessage');
       const resetBtn = document.getElementById('resetBtn');
       
+      // Verifica se a URL tem parâmetro de sucesso
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('success')) {
+        successMessage.style.display = 'block';
+        setTimeout(() => {
+          successMessage.style.display = 'none';
+          history.replaceState({}, document.title, window.location.pathname);
+        }, 3000);
+      }
+      
       // Envio do formulário
       contactForm.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -443,6 +449,9 @@
         
         // Validação dos campos
         inputs.forEach(input => {
+          // Ignora campos ocultos
+          if (input.type === 'hidden' || input.name === '_honey') return;
+          
           const errorMsg = input.nextElementSibling;
           
           if (input.validity.valueMissing) {
@@ -464,20 +473,16 @@
         
         // Se o formulário for válido
         if (isValid) {
-          // Mostra mensagem de sucesso
+          // Envia o formulário via FormSubmit
+          this.submit();
+          
+          // Mostra mensagem de sucesso local
           successMessage.style.display = 'block';
-          
-          // Limpa o formulário
           contactForm.reset();
-          
-          // Esconde a mensagem após 3 segundos
-          setTimeout(() => {
-            successMessage.style.display = 'none';
-          }, 3000);
         }
       });
       
-      // Botão Limpar - limpa os campos e esconde mensagens de erro
+      // Botão Limpar
       resetBtn.addEventListener('click', function() {
         const errorMessages = contactForm.querySelectorAll('.error-message, .empty-message');
         errorMessages.forEach(msg => {
