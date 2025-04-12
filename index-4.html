@@ -332,12 +332,19 @@
       
       <div class="grid_6 prefix_1">
         <h3>Formulário de contato</h3>
-        <form id="contactForm" action="https://formsubmit.co/mercuriolocacoes@gmail.com" method="POST">
-        <!-- Evita redirecionamento e mantém o usuário na página -->
-        <input type="hidden" name="_next" value="https://mercuriolocacoes.netlify.app/index-4.html">
-        <input type="hidden" name="_subject" value="Novo contato - Mercúrio Locações">
-        <input type="text" name="_honey" style="display:none">
-        <input type="hidden" name="_template" value="table"> <!-- Formatação da bagaça - funcionou? -->
+        <form id="contactForm" 
+            action="https://formsubmit.co/mercuriolocacoes@gmail.com" 
+            method="POST"
+            onsubmit="return validateForm()">
+        
+        <input type="hidden" name="_next" 
+               value="https://mercuriolocacoes.netlify.app/index-4.html?success=true">
+        <input type="hidden" name="_subject" 
+               value="✉ Novo Contato - Mercúrio Locações">
+        <input type="hidden" name="_template" 
+               value="table">
+        <input type="text" name="_honey" 
+               style="display:none">
           
           <div class="success_wrapper" id="successMessage">
             <div class="success-message">Formulário enviado com sucesso!</div>
@@ -361,7 +368,8 @@
             <span class="error-message">*A mensagem é muito breve.</span>
           </label>
           <div class="btns">
-            <button type="submit" class="btn">Enviar</button>
+            <!-- <button type="submit" class="btn">Enviar</button> -->
+            <button type="submit">Enviar</button>
             <button type="reset" class="btn" id="resetBtn">Limpar</button>
             <input type="text" name="_honey" style="display:none">
           </div>
