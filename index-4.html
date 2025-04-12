@@ -194,6 +194,10 @@
       text-align: center;
     }
     
+    .hidden {
+      display: none;
+    }
+    
     footer {
       background-color: #333;
       color: white;
@@ -333,45 +337,46 @@
       <div class="grid_6 prefix_1">
         <h3>Formulário de contato</h3>
         <form id="contactForm" 
-            action="https://formsubmit.co/mercuriolocacoes@gmail.com" 
-            method="POST"
-            onsubmit="return validateForm()">
-        
-        <input type="hidden" name="_next" 
-               value="https://mercuriolocacoes.netlify.app/index-4.html?success=true">
-        <input type="hidden" name="_subject" 
-               value="✉ Novo Contato - Mercúrio Locações">
-        <input type="hidden" name="_template" 
-               value="table">
-        <input type="text" name="_honey" 
-               style="display:none">
+              name="contact"
+              method="POST" 
+              data-netlify="true"
+              netlify-honeypot="bot-field"
+              action="/index-4.html?success=true">
+          
+          <!-- Campo honeypot do Netlify -->
+          <p class="hidden">
+            <label>Não preencha este campo: <input name="bot-field"></label>
+          </p>
           
           <div class="success_wrapper" id="successMessage">
             <div class="success-message">Formulário enviado com sucesso!</div>
           </div>
+          
           <label class="name">
             <input type="text" placeholder="Nome:" name="name" id="name" required>
             <span class="empty-message">*Este campo é obrigatório.</span>
           </label>
+          
           <label class="email">
             <input type="email" placeholder="E-mail:" name="email" id="email" required>
             <span class="empty-message">*Este campo é obrigatório.</span>
             <span class="error-message">*Esse e-mail não é válido.</span>
           </label>
+          
           <label class="phone">
             <input type="tel" placeholder="Telefone:" name="phone" id="phone" required>
             <span class="empty-message">*Este campo é obrigatório.</span>
           </label>
+          
           <label class="message">
             <textarea placeholder="Mensagem:" name="message" id="message" required minlength="20"></textarea>
             <span class="empty-message">*Este campo é obrigatório.</span>
             <span class="error-message">*A mensagem é muito breve.</span>
           </label>
+          
           <div class="btns">
             <button type="submit" class="btn">Enviar</button>
-            <!-- <button type="submit">Enviar</button> -->
             <button type="reset" class="btn" id="resetBtn">Limpar</button>
-            <!-- <input type="text" name="_honey" style="display:none"> --->
           </div>
         </form>
       </div>
@@ -450,13 +455,18 @@
       contactForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
+        // Verifica se o honeypot foi preenchido (spam)
+        if (document.querySelector('[name="bot-field"]').value) {
+          return false;
+        }
+        
         let isValid = true;
         const inputs = contactForm.querySelectorAll('input, textarea');
         
         // Validação dos campos
         inputs.forEach(input => {
-          // Ignora campos ocultos
-          if (input.type === 'hidden' || input.name === '_honey') return;
+          // Ignora campos ocultos e honeypot
+          if (input.type === 'hidden' || input.name === 'bot-field') return;
           
           const errorMsg = input.nextElementSibling;
           
@@ -479,12 +489,15 @@
         
         // Se o formulário for válido
         if (isValid) {
-          // Envia o formulário via FormSubmit
+          // Envia o formulário (Netlify Forms cuidará do processamento)
           this.submit();
           
-          // Mostra mensagem de sucesso local
+          // Mostra mensagem de sucesso
           successMessage.style.display = 'block';
           contactForm.reset();
+          
+          // Rolagem suave para a mensagem
+          successMessage.scrollIntoView({ behavior: 'smooth' });
         }
       });
       
