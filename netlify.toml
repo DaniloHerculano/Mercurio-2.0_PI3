@@ -1,3 +1,5 @@
+ # Redirecionar envios para o endereço de e-mail usando o recurso de tratamento de formulários do Netlify.
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
