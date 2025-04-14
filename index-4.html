@@ -336,7 +336,10 @@
       
       <div class="grid_6 prefix_1">
         <h3>Formulário de contato</h3>
-        <form id="contactForm" name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/success.html">
+        <form id="contactForm" name="contact" method="POST" netlify netlify-honeypot="bot-field" action="/success.html">
+          <!-- Campo oculto necessário para o Netlify Forms -->
+          <input type="hidden" name="form-name" value="contact">
+          
           <!-- Campo honeypot (deve ser o primeiro) -->
           <div class="hidden">
             <label>Não preencha: <input name="bot-field"></label>
@@ -496,11 +499,26 @@
         if (validateForm()) {
           // Mostra feedback visual imediato
           successMessage.style.display = 'block';
-          contactForm.reset();
           successMessage.scrollIntoView({ behavior: 'smooth' });
           
-          // Envia o formulário
-          this.submit();
+          // Cria um novo formulário temporário para garantir o envio correto
+          const formData = new FormData(contactForm);
+          const tempForm = document.createElement('form');
+          tempForm.style.display = 'none';
+          tempForm.method = 'POST';
+          tempForm.action = '/';
+          
+          // Adiciona todos os campos ao formulário temporário
+          for (const [name, value] of formData.entries()) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            input.value = value;
+            tempForm.appendChild(input);
+          }
+          
+          document.body.appendChild(tempForm);
+          tempForm.submit();
         }
       });
       
