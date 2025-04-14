@@ -194,9 +194,9 @@
       text-align: center;
     }
     
-    .hidden { display: none; }
-    .error-message, .empty-message { color: red; font-size: 0.8em; display: none; }
-    .success_wrapper { display: none; }
+    .hidden { 
+      display: none; 
+    }
     
     footer {
       background-color: #333;
@@ -336,18 +336,11 @@
       
       <div class="grid_6 prefix_1">
         <h3>Formulário de contato</h3>
-        <form id="contactForm" 
-                name="contact"
-                method="POST" 
-                data-netlify="true"
-                netlify-honeypot="bot-field"
-                action="/success.html">
-            <!-- Campo honeypot (deve ser o primeiro) -->
-            <div class="hidden">
-              <label>Não preencha: <input name="bot-field"></label>
-            </div>
-            <!-- outros campos -->
-          </form>
+        <form id="contactForm" name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/success.html">
+          <!-- Campo honeypot (deve ser o primeiro) -->
+          <div class="hidden">
+            <label>Não preencha: <input name="bot-field"></label>
+          </div>
           
           <div class="success_wrapper" id="successMessage">
             <div class="success-message">Formulário enviado com sucesso!</div>
@@ -413,7 +406,7 @@
   <!------------- JAVASCRIPT ------------>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // 1. Controle do menu mobile (mantido funcional)
+      // 1. Controle do menu mobile
       const menuToggle = document.getElementById('menuToggle');
       const mainNav = document.querySelector('.sf-menu');
       
@@ -436,8 +429,8 @@
           mainNav.style.display = 'none';
         }
       });
-  
-      // 2. Controle do formulário (totalmente corrigido)
+
+      // 2. Controle do formulário
       const contactForm = document.getElementById('contactForm');
       const successMessage = document.getElementById('successMessage');
       const resetBtn = document.getElementById('resetBtn');
@@ -452,12 +445,12 @@
         }, 3000);
       }
       
-      // 3. Função de validação completa
+      // 3. Função de validação
       function validateForm() {
         let isValid = true;
         const inputs = contactForm.querySelectorAll('input[required], textarea[required]');
         
-        // Resetar todas as mensagens de erro primeiro
+        // Resetar todas as mensagens de erro
         document.querySelectorAll('.error-message, .empty-message').forEach(msg => {
           msg.style.display = 'none';
         });
@@ -470,16 +463,16 @@
           const errorMsg = input.nextElementSibling.nextElementSibling;
           
           // Validação de campo obrigatório
-          if (input.validity.valueMissing) {
+          if (input.value.trim() === '') {
             emptyMsg.style.display = 'block';
             isValid = false;
           } 
           // Validação específica para email
-          else if (input.type === 'email' && !input.validity.valid) {
+          else if (input.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value)) {
             if (errorMsg) errorMsg.style.display = 'block';
             isValid = false;
           } 
-          // Validação específica para textarea (mínimo 20 caracteres)
+          // Validação específica para textarea
           else if (input.tagName === 'TEXTAREA' && input.value.length < 20) {
             if (errorMsg) errorMsg.style.display = 'block';
             isValid = false;
@@ -489,67 +482,41 @@
         return isValid;
       }
       
-      // 4. Evento de submit totalmente funcional
+      // 4. Evento de submit
       contactForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // Verifica honeypot (anti-spam)
+        // Verifica honeypot
         const honeypot = document.querySelector('[name="bot-field"]');
         if (honeypot && honeypot.value) {
           return false;
         }
         
-        // Executa validação completa
+        // Valida o formulário
         if (validateForm()) {
-          // Método 1: Envio tradicional (recomendado para Netlify Forms)
-          try {
-            // Mostra feedback visual imediato
-            successMessage.style.display = 'block';
-            contactForm.reset();
-            successMessage.scrollIntoView({ behavior: 'smooth' });
-            
-            // Envia o formulário
-            this.submit();
-            
-          } catch (error) {
-            console.error("Erro no envio:", error);
-            successMessage.style.display = 'none';
-            alert("Erro ao enviar formulário. Por favor, tente novamente.");
-          }
+          // Mostra feedback visual imediato
+          successMessage.style.display = 'block';
+          contactForm.reset();
+          successMessage.scrollIntoView({ behavior: 'smooth' });
           
-          /* Método 2 alternativo (caso precise):
-          const formData = new FormData(this);
-          fetch("/", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams(formData).toString()
-          })
-          .then(() => {
-            successMessage.style.display = 'block';
-            contactForm.reset();
-            history.pushState({}, "", "/index-4.html?success=true");
-          })
-          .catch(error => {
-            console.error('Erro:', error);
-            alert('Erro ao enviar. Tente novamente.');
-          });
-          */
+          // Envia o formulário
+          this.submit();
         }
       });
       
-      // 5. Botão Limpar totalmente funcional
+      // 5. Botão Limpar
       resetBtn.addEventListener('click', function(e) {
         e.preventDefault();
         
-        // Limpa todos os campos do formulário
+        // Limpa todos os campos
         contactForm.reset();
         
-        // Oculta todas as mensagens de erro
+        // Oculta mensagens de erro
         document.querySelectorAll('.error-message, .empty-message').forEach(msg => {
           msg.style.display = 'none';
         });
         
-        // Oculta mensagem de sucesso se estiver visível
+        // Oculta mensagem de sucesso
         successMessage.style.display = 'none';
         
         // Foca no primeiro campo
