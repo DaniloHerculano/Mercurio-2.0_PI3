@@ -311,7 +311,6 @@
     </div>
   </header>
 
-  <!-- CONTEÚDO -->
   <div class="content">
     <div class="container_12">
       <div class="grid_12">
@@ -340,7 +339,7 @@
           <!-- Campo oculto necessário para o Netlify Forms -->
           <input type="hidden" name="form-name" value="contact">
           
-          <!-- Campo honeypot (deve ser o primeiro) -->
+          <!-- Campo honeypot (deve ser o primeiro... Maybe, I don't know! hahaha) -->
           <div class="hidden">
             <label>Não preencha: <input name="bot-field"></label>
           </div>
@@ -380,7 +379,6 @@
     </div>
   </div>
 
-  <!-- RODAPÉ -->
   <footer>
     <div class="container_12">
       <div style="margin-bottom: 20px;">
@@ -453,7 +451,7 @@
         let isValid = true;
         const inputs = contactForm.querySelectorAll('input[required], textarea[required]');
         
-        // Resetar todas as mensagens de erro
+        // Resetar todas as mensagens de erro - espero que ainda funcione
         document.querySelectorAll('.error-message, .empty-message').forEach(msg => {
           msg.style.display = 'none';
         });
