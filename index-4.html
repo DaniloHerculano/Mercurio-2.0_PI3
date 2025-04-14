@@ -341,7 +341,7 @@
               method="POST" 
               data-netlify="true"
               netlify-honeypot="bot-field"
-              action="/index-4.html?success=true">
+              action="/success.html">
           
           <!-- Campo honeypot do Netlify -->
           <p class="hidden">
@@ -451,8 +451,8 @@
         }, 3000);
       }
       
-      // Envio do formulário
-      contactForm.addEventListener('submit', function(e) {
+     // Envio do formulário
+      contactForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         // Verifica se o honeypot foi preenchido (spam)
@@ -489,15 +489,30 @@
         
         // Se o formulário for válido
         if (isValid) {
-          // Envia o formulário (Netlify Forms cuidará do processamento)
-          this.submit();
-          
-          // Mostra mensagem de sucesso
-          successMessage.style.display = 'block';
-          contactForm.reset();
-          
-          // Rolagem suave para a mensagem
-          successMessage.scrollIntoView({ behavior: 'smooth' });
+          try {
+            // Cria FormData e envia via fetch
+            const formData = new FormData(this);
+            
+            await fetch("/", {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams(formData).toString()
+            });
+            
+            // Mostra mensagem de sucesso
+            successMessage.style.display = 'block';
+            contactForm.reset();
+            
+            // Rolagem suave para a mensagem
+            successMessage.scrollIntoView({ behavior: 'smooth' });
+            
+            // Atualiza a URL sem recarregar a página
+            history.pushState({}, "", "/index-4.html?success=true");
+            
+          } catch (error) {
+            console.error('Erro ao enviar formulário:', error);
+            alert('Ocorreu um erro ao enviar o formulário. Por favor, tente novamente.');
+          }
         }
       });
       
