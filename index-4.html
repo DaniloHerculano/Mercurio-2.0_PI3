@@ -337,16 +337,17 @@
       <div class="grid_6 prefix_1">
         <h3>Formulário de contato</h3>
         <form id="contactForm" 
-              name="contact"
-              method="POST" 
-              data-netlify="true"
-              netlify-honeypot="bot-field"
-              action="/success.html">
-          
-          <!-- Campo honeypot do Netlify -->
-          <p class="hidden">
-            <label>Não preencha este campo: <input name="bot-field"></label>
-          </p>
+                name="contact" 
+                method="POST" 
+                data-netlify="true"
+                netlify-honeypot="bot-field"
+                action="/success.html">
+            
+            <!-- Campo honeypot anti-spam (DEVE vir primeiro) -->
+            <p class="hidden">
+              <label>Não preencha: <input name="bot-field"></label>
+            </p>
+          </form>
           
           <div class="success_wrapper" id="successMessage">
             <div class="success-message">Formulário enviado com sucesso!</div>
@@ -452,13 +453,35 @@
       }
       
      // Envio do formulário
-      contactForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        // Verifica se o honeypot foi preenchido (spam)
-        if (document.querySelector('[name="bot-field"]').value) {
-          return false;
-        }
+        contactForm.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          // Validação existente (mantenha igual)
+          
+          if (isValid) {
+            try {
+              // Método 1: Envio tradicional (recomendado para Netlify)
+              this.submit();
+              
+              // Ou Método 2: Envio via Fetch (alternativo)
+              /*
+              const formData = new FormData(this);
+              await fetch("/", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams(formData).toString()
+              });
+              */
+              
+              successMessage.style.display = 'block';
+              contactForm.reset();
+              
+            } catch (error) {
+              console.error("Erro:", error);
+              alert("Erro ao enviar. Tente novamente.");
+            }
+          }
+        });
         
         let isValid = true;
         const inputs = contactForm.querySelectorAll('input, textarea');
