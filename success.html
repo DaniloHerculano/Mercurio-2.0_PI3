@@ -1,11 +1,115 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-    <meta http-equiv="refresh" content="3;url=/index-4.html">
-    <title>Sucesso!</title>
+  <title>Mensagem Enviada - Mercúrio</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="icon" href="images/favicon.ico">
+  <link rel="shortcut icon" href="images/favicon.ico">
+  <meta http-equiv="refresh" content="4;url=/index-4.html">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    
+    body {
+      background-color: #f9f9f9;
+      color: #333;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 15px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    
+    .success-content {
+      background: white;
+      padding: 40px;
+      border-radius: 5px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 600px;
+      width: 100%;
+      margin: 30px 0;
+    }
+    
+    h1 {
+      color: #f0a500;
+      margin-bottom: 20px;
+      font-size: 2em;
+    }
+    
+    p {
+      margin-bottom: 30px;
+      font-size: 1.1em;
+    }
+    
+    .loading-bar {
+      width: 100%;
+      height: 4px;
+      background: #eee;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+    
+    .loading-progress {
+      height: 100%;
+      width: 100%;
+      background: #4CAF50;
+      animation: loading 3s linear forwards;
+    }
+    
+    @keyframes loading {
+      from { width: 100%; }
+      to { width: 0%; }
+    }
+    
+    footer {
+      background-color: #333;
+      color: white;
+      text-align: center;
+      padding: 20px 0;
+      width: 100%;
+    }
+    
+    .brand {
+      font-weight: bold;
+      color: #f0a500;
+    }
+  </style>
 </head>
 <body>
-    <h1>Formulário enviado com sucesso!</h1>
-    <p>Redirecionando de volta ao formulário...</p>
+  <div class="container">
+    <div class="success-content">
+      <h1>Mensagem Enviada com Sucesso!</h1>
+      <p>Obrigado por entrar em contato com a <span class="brand">Mercúrio</span>. Retornaremos em breve.</p>
+      <p>Você será redirecionado automaticamente...</p>
+      <div class="loading-bar">
+        <div class="loading-progress"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div>
+      <span class="brand">MERCÚRIO</span> &copy; 2025 | <a href="#" style="color: #f0a500;">Política de Privacidade</a>
+    </div>
+  </footer>
 </body>
 </html>
