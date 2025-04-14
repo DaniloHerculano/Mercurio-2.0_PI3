@@ -194,9 +194,9 @@
       text-align: center;
     }
     
-    .hidden {
-      display: none;
-    }
+    .hidden { display: none; }
+    .error-message, .empty-message { color: red; font-size: 0.8em; display: none; }
+    .success_wrapper { display: none; }
     
     footer {
       background-color: #333;
@@ -337,16 +337,16 @@
       <div class="grid_6 prefix_1">
         <h3>Formulário de contato</h3>
         <form id="contactForm" 
-                name="contact" 
+                name="contact"
                 method="POST" 
                 data-netlify="true"
                 netlify-honeypot="bot-field"
                 action="/success.html">
-            
-            <!-- Campo honeypot anti-spam (DEVE vir primeiro) -->
-            <p class="hidden">
+            <!-- Campo honeypot (deve ser o primeiro) -->
+            <div class="hidden">
               <label>Não preencha: <input name="bot-field"></label>
-            </p>
+            </div>
+            <!-- outros campos -->
           </form>
           
           <div class="success_wrapper" id="successMessage">
@@ -413,7 +413,7 @@
   <!------------- JAVASCRIPT ------------>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Controle do menu mobile (mantido igual)
+      // 1. Controle do menu mobile (mantido funcional)
       const menuToggle = document.getElementById('menuToggle');
       const mainNav = document.querySelector('.sf-menu');
       
@@ -437,7 +437,7 @@
         }
       });
   
-      // Controle do formulário (parte corrigida)
+      // 2. Controle do formulário (totalmente corrigido)
       const contactForm = document.getElementById('contactForm');
       const successMessage = document.getElementById('successMessage');
       const resetBtn = document.getElementById('resetBtn');
@@ -452,73 +452,108 @@
         }, 3000);
       }
       
-      // Validação e envio do formulário (CORRIGIDO)
-      contactForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        // Verifica honeypot
-        if (document.querySelector('[name="bot-field"]').value) {
-          return false;
-        }
-        
+      // 3. Função de validação completa
+      function validateForm() {
         let isValid = true;
-        const inputs = contactForm.querySelectorAll('input, textarea');
+        const inputs = contactForm.querySelectorAll('input[required], textarea[required]');
         
-        // Validação dos campos
+        // Resetar todas as mensagens de erro primeiro
+        document.querySelectorAll('.error-message, .empty-message').forEach(msg => {
+          msg.style.display = 'none';
+        });
+        
         inputs.forEach(input => {
+          // Ignora campos ocultos e honeypot
           if (input.type === 'hidden' || input.name === 'bot-field') return;
           
-          const errorMsg = input.nextElementSibling;
+          const emptyMsg = input.nextElementSibling;
+          const errorMsg = input.nextElementSibling.nextElementSibling;
           
+          // Validação de campo obrigatório
           if (input.validity.valueMissing) {
-            errorMsg.style.display = 'block';
+            emptyMsg.style.display = 'block';
             isValid = false;
-          } else if (input.type === 'email' && !input.validity.valid) {
-            input.nextElementSibling.nextElementSibling.style.display = 'block';
+          } 
+          // Validação específica para email
+          else if (input.type === 'email' && !input.validity.valid) {
+            if (errorMsg) errorMsg.style.display = 'block';
             isValid = false;
-          } else if (input.tagName === 'TEXTAREA' && input.value.length < 20) {
-            input.nextElementSibling.nextElementSibling.style.display = 'block';
+          } 
+          // Validação específica para textarea (mínimo 20 caracteres)
+          else if (input.tagName === 'TEXTAREA' && input.value.length < 20) {
+            if (errorMsg) errorMsg.style.display = 'block';
             isValid = false;
-          } else {
-            errorMsg.style.display = 'none';
-            if (input.nextElementSibling.nextElementSibling) {
-              input.nextElementSibling.nextElementSibling.style.display = 'none';
-            }
           }
         });
         
-        if (isValid) {
+        return isValid;
+      }
+      
+      // 4. Evento de submit totalmente funcional
+      contactForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Verifica honeypot (anti-spam)
+        const honeypot = document.querySelector('[name="bot-field"]');
+        if (honeypot && honeypot.value) {
+          return false;
+        }
+        
+        // Executa validação completa
+        if (validateForm()) {
+          // Método 1: Envio tradicional (recomendado para Netlify Forms)
           try {
-            // Método 1: Envio tradicional (recomendado)
-            this.submit();
-            
-            // Método alternativo (descomente se necessário):
-            /*
-            const formData = new FormData(this);
-            await fetch("/", {
-              method: "POST",
-              headers: { "Content-Type": "application/x-www-form-urlencoded" },
-              body: new URLSearchParams(formData).toString()
-            });
-            */
-            
+            // Mostra feedback visual imediato
             successMessage.style.display = 'block';
             contactForm.reset();
             successMessage.scrollIntoView({ behavior: 'smooth' });
             
+            // Envia o formulário
+            this.submit();
+            
           } catch (error) {
             console.error("Erro no envio:", error);
+            successMessage.style.display = 'none';
             alert("Erro ao enviar formulário. Por favor, tente novamente.");
           }
+          
+          /* Método 2 alternativo (caso precise):
+          const formData = new FormData(this);
+          fetch("/", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams(formData).toString()
+          })
+          .then(() => {
+            successMessage.style.display = 'block';
+            contactForm.reset();
+            history.pushState({}, "", "/index-4.html?success=true");
+          })
+          .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao enviar. Tente novamente.');
+          });
+          */
         }
       });
       
-      // Botão Limpar (mantido igual)
-      resetBtn.addEventListener('click', function() {
-        const errorMessages = contactForm.querySelectorAll('.error-message, .empty-message');
-        errorMessages.forEach(msg => {
+      // 5. Botão Limpar totalmente funcional
+      resetBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Limpa todos os campos do formulário
+        contactForm.reset();
+        
+        // Oculta todas as mensagens de erro
+        document.querySelectorAll('.error-message, .empty-message').forEach(msg => {
           msg.style.display = 'none';
         });
+        
+        // Oculta mensagem de sucesso se estiver visível
+        successMessage.style.display = 'none';
+        
+        // Foca no primeiro campo
+        contactForm.querySelector('input').focus();
       });
     });
   </script>
