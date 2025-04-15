@@ -52,6 +52,13 @@ A plataforma utiliza HTML, CSS, Javascript, e integra-se com APIs para uma exper
 - Implementada função que gera valores de frete aleatórios para simulação dinâmica.
 - Código documentado com comentários para melhorar a clareza e a manutenção.
 
+14/04 – Autor: Danilo Herculano
+Arquivos adicionados:
+- netlify.toml – Configuração de formulários com Netlify.
+- success.html – Página de confirmação de envio.
+Atualizações em index-4.html:
+- Formulário de contato integrado ao Netlify Forms, enviando os dados para mercuriolocacoes@gmail.com.
+- Redirecionamento para success.html após envio bem-sucedido.
 
 Pendências e Correções Futuras
 - Ver aba "Issues" - https://github.com/DaniloHerculano/Mercurio-2.0_PI3/issues
