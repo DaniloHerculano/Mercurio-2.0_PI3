@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
@@ -14,9 +13,9 @@ router.post('/', async (req, res) => {
 
     const [result] = await pool.query(`
       INSERT INTO pedidos 
-      (data_inicio, data_retorno, modelo, bancos, cadeiras, mesas,
-      endereco, tipo_entrega, total_diario, total_sem_frete, frete,
-      total, status, data_pedido, dias)
+      (datepickerstart, datepickerend, modelo, quantidadebancos, quantidadecadeiras, quantidademesas,
+      endereco, tipo_entrega, totaldiaria, totalpedido_nfrete, valor_frete,
+      totalpedido, status, data_pedido, dias)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       dataInicio, dataRetorno, modelo, bancos, cadeiras, mesas,
