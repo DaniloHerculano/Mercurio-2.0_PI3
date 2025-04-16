@@ -669,19 +669,26 @@
     }
 
     // FUNÇÃO PARA EXIBIR ESTOQUE (AGORA COM CHAMADA À API)
+    // Em exibirEstoque(), adicione um log para debug:
     async function exibirEstoque() {
       try {
-        const response = await fetch('/api/estoque');
+        console.log('Chamando API de estoque...'); // ← Adicione isto
+        
+        const response = await fetch('http://localhost:3000/api/estoque'); // ← Use URL completa
+        console.log('Resposta da API:', response); // ← Adicione isto
+        
         if (!response.ok) {
-          throw new Error('Erro ao obter estoque');
+          throw new Error(`Erro HTTP: ${response.status}`);
         }
-        const estoque = await response.json();
+    
+    const estoque = await response.json();
+    console.log('Dados recebidos:', estoque); // ← Adicione isto
         
         document.getElementById('estoqueMesas').innerText = `Mesas: ${estoque.data.estoqueMesas || 0}`;
         document.getElementById('estoqueCadeiras').innerText = `Cadeiras: ${estoque.data.estoqueCadeiras || 0}`;
         document.getElementById('estoqueBancos').innerText = `Bancos: ${estoque.data.estoqueBancos || 0}`;
       } catch (error) {
-        console.error('Erro ao carregar estoque:', error);
+        console.error('Erro detalhado:', error); // ← Log mais detalhado
         // Valores padrão caso a API falhe
         document.getElementById('estoqueMesas').innerText = 'Mesas: 0';
         document.getElementById('estoqueCadeiras').innerText = 'Cadeiras: 0';
