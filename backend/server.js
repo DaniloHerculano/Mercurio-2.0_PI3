@@ -31,3 +31,10 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
+
+// Ajuste o CORS para permitir seu frontend
+const corsOptions = {
+  origin: 'http://seu-frontend.com', // ou 'http://localhost:3000'
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
