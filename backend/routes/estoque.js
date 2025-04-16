@@ -2,43 +2,45 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 
-// Criar pedido
-router.post('/', async (req, res, next) => {
+// Obter estoque
+router.get('/', async (req, res) => {
   try {
-    const {
-      dataInicio, dataRetorno, modelo, bancos, cadeiras, mesas,
-      endereco, tipoEntrega, totalDiario, totalSemFrete, frete,
-      total, status, dataPedido, dias
-    } = req.body;
+    // 1. Verifique a conexão com o banco
+    const connection = await pool.getConnection();
+    console.log('Conexão com o banco estabelecida');
 
-    // Validação básica
-    if (!dataInicio || !dataRetorno || !modelo || bancos === undefined || 
-        cadeiras === undefined || mesas === undefined || !endereco || !tipoEntrega) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Campos obrigatórios faltando' 
+    // 2. Execute a query
+    const [rows] = await connection.query('SELECT * FROM estoque LIMIT 1');
+    connection.release();
+
+    // 3. Verifique se retornou dados
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Estoque não encontrado'
       });
     }
 
-    const [result] = await pool.query(`
-      INSERT INTO pedidos 
-      (datepickerstart, datepickerend, modelo, quantidadebancos, quantidadecadeiras, quantidademesas,
-      endereco, tipo_entrega, totaldiaria, totalpedido_nfrete, valor_frete,
-      totalpedido, status, data_pedido, dias)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-      dataInicio, dataRetorno, modelo, bancos, cadeiras, mesas,
-      endereco, tipoEntrega, totalDiario, totalSemFrete, frete,
-      total, status || 'pendente', dataPedido || new Date(), dias
-    ]);
+    // 4. Log para debug
+    console.log('Dados do estoque:', rows[0]);
 
-    res.status(201).json({ 
-      success: true, 
-      pedidoId: result.insertId,
-      message: 'Pedido criado com sucesso'
+    // 5. Retorne no formato esperado pelo frontend
+    res.json({
+      success: true,
+      data: {
+        estoqueMesas: rows[0].estoqueMesas || rows[0].mesas || 0,
+        estoqueCadeiras: rows[0].estoqueCadeiras || rows[0].cadeiras || 0,
+        estoqueBancos: rows[0].estoqueBancos || rows[0].bancos || 0
+      }
     });
+
   } catch (error) {
-    next(error);
+    console.error('Erro detalhado:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro no servidor',
+      error: error.message // Adicione esta linha para mais detalhes
+    });
   }
 });
 
