@@ -42,16 +42,37 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-// Listar pedidos (novo endpoint)
-router.get('/', async (req, res, next) => {
+// Verifique se sua rota está retornando no formato esperado
+router.get('/', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM pedidos ORDER BY data_pedido DESC');
+    const [rows] = await pool.query('SELECT * FROM estoque LIMIT 1');
+    
+    // Adicione este log para debug:
+    console.log('Dados do estoque:', rows[0]);
+    
+    if (!rows.length) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Estoque não encontrado' 
+      });
+    }
+    
+    // Certifique-se que os nomes dos campos batem com seu banco
     res.json({
       success: true,
-      data: rows
+      data: {
+        estoqueMesas: rows[0].estoqueMesas, // ou rows[0].mesas?
+        estoqueCadeiras: rows[0].estoqueCadeiras,
+        estoqueBancos: rows[0].estoqueBancos
+      }
     });
+    
   } catch (error) {
-    next(error);
+    console.error('Erro no estoque:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Erro no servidor' 
+    });
   }
 });
 
