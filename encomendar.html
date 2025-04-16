@@ -423,6 +423,22 @@
     </div>
   </footer>
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <title>Encomendar - Mercúrio</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <link rel="icon" href="images/favicon.ico">
+  <link rel="shortcut icon" href="images/favicon.ico">
+  <style>
+    /* ... (mantenha todo o CSS existente) ... */
+  </style>
+</head>
+<body>
+
   <!------------- JAVASCRIPT ------------>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
@@ -652,8 +668,29 @@
       document.getElementById("totalpedido").innerHTML = (totalSemFrete + frete).toFixed(2);
     }
 
-    // FUNÇÃO DE FINALIZAÇÃO DO PEDIDO
-    function fim() {
+    // FUNÇÃO PARA EXIBIR ESTOQUE (AGORA COM CHAMADA À API)
+    async function exibirEstoque() {
+      try {
+        const response = await fetch('/api/estoque');
+        if (!response.ok) {
+          throw new Error('Erro ao obter estoque');
+        }
+        const estoque = await response.json();
+        
+        document.getElementById('estoqueMesas').innerText = `Mesas: ${estoque.data.estoqueMesas || 0}`;
+        document.getElementById('estoqueCadeiras').innerText = `Cadeiras: ${estoque.data.estoqueCadeiras || 0}`;
+        document.getElementById('estoqueBancos').innerText = `Bancos: ${estoque.data.estoqueBancos || 0}`;
+      } catch (error) {
+        console.error('Erro ao carregar estoque:', error);
+        // Valores padrão caso a API falhe
+        document.getElementById('estoqueMesas').innerText = 'Mesas: 0';
+        document.getElementById('estoqueCadeiras').innerText = 'Cadeiras: 0';
+        document.getElementById('estoqueBancos').innerText = 'Bancos: 0';
+      }
+    }
+
+    // FUNÇÃO DE FINALIZAÇÃO DO PEDIDO (AGORA COM CHAMADA À API)
+    async function fim() {
       // Verifica se todos os campos estão preenchidos
       const requiredFields = [
         'datepickerstart', 'datepickerend', 'quantidadebancos', 
@@ -673,14 +710,30 @@
         return;
       }
 
-      // Verifica estoque
-      const estoque = JSON.parse(localStorage.getItem('estoque')) || { mesas: 500, cadeiras: 500, bancos: 500 };
-      const bancos = parseInt(document.getElementById("quantidadebancos").value);
-      const cadeiras = parseInt(document.getElementById("quantidadecadeiras").value);
-      const mesas = parseInt(document.getElementById("quantidademesas").value);
-      
-      if (bancos > estoque.bancos || cadeiras > estoque.cadeiras || mesas > estoque.mesas) {
-        alert("Quantidade solicitada maior que o estoque disponível");
+      // Verifica estoque via API
+      let estoqueDisponivel = false;
+      try {
+        const estoqueResponse = await fetch('/api/estoque');
+        if (!estoqueResponse.ok) {
+          throw new Error('Erro ao verificar estoque');
+        }
+        const estoque = await estoqueResponse.json();
+        
+        const bancos = parseInt(document.getElementById("quantidadebancos").value);
+        const cadeiras = parseInt(document.getElementById("quantidadecadeiras").value);
+        const mesas = parseInt(document.getElementById("quantidademesas").value);
+        
+        if (bancos > estoque.data.estoqueBancos || 
+            cadeiras > estoque.data.estoqueCadeiras || 
+            mesas > estoque.data.estoqueMesas) {
+          alert("Quantidade solicitada maior que o estoque disponível");
+          return;
+        }
+        
+        estoqueDisponivel = true;
+      } catch (error) {
+        console.error('Erro ao verificar estoque:', error);
+        alert('Não foi possível verificar o estoque. Tente novamente.');
         return;
       }
 
@@ -724,14 +777,20 @@
         enderecoEntrega = 'Av. Independência, 5110 - Barra Funda, Vinhedo - SP, 13280-000 (Retirada na loja)';
       }
       
-      // Coleta todos os dados do pedido
-      const pedido = {
+      // Calcula dias
+      const startDate = $("#datepickerstart").datepicker("getDate");
+      const endDate = $("#datepickerend").datepicker("getDate");
+      const diffTime = Math.abs(endDate - startDate);
+      const dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      // Prepara dados do pedido para a API
+      const pedidoData = {
         dataInicio: document.getElementById("datepickerstart").value,
         dataRetorno: document.getElementById("datepickerend").value,
         modelo: document.querySelector('input[name="opcao"]:checked').value,
-        bancos: bancos,
-        cadeiras: cadeiras,
-        mesas: mesas,
+        bancos: parseInt(document.getElementById("quantidadebancos").value),
+        cadeiras: parseInt(document.getElementById("quantidadecadeiras").value),
+        mesas: parseInt(document.getElementById("quantidademesas").value),
         endereco: enderecoEntrega,
         tipoEntrega: isEntrega ? 'entrega' : 'retirada',
         totalDiario: parseFloat(document.getElementById("totaldiaria").innerHTML),
@@ -739,52 +798,76 @@
         frete: isEntrega ? parseFloat(document.getElementById("valor_frete").innerHTML) || 0 : 0,
         total: parseFloat(document.getElementById("totalpedido").innerHTML),
         status: 'pendente',
-        dataPedido: new Date().toLocaleString()
+        dataPedido: new Date().toISOString(),
+        dias: dias
       };
-      
-      // Calcula dias (para exibição)
-      const startDate = $("#datepickerstart").datepicker("getDate");
-      const endDate = $("#datepickerend").datepicker("getDate");
-      const diffTime = Math.abs(endDate - startDate);
-      pedido.dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      // Salva no LocalStorage
-      let pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
-      pedido.numero = pedidos.length + 1;
-      pedidos.push(pedido);
-      localStorage.setItem('pedidos', JSON.stringify(pedidos));
-      
-      // Atualiza estoque
-      estoque.mesas -= pedido.mesas;
-      estoque.cadeiras -= pedido.cadeiras;
-      estoque.bancos -= pedido.bancos;
-      localStorage.setItem('estoque', JSON.stringify(estoque));
-      
-      // Exibe mensagem de sucesso
-      document.getElementById("corpo").innerHTML = `
-        <h4 style="color: #1b6222;">Pedido realizado com sucesso!</h4>
-        <p><strong>Número do Pedido:</strong> ${pedido.numero}</p>
-        <p><strong>Total a Pagar:</strong> R$${pedido.total.toFixed(2)}</p>
-        <p><strong>${pedido.tipoEntrega === 'retirada' ? 'Local de Retirada' : 'Endereço de Entrega'}:</strong> ${pedido.endereco}</p>
-        <p><strong>Data de Retirada:</strong> ${pedido.dataInicio}</p>
-        <p><strong>Data de Devolução:</strong> ${pedido.dataRetorno}</p>
-        <p>Em breve entraremos em contato para confirmar os detalhes.</p>
-      `;
-      
-      // Mostra o modal
-      document.getElementById("fade").style.display = "block";
-      document.getElementById("modal").style.display = "block";
-      
-      // Atualiza exibição do estoque
-      exibirEstoque();
-    }
 
-    // FUNÇÃO PARA EXIBIR ESTOQUE
-    function exibirEstoque() {
-      const estoque = JSON.parse(localStorage.getItem('estoque')) || { mesas: 500, cadeiras: 500, bancos: 500 };
-      document.getElementById('estoqueMesas').innerText = `Mesas: ${estoque.mesas}`;
-      document.getElementById('estoqueCadeiras').innerText = `Cadeiras: ${estoque.cadeiras}`;
-      document.getElementById('estoqueBancos').innerText = `Bancos: ${estoque.bancos}`;
+      // Obtém o ID do usuário logado (você precisará implementar isso no seu backend)
+      const loggedInUserEmail = localStorage.getItem('loggedInUser');
+      if (!loggedInUserEmail) {
+        alert('Usuário não logado. Faça login para continuar.');
+        return;
+      }
+
+      try {
+        // Primeiro: Envia o pedido para a API
+        const response = await fetch('/api/pedidos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...pedidoData,
+            usuario_id: loggedInUserEmail // Aqui você deve usar o ID do usuário, não o email
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Erro ao criar pedido');
+        }
+
+        const result = await response.json();
+
+        // Segundo: Atualiza o estoque via API
+        const estoqueResponse = await fetch('/api/estoque/atualizar', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            mesas: pedidoData.mesas,
+            cadeiras: pedidoData.cadeiras,
+            bancos: pedidoData.bancos
+          })
+        });
+
+        if (!estoqueResponse.ok) {
+          throw new Error('Pedido criado, mas erro ao atualizar estoque');
+        }
+
+        // Exibe mensagem de sucesso
+        document.getElementById("corpo").innerHTML = `
+          <h4 style="color: #1b6222;">Pedido realizado com sucesso!</h4>
+          <p><strong>Número do Pedido:</strong> ${result.pedidoId}</p>
+          <p><strong>Total a Pagar:</strong> R$${pedidoData.total.toFixed(2)}</p>
+          <p><strong>${pedidoData.tipoEntrega === 'retirada' ? 'Local de Retirada' : 'Endereço de Entrega'}:</strong> ${pedidoData.endereco}</p>
+          <p><strong>Data de Retirada:</strong> ${pedidoData.dataInicio}</p>
+          <p><strong>Data de Devolução:</strong> ${pedidoData.dataRetorno}</p>
+          <p>Em breve entraremos em contato para confirmar os detalhes.</p>
+        `;
+        
+        // Mostra o modal
+        document.getElementById("fade").style.display = "block";
+        document.getElementById("modal").style.display = "block";
+        
+        // Atualiza exibição do estoque
+        exibirEstoque();
+
+      } catch (error) {
+        console.error('Erro ao finalizar pedido:', error);
+        alert(`Erro ao finalizar pedido: ${error.message}`);
+      }
     }
   </script>
 </body>
