@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
 // Atualizar estoque
 router.post('/atualizar', async (req, res) => {
   const { mesas, cadeiras, bancos } = req.body;
-  await pool.query('UPDATE estoque SET mesas = ?, cadeiras = ?, bancos = ? WHERE id = 1', [mesas, cadeiras, bancos]);
+  await pool.query('UPDATE estoque SET estoqueMesas = ?, estoqueCadeiras = ?, estoqueBancos = ? WHERE id = 1', [mesas, cadeiras, bancos]);
   res.json({ success: true });
 });
 
