@@ -8,6 +8,10 @@
   <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   <link rel="icon" href="images/favicon.ico">
   <link rel="shortcut icon" href="images/favicon.ico">
+  <script src="backend/db.js"></script>
+  <script src="backend/server.js"></script>
+  <script src="backend/routes/estoque.js"></script>
+  <script src="backend/routes/pedido.js"></script>
   <style>
     /* --------------- CSS -------------- */
     /* RESET E ESTILOS GERAIS */
@@ -307,10 +311,10 @@
       </div>
 
       <h6>Para qual data você vai precisar?</h6>
-      <input type="text" id="datepicker-start" placeholder="Data de Início (dd/mm/aaaa)">
+      <input type="text" id="datepickerstart" placeholder="Data de Início (dd/mm/aaaa)">
       
       <h6>Data de devolução</h6>
-      <input type="text" id="datepicker-end" placeholder="Data de Retorno (dd/mm/aaaa)">
+      <input type="text" id="datepickerend" placeholder="Data de Retorno (dd/mm/aaaa)">
 
       <h6>Escolha o modelo:</h6>
       <div class="radio-group">
@@ -335,8 +339,8 @@
       
       <div style="margin: 20px 0;">
         <p><b>VALOR DIÁRIA: R$ <span id="totaldiaria">0.00</span></b></p>
-        <p><b>VALOR TOTAL (SEM FRETE): R$ <span id="totalpedido_nfrete">0.00</span></b></p>
-        <p id="frete-section" style="display: none;"><b>FRETE: R$ <span id="valor-frete">0.00</span></b></p>
+        <p><b>VALOR TOTAL (SEM FRETE): R$ <span id="totalpedido_frete">0.00</span></b></p>
+        <p id="frete-section" style="display: none;"><b>FRETE: R$ <span id="valor_frete">0.00</span></b></p>
         <p><b>VALOR TOTAL (COM FRETE): R$ <span id="totalpedido">0.00</span></b></p>
       </div>
       
@@ -452,17 +456,17 @@
       });
 
       // Datepicker
-      $("#datepicker-start").datepicker({
+      $("#datepickerstart").datepicker({
         dateFormat: "dd/mm/yy",
         minDate: 0,
         onSelect: function() {
-          let startDate = $("#datepicker-start").datepicker("getDate");
+          let startDate = $("#datepickerstart").datepicker("getDate");
           startDate.setDate(startDate.getDate() + 1);
-          $("#datepicker-end").datepicker("option", "minDate", startDate);
+          $("#datepickerend").datepicker("option", "minDate", startDate);
         }
       });
       
-      $("#datepicker-end").datepicker({
+      $("#datepickerend").datepicker({
         dateFormat: "dd/mm/yy",
         minDate: 1
       });
@@ -549,8 +553,8 @@
 
     // FUNÇÃO DE CÁLCULO DO VALOR TOTAL
     function valor() {
-      const startDate = $("#datepicker-start").datepicker("getDate");
-      const endDate = $("#datepicker-end").datepicker("getDate");
+      const startDate = $("#datepickerstart").datepicker("getDate");
+      const endDate = $("#datepickerend").datepicker("getDate");
       
       if (!startDate || !endDate) {
         alert("Por favor, selecione as datas de início e término");
@@ -595,7 +599,7 @@
       const totalSemFrete = totalBancos + totalCadeiras + totalMesas;
       
       document.getElementById("totaldiaria").innerHTML = totalDiaria.toFixed(2);
-      document.getElementById("totalpedido_nfrete").innerHTML = totalSemFrete.toFixed(2);
+      document.getElementById("totalpedido_frete").innerHTML = totalSemFrete.toFixed(2);
       
       // Se for retirada, zera o frete
       if (document.getElementById('retirada').checked) {
@@ -613,7 +617,7 @@
       const isEntrega = document.getElementById('entrega').checked;
       
       if (!isEntrega) {
-        document.getElementById("valor-frete").innerHTML = "0.00";
+        document.getElementById("valor_frete").innerHTML = "0.00";
         document.getElementById("totalpedido").innerHTML = totalSemFrete.toFixed(2);
         return;
       }
@@ -637,14 +641,14 @@
       // Se não tem CEP, usa um valor padrão
       if (!cep || cep.length !== 8) {
         const fretePadrao = 50.00;
-        document.getElementById("valor-frete").innerHTML = fretePadrao.toFixed(2);
+        document.getElementById("valor_frete").innerHTML = fretePadrao.toFixed(2);
         document.getElementById("totalpedido").innerHTML = (totalSemFrete + fretePadrao).toFixed(2);
         return;
       }
       
       // Simulação de cálculo de frete (substituir por API real)
       const frete = Math.floor(Math.random() * 50) + 20; // Valor aleatório entre 20 e 70
-      document.getElementById("valor-frete").innerHTML = frete.toFixed(2);
+      document.getElementById("valor_frete").innerHTML = frete.toFixed(2);
       document.getElementById("totalpedido").innerHTML = (totalSemFrete + frete).toFixed(2);
     }
 
@@ -652,7 +656,7 @@
     function fim() {
       // Verifica se todos os campos estão preenchidos
       const requiredFields = [
-        'datepicker-start', 'datepicker-end', 'quantidadebancos', 
+        'datepickerstart', 'datepickerend', 'quantidadebancos', 
         'quantidadecadeiras', 'quantidademesas'
       ];
       
@@ -722,8 +726,8 @@
       
       // Coleta todos os dados do pedido
       const pedido = {
-        dataInicio: document.getElementById("datepicker-start").value,
-        dataRetorno: document.getElementById("datepicker-end").value,
+        dataInicio: document.getElementById("datepickerstart").value,
+        dataRetorno: document.getElementById("datepickerend").value,
         modelo: document.querySelector('input[name="opcao"]:checked').value,
         bancos: bancos,
         cadeiras: cadeiras,
@@ -731,16 +735,16 @@
         endereco: enderecoEntrega,
         tipoEntrega: isEntrega ? 'entrega' : 'retirada',
         totalDiario: parseFloat(document.getElementById("totaldiaria").innerHTML),
-        totalSemFrete: parseFloat(document.getElementById("totalpedido_nfrete").innerHTML),
-        frete: isEntrega ? parseFloat(document.getElementById("valor-frete").innerHTML) || 0 : 0,
+        totalSemFrete: parseFloat(document.getElementById("totalpedido_frete").innerHTML),
+        frete: isEntrega ? parseFloat(document.getElementById("valor_frete").innerHTML) || 0 : 0,
         total: parseFloat(document.getElementById("totalpedido").innerHTML),
         status: 'pendente',
         dataPedido: new Date().toLocaleString()
       };
       
       // Calcula dias (para exibição)
-      const startDate = $("#datepicker-start").datepicker("getDate");
-      const endDate = $("#datepicker-end").datepicker("getDate");
+      const startDate = $("#datepickerstart").datepicker("getDate");
+      const endDate = $("#datepickerend").datepicker("getDate");
       const diffTime = Math.abs(endDate - startDate);
       pedido.dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       
