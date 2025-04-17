@@ -501,70 +501,82 @@
   }
 
   async function carregarPedidosUsuario(email) {
-  showLoader(true);
+  const pedidosContainer = document.getElementById('meusPedidos');
+  pedidosContainer.innerHTML = '<div class="loading">Carregando...</div>';
+  
   try {
-    const response = await fetch(PEDIDOS_SHEET_URL);
+    const API_URL = "SUA_URL_DE_SCRIPT_AQUI";
+    const response = await fetch(`${API_URL}?email=${encodeURIComponent(email)}`);
+    
+    if (!response.ok) {
+      throw new Error(`Erro HTTP: ${response.status}`);
+    }
+    
     const text = await response.text();
-    const json = JSON.parse(text.substr(47).slice(0, -2));
+    console.log("Resposta bruta:", text); // Para debug
     
-    const pedidosContainer = document.getElementById('meusPedidos');
-    pedidosContainer.innerHTML = '';
+    let pedidos;
+    try {
+      pedidos = JSON.parse(text);
+    } catch (e) {
+      throw new Error("Resposta inválida da API");
+    }
     
-    const pedidos = json.table.rows.slice(1) // Pula cabeçalho
-      .map(row => ({
-        id: row.c[0]?.v,
-        email: row.c[1]?.v,
-        dataInicio: row.c[2]?.v,
-        dataFim: row.c[3]?.v,
-        mesas: row.c[4]?.v || 0,
-        cadeiras: row.c[5]?.v || 0,
-        bancos: row.c[6]?.v || 0,
-        endereco: row.c[7]?.v,
-        total: row.c[8]?.v,
-        status: row.c[9]?.v || 'Ativo'
-      }))
-      .filter(pedido => pedido.email === email);
+    if (!Array.isArray(pedidos)) {
+      throw new Error("Formato de dados inválido");
+    }
     
     if (pedidos.length === 0) {
-      pedidosContainer.innerHTML = "<p>Nenhum pedido encontrado.</p>";
+      pedidosContainer.innerHTML = `
+        <div class="no-orders">
+          <p>Nenhum pedido encontrado.</p>
+          <a href="encomendar.html" class="btn">Fazer primeiro pedido</a>
+        </div>
+      `;
       return;
     }
 
-    pedidos.forEach(pedido => {
-      const pedidoDiv = document.createElement('div');
-      pedidoDiv.className = 'pedido-item';
-      pedidoDiv.innerHTML = `
-        <div style="display: flex; justify-content: space-between;">
-          <h4>Pedido #${pedido.id}</h4>
-          <span style="background: ${pedido.status === 'Ativo' ? '#4CAF50' : '#607D8B'}; 
-                      color: white; 
-                      padding: 3px 8px; 
-                      border-radius: 10px;
-                      font-size: 0.8em;">
-            ${pedido.status}
-          </span>
-        </div>
-        <p><strong>Período:</strong> ${formatarData(pedido.dataInicio)} - ${formatarData(pedido.dataFim)}</p>
-        <p><strong>Itens:</strong> ${pedido.mesas} mesa(s), ${pedido.cadeiras} cadeira(s), ${pedido.bancos} banco(s)</p>
-        <p><strong>Total:</strong> R$ ${pedido.total?.toFixed(2) || '0.00'}</p>
-        <p><strong>Endereço:</strong> ${pedido.endereco || 'Retirada na loja'}</p>
-        ${pedido.status === 'Ativo' ? 
-          `<button onclick="devolverPedido('${pedido.id}', ${pedido.mesas}, ${pedido.cadeiras}, ${pedido.bancos})" 
-                  class="btn2"
-                  style="margin-top: 10px;">
-            Devolver Itens
-          </button>` : ''}
-      `;
-      pedidosContainer.appendChild(pedidoDiv);
-    });
+    pedidosContainer.innerHTML = '';
+    pedidos.sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio))
+      .forEach(pedido => {
+        const pedidoDiv = document.createElement('div');
+        pedidoDiv.className = 'pedido-item';
+        pedidoDiv.innerHTML = criarHTMLPedido(pedido);
+        pedidosContainer.appendChild(pedidoDiv);
+      });
+      
   } catch (error) {
-    console.error("Erro:", error);
+    console.error("Erro detalhado:", error);
     pedidosContainer.innerHTML = `
-      <p style="color: red;">Erro ao carregar pedidos. Recarregue a página.</p>
+      <div class="error">
+        <p>Não foi possível carregar seus pedidos.</p>
+        <p><small>${error.message}</small></p>
+        <button onclick="location.reload()" class="btn2">Recarregar</button>
+      </div>
     `;
-  } finally {
-    showLoader(false);
   }
+}
+
+function criarHTMLPedido(pedido) {
+  return `
+    <div class="pedido-header">
+      <h4>Pedido #${pedido.id}</h4>
+      <span class="status-badge ${pedido.status.toLowerCase()}">${pedido.status}</span>
+    </div>
+    <div class="pedido-body">
+      <p><i class="fa fa-calendar"></i> <strong>Período:</strong> ${formatarData(pedido.dataInicio)} - ${formatarData(pedido.dataFim)}</p>
+      <p><i class="fa fa-cubes"></i> <strong>Itens:</strong> ${pedido.mesas} mesa(s), ${pedido.cadeiras} cadeira(s), ${pedido.bancos} banco(s)</p>
+      <p><i class="fa fa-money"></i> <strong>Total:</strong> R$ ${pedido.total?.toFixed(2) || '0.00'}</p>
+      <p><i class="fa fa-map-marker"></i> <strong>Endereço:</strong> ${pedido.endereco || 'Retirada na loja'}</p>
+    </div>
+    ${pedido.status === 'Ativo' ? `
+    <div class="pedido-actions">
+      <button onclick="devolverPedido('${pedido.id}', ${pedido.mesas}, ${pedido.cadeiras}, ${pedido.bancos})" 
+              class="btn2">
+        <i class="fa fa-undo"></i> Devolver Itens
+      </button>
+    </div>` : ''}
+  `;
 }
 
   function formatarData(dataString) {
