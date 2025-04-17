@@ -198,6 +198,42 @@
       margin-top: 0;
       color: #f0a500;
     }
+
+    .pedido-item {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+
+.pedido-item:hover {
+  transform: translateY(-2px);
+}
+
+.btn2 {
+  background-color: #1b6222;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.3s;
+}
+
+.btn2:hover {
+  background-color: #f0a500;
+}
+
+.address-section {
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 10px;
+}
     
     /* RODAPÉ */
     footer {
@@ -326,6 +362,13 @@
     </div>
   </div>
 
+  <div id="loading-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+  <div style="background: white; padding: 20px; border-radius: 5px; text-align: center;">
+    <img src="https://i.gifer.com/ZZ5H.gif" alt="Carregando" style="width: 50px;">
+    <p>Processando sua solicitação...</p>
+  </div>
+</div>
+
   <!-- RODAPÉ -->
   <footer>
     <div class="container_12">
@@ -352,248 +395,209 @@
     </div>
   </footer>
 
-<!------------- JAVASCRIPT ATUALIZADO ------------>
-  <script>
-    // Configurações da Planilha Google (usando as mesmas do seu sistema de encomendas)
-    const SHEET_ID = "1QKnR6pWhemrdT5csvGpsy-pLxq0qQuKjniY7yvH3d48";
-    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`; 
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlWH6q0Fvuweh0nCu5jNaBD1k0BTi0-sMgkMF-S2u_0tR9VxoyNohJHW0PhRa0vqTG/exec";
+<!------------- JAVASCRIPT ------------>
 
-    // Dados globais
-    let dados = {
-      estoque: { mesas: 0, cadeiras: 0, bancos: 0 },
-      pedidos: []
-    };
+ <script>
+  // Configurações da Planilha Google
+  const SHEET_ID = "1QKnR6pWhemrdT5csvGpsy-pLxq0qQuKjniY7yvH3d48";
+  const PEDIDOS_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Pedidos&tqx=out:json`;
+  const ESTOQUE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Estoque&tqx=out:json`;
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlWH6q0Fvuweh0nCu5jNaBD1k0BTi0-sMgkMF-S2u_0tR9VxoyNohJHW0PhRa0vqTG/exec";
 
-    document.addEventListener('DOMContentLoaded', function() {
-      // Controle do menu mobile (mesmo código)
-      const menuToggle = document.getElementById('menuToggle');
-      const mainNav = document.querySelector('.sf-menu');
-      
-      if (window.innerWidth <= 768) {
-        mainNav.style.display = 'none';
-      }
-      
-      menuToggle.addEventListener('click', function() {
-        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
-          mainNav.style.display = 'flex';
-        } else {
-          mainNav.style.display = 'none';
-        }
-      });
-      
-      window.addEventListener('resize', function() {
-        if (window.innerWidth > 768) {
-          mainNav.style.display = 'flex';
-        } else {
-          mainNav.style.display = 'none';
-        }
-      });
-
-      // Carrega dados do usuário (mantido do localStorage)
-      const loggedInUserEmail = localStorage.getItem('loggedInUser');
-      if (loggedInUserEmail) {
-        const userData = JSON.parse(localStorage.getItem(loggedInUserEmail));
-        
-        if (userData) {
-          const userInfoDiv = document.getElementById('userInfo');
-          const registrationDate = new Date(userData.registrationDate);
-          const formattedDate = registrationDate.toLocaleDateString('pt-BR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          });
-          
-          let enderecoHTML = '';
-          if (userData.rua || userData.cep) {
-            enderecoHTML = `
-              <div class="address-section">
-                <div class="info-item"><strong>Endereço:</strong></div>
-                ${userData.rua ? `<div class="address-line">${userData.rua}, ${userData.numero || 'S/N'} ${userData.complemento ? '(' + userData.complemento + ')' : ''}</div>` : ''}
-                ${userData.bairro ? `<div class="address-line">${userData.bairro}</div>` : ''}
-                ${userData.cidade || userData.estado ? `<div class="address-line">${userData.cidade || ''}${userData.cidade && userData.estado ? ' - ' : ''}${userData.estado || ''}</div>` : ''}
-                ${userData.cep ? `<div class="address-line">CEP: ${userData.cep}</div>` : ''}
-                ${userData.pais ? `<div class="address-line">${userData.pais}</div>` : ''}
-              </div>
-            `;
-          } else {
-            enderecoHTML = '<div class="info-item"><strong>Endereço:</strong> Não informado</div>';
-          }
-
-          userInfoDiv.innerHTML = `
-            <div class="info-item"><strong>Nome:</strong> ${userData.firstname} ${userData.lastname}</div>
-            <div class="info-item"><strong>Nome de Usuário:</strong> ${userData.username}</div>
-            <div class="info-item"><strong>E-mail:</strong> ${userData.email}</div>
-            <div class="info-item"><strong>Telefone:</strong> ${userData.phone || 'Não informado'}</div>
-            <div class="info-item"><strong>Idade:</strong> ${userData.age} anos</div>
-            <div class="info-item"><strong>Gênero:</strong> ${userData.gender}</div>
-            
-            ${enderecoHTML}
-            
-            <div class="info-item"><strong>Cadastrado em:</strong> ${formattedDate}</div>
-            <div class="info-item"><strong>Status:</strong> ${userData.isActive ? 'Ativo' : 'Inativo'}</div>
-          `;
-        } else {
-          alert('Usuário não encontrado. Por favor, faça login.');
-          window.location.href = "login.html";
-        }
-      } else {
-        alert('Nenhum usuário logado. Por favor, faça login.');
-        window.location.href = "login.html";
-      }
-
-      // Carrega estoque e pedidos
-      carregarDados();
-
-      // Função de Logout
-      document.getElementById('logout').addEventListener('click', function(event) {
-        event.preventDefault();
-        localStorage.removeItem('loggedInUser');
-        window.location.href = "login.html";
-      });
+  document.addEventListener('DOMContentLoaded', async function() {
+    // Controle do menu mobile
+    const menuToggle = document.getElementById('menuToggle');
+    const mainNav = document.querySelector('.sf-menu');
+    
+    if (window.innerWidth <= 768) {
+      mainNav.style.display = 'none';
+    }
+    
+    menuToggle.addEventListener('click', function() {
+      mainNav.style.display = (mainNav.style.display === 'none' || mainNav.style.display === '') ? 'flex' : 'none';
+    });
+    
+    window.addEventListener('resize', function() {
+      mainNav.style.display = window.innerWidth > 768 ? 'flex' : 'none';
     });
 
-    // Função para carregar estoque e pedidos
-    async function carregarDados() {
-      try {
-        // Carrega estoque
-        await carregarEstoque();
-        
-        // Carrega pedidos do usuário
-        await carregarPedidosUsuario();
-        
-      } catch (error) {
-        console.error("Erro ao carregar dados:", error);
-        alert("Erro ao carregar dados. Tente recarregar a página.");
-      }
+    // Verifica usuário logado
+    const loggedInUserEmail = localStorage.getItem('loggedInUser');
+    if (!loggedInUserEmail) {
+      window.location.href = "login.html";
+      return;
     }
 
-    // Função para carregar estoque da planilha
-    async function carregarEstoque() {
-      try {
-        const response = await fetch(SHEET_URL);
-        const text = await response.text();
-        const json = JSON.parse(text.substr(47).slice(0, -2));
-        
-        dados.estoque = {
-          mesas: json.table.rows[0].c[3].v,
-          cadeiras: json.table.rows[1].c[3].v,
-          bancos: json.table.rows[2].c[3].v
-        };
-        
-        // Atualiza a exibição do estoque
-        const estoqueContainer = document.getElementById('estoqueAtual');
-        estoqueContainer.innerHTML = `
-          <p><strong>Mesas disponíveis:</strong> ${dados.estoque.mesas}</p>
-          <p><strong>Cadeiras disponíveis:</strong> ${dados.estoque.cadeiras}</p>
-          <p><strong>Bancos disponíveis:</strong> ${dados.estoque.bancos}</p>
+    // Carrega dados do usuário
+    const userData = JSON.parse(localStorage.getItem(loggedInUserEmail));
+    if (!userData) {
+      alert('Dados do usuário não encontrados!');
+      window.location.href = "login.html";
+      return;
+    }
+
+    exibirDadosUsuario(userData);
+    await carregarEstoque();
+    await carregarPedidosUsuario(loggedInUserEmail);
+
+    // Logout
+    document.getElementById('logout').addEventListener('click', function(e) {
+      e.preventDefault();
+      localStorage.removeItem('loggedInUser');
+      window.location.href = "login.html";
+    });
+  });
+
+  function exibirDadosUsuario(userData) {
+    const registrationDate = new Date(userData.registrationDate);
+    const formattedDate = registrationDate.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    const userInfoDiv = document.getElementById('userInfo');
+    userInfoDiv.innerHTML = `
+      <div class="info-item"><strong>Nome:</strong> ${userData.firstname} ${userData.lastname}</div>
+      <div class="info-item"><strong>E-mail:</strong> ${userData.email}</div>
+      <div class="info-item"><strong>Telefone:</strong> ${userData.phone || 'Não informado'}</div>
+      <div class="address-section">
+        <div class="info-item"><strong>Endereço:</strong></div>
+        ${userData.rua ? `<div class="address-line">${userData.rua}, ${userData.numero || 'S/N'}</div>` : ''}
+        ${userData.complemento ? `<div class="address-line">${userData.complemento}</div>` : ''}
+        ${userData.bairro ? `<div class="address-line">Bairro: ${userData.bairro}</div>` : ''}
+        ${userData.cidade ? `<div class="address-line">${userData.cidade} - ${userData.estado || ''}</div>` : ''}
+        ${userData.cep ? `<div class="address-line">CEP: ${userData.cep}</div>` : ''}
+      </div>
+      <div class="info-item"><strong>Cadastrado em:</strong> ${formattedDate}</div>
+    `;
+  }
+
+  async function carregarEstoque() {
+    try {
+      const response = await fetch(ESTOQUE_SHEET_URL);
+      const text = await response.text();
+      const json = JSON.parse(text.substr(47).slice(0, -2));
+      
+      const estoque = {
+        mesas: json.table.rows[0]?.c[3]?.v || 0,
+        cadeiras: json.table.rows[1]?.c[3]?.v || 0,
+        bancos: json.table.rows[2]?.c[3]?.v || 0
+      };
+
+      document.getElementById('estoqueAtual').innerHTML = `
+        <p><strong>Mesas disponíveis:</strong> ${estoque.mesas}</p>
+        <p><strong>Cadeiras disponíveis:</strong> ${estoque.cadeiras}</p>
+        <p><strong>Bancos disponíveis:</strong> ${estoque.bancos}</p>
+      `;
+    } catch (error) {
+      console.error("Erro ao carregar estoque:", error);
+      document.getElementById('estoqueAtual').innerHTML = `
+        <p style="color: red;">Erro ao carregar estoque. Atualize a página.</p>
+      `;
+    }
+  }
+
+  async function carregarPedidosUsuario(email) {
+    try {
+      const response = await fetch(PEDIDOS_SHEET_URL);
+      const text = await response.text();
+      const json = JSON.parse(text.substr(47).slice(0, -2));
+      
+      const pedidosContainer = document.getElementById('meusPedidos');
+      pedidosContainer.innerHTML = '<p>Carregando seus pedidos...</p>';
+      
+      // Extrai os pedidos do usuário
+      const pedidos = json.table.rows
+        .map(row => ({
+          email: row.c[0]?.v,
+          dataInicio: row.c[1]?.v,
+          dataFim: row.c[2]?.v,
+          mesas: row.c[3]?.v,
+          cadeiras: row.c[4]?.v,
+          bancos: row.c[5]?.v,
+          endereco: row.c[6]?.v,
+          total: row.c[7]?.v,
+          status: row.c[8]?.v
+        }))
+        .filter(pedido => pedido.email === email);
+      
+      if (pedidos.length === 0) {
+        pedidosContainer.innerHTML = "<p>Você ainda não realizou nenhum pedido.</p>";
+        return;
+      }
+
+      pedidosContainer.innerHTML = '';
+      pedidos.forEach((pedido, index) => {
+        const pedidoDiv = document.createElement('div');
+        pedidoDiv.className = 'pedido-item';
+        pedidoDiv.innerHTML = `
+          <h4>Pedido ${index + 1}</h4>
+          <p><strong>Status:</strong> ${pedido.status || 'Confirmado'}</p>
+          <p><strong>Período:</strong> ${formatarData(pedido.dataInicio)} a ${formatarData(pedido.dataFim)}</p>
+          <p><strong>Endereço:</strong> ${pedido.endereco || 'Retirada na loja'}</p>
+          <p><strong>Itens:</strong> ${pedido.mesas || 0} mesas, ${pedido.cadeiras || 0} cadeiras, ${pedido.bancos || 0} bancos</p>
+          <p><strong>Valor Total:</strong> R$ ${pedido.total?.toFixed(2) || '0.00'}</p>
+          ${pedido.status === 'Ativo' ? 
+            `<button onclick="devolverPedido('${pedido.dataInicio}', ${pedido.mesas}, ${pedido.cadeiras}, ${pedido.bancos})" class="btn2">
+              Devolver Itens
+            </button>` : 
+            ''}
         `;
-      } catch (error) {
-        console.error("Erro ao carregar estoque:", error);
-        // Exibe valores padrão em caso de erro
-        const estoqueContainer = document.getElementById('estoqueAtual');
-        estoqueContainer.innerHTML = `
-          <p><strong>Mesas disponíveis:</strong> 50</p>
-          <p><strong>Cadeiras disponíveis:</strong> 100</p>
-          <p><strong>Bancos disponíveis:</strong> 30</p>
-          <p style="color: red;">Obs: Estoque pode não estar atualizado</p>
-        `;
-      }
+        pedidosContainer.appendChild(pedidoDiv);
+      });
+    } catch (error) {
+      console.error("Erro ao carregar pedidos:", error);
+      document.getElementById('meusPedidos').innerHTML = `
+        <p style="color: red;">Erro ao carregar seus pedidos. Tente novamente mais tarde.</p>
+      `;
     }
+  }
 
-    // Função para carregar pedidos do usuário
-    async function carregarPedidosUsuario() {
-      try {
-        const loggedInUserEmail = localStorage.getItem('loggedInUser');
-        if (!loggedInUserEmail) return;
-        
-        // Aqui você precisaria implementar a lógica para buscar os pedidos do usuário
-        // Pode ser de um localStorage específico ou de uma API
-        // Vou manter o exemplo com localStorage para compatibilidade
-        
-        const pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
-        const pedidosContainer = document.getElementById('meusPedidos');
-        pedidosContainer.innerHTML = '';
-        
-        if (pedidos.length > 0) {
-          pedidos.forEach((pedido, index) => {
-            pedidosContainer.innerHTML += `
-              <div class="pedido-item">
-                <h4>Pedido ${index + 1}</h4>
-                <p><strong>Data de Retirada:</strong> ${pedido.dataInicio || 'Não especificada'}</p>
-                <p><strong>Data de Devolução:</strong> ${pedido.dataRetorno || 'Não especificada'}</p>
-                <p><strong>Quantidade de Dias:</strong> ${pedido.dias || 'Não especificada'}</p>
-                <p><strong>Endereço de Entrega:</strong> ${pedido.endereco}</p>
-                <p><strong>Quantidade de Mesas:</strong> ${pedido.mesas}</p>
-                <p><strong>Quantidade de Cadeiras:</strong> ${pedido.cadeiras}</p>
-                <p><strong>Quantidade de Bancos:</strong> ${pedido.bancos}</p>
-                <p><strong>Valor Diário dos Produtos:</strong> R$${parseFloat(pedido.totalDiario).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-                <p><strong>Valor Total dos Produtos (sem frete):</strong> R$${parseFloat(pedido.totalSemFrete).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-                <p><strong>Frete:</strong> R$${parseFloat(pedido.frete).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-                <p><strong>Total a Pagar:</strong> R$${parseFloat(pedido.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-                <button onclick="devolverEstoque(${index})" class="btn2">Devolver Estoque</button>
-              </div>
-            `;
-          });
-        } else {
-          pedidosContainer.innerHTML = "<p>Você ainda não realizou nenhum pedido.</p>";
-        }
-      } catch (error) {
-        console.error("Erro ao carregar pedidos:", error);
-        document.getElementById('meusPedidos').innerHTML = 
-          "<p>Erro ao carregar seus pedidos. Tente recarregar a página.</p>";
-      }
+  function formatarData(dataString) {
+    if (!dataString) return 'Não definida';
+    const data = new Date(dataString);
+    return data.toLocaleDateString('pt-BR');
+  }
+
+  async function devolverPedido(pedidoId, mesas, cadeiras, bancos) {
+    if (!confirm(`Confirmar devolução do pedido #${pedidoId}?\n\nItens:\n${mesas} mesas\n${cadeiras} cadeiras\n${bancos} bancos`)) {
+      return;
     }
-
-    // Função para devolver o estoque (atualizada para usar a API)
-    async function devolverEstoque(index) {
-      try {
-        const pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
-        const pedido = pedidos[index];
-        
-        if (!pedido) {
-          alert("Pedido não encontrado!");
-          return;
-        }
-
-        // Confirmação do usuário
-        if (!confirm(`Tem certeza que deseja devolver:\n${pedido.mesas} mesas\n${pedido.cadeiras} cadeiras\n${pedido.bancos} bancos?`)) {
-          return;
-        }
-
-        // Atualiza o estoque na planilha
-        await atualizarEstoqueAPI("mesas", pedido.mesas);
-        await atualizarEstoqueAPI("cadeiras", pedido.cadeiras);
-        await atualizarEstoqueAPI("bancos", pedido.bancos);
-
-        // Remove o pedido do histórico
-        pedidos.splice(index, 1);
-        localStorage.setItem('pedidos', JSON.stringify(pedidos));
-        
-        // Recarrega os dados
-        await carregarDados();
-        alert("Estoque devolvido com sucesso!");
-
-      } catch (error) {
-        console.error("Erro ao devolver estoque:", error);
-        alert("Erro ao devolver estoque. Tente novamente.");
-      }
+  
+    try {
+      // 1. Atualizar estoque
+      await atualizarEstoque('mesas', mesas);
+      await atualizarEstoque('cadeiras', cadeiras);
+      await atualizarEstoque('bancos', bancos);
+      
+      // 2. Marcar pedido como devolvido
+      const response = await fetch(`${SCRIPT_URL}?action=return_order&pedido_id=${pedidoId}`, {
+        method: 'POST',
+        mode: 'no-cors'
+      });
+      
+      alert('Devolução realizada com sucesso!');
+      location.reload();
+    } catch (error) {
+      console.error("Erro ao devolver pedido:", error);
+      alert("Erro ao processar devolução. Tente novamente.");
     }
+  }
 
-    // Função para atualizar estoque na API
-    async function atualizarEstoqueAPI(item, quantidade) {
-      try {
-        await fetch(`${SCRIPT_URL}?item=${item}&quantidade=${quantidade}`, {
-          method: 'POST',
-          mode: 'no-cors'
-        });
-      } catch (error) {
-        console.error(`Erro ao atualizar estoque (${item}):`, error);
-        throw error;
-      }
+  async function atualizarEstoque(item, quantidade) {
+    try {
+      await fetch(`${SCRIPT_URL}?item=${item}&quantidade=${quantidade}`, {
+        method: 'POST',
+        mode: 'no-cors'
+      });
+    } catch (error) {
+      console.error(`Erro ao atualizar estoque (${item}):`, error);
+      throw error;
     }
-  </script>
+  }
+</script>
 </body>
 </html>
