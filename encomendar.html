@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
   <link rel="icon" href="images/favicon.ico">
   <link rel="shortcut icon" href="images/favicon.ico">
   <style>
@@ -438,67 +440,46 @@
   <!------------- JAVASCRIPT ------------>
 // Dados globais
 let dados = {
-  estoque: { mesas: 50, cadeiras: 100, bancos: 30 },
-  pedidos: []
-};
+    estoque: { mesas: 50, cadeiras: 100, bancos: 30 },
+    pedidos: []
+  };
 
-// Configurações da Planilha Google
-const SHEET_ID = "1QKnR6pWhemrdT5csvGpsy-pLxq0qQuKjniY7yvH3d48";
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`; 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlWH6q0Fvuweh0nCu5jNaBD1k0BTi0-sMgkMF-S2u_0tR9VxoyNohJHW0PhRa0vqTG/exec";
-  
-// CONTROLE DO MENU MOBILE
-document.addEventListener('DOMContentLoaded', function() {
-  const menuToggle = document.getElementById('menuToggle');
-  const mainNav = document.querySelector('.sf-menu');
-  
-  if (window.innerWidth <= 768) {
-    mainNav.style.display = 'none';
-  }
-  
-  menuToggle.addEventListener('click', function() {
-    if (mainNav.style.display === 'none' || mainNav.style.display === '') {
-      mainNav.style.display = 'flex';
-    } else {
-      mainNav.style.display = 'none';
-    }
-  });
-  
-  window.addEventListener('resize', function() {
-    if (window.innerWidth > 768) {
-      mainNav.style.display = 'flex';
-    } else {
-      mainNav.style.display = 'none';
-    }
-  });
+  // Configurações da Planilha Google
+  const SHEET_ID = "1QKnR6pWhemrdT5csvGpsy-pLxq0qQuKjniY7yvH3d48";
+  const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`; 
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlWH6q0Fvuweh0nCu5jNaBD1k0BTi0-sMgkMF-S2u_0tR9VxoyNohJHW0PhRa0vqTG/exec";
+    
+  // CONTROLE DO MENU MOBILE
+  document.addEventListener('DOMContentLoaded', function() {
+    // Restante do código JavaScript...
+    
+    // Datepicker
+    $("#datepickerstart").datepicker({
+      dateFormat: "dd/mm/yy",
+      minDate: 0,
+      onSelect: function() {
+        let startDate = $("#datepickerstart").datepicker("getDate");
+        startDate.setDate(startDate.getDate() + 1);
+        $("#datepickerend").datepicker("option", "minDate", startDate);
+      }
+    });
+    
+    $("#datepickerend").datepicker({
+      dateFormat: "dd/mm/yy",
+      minDate: 1
+    });
+    
+    carregarEstoque();
+    
+    const closeModalBtn = document.getElementById("close-modal");
+    closeModalBtn.addEventListener("click", () => {
+      document.getElementById("fade").style.display = "none";
+      document.getElementById("modal").style.display = "none";
+      window.location.href = "customer_area.html";
+    });
 
-  // Datepicker
-  $("#datepickerstart").datepicker({
-    dateFormat: "dd/mm/yy",
-    minDate: 0,
-    onSelect: function() {
-      let startDate = $("#datepickerstart").datepicker("getDate");
-      startDate.setDate(startDate.getDate() + 1);
-      $("#datepickerend").datepicker("option", "minDate", startDate);
-    }
+    toggleAddress(false);
   });
-  
-  $("#datepickerend").datepicker({
-    dateFormat: "dd/mm/yy",
-    minDate: 1
-  });
-  
-  carregarEstoque();
-  
-  const closeModalBtn = document.getElementById("close-modal");
-  closeModalBtn.addEventListener("click", () => {
-    document.getElementById("fade").style.display = "none";
-    document.getElementById("modal").style.display = "none";
-    window.location.href = "customer_area.html";
-  });
-
-  toggleAddress(false);
-});
 
 // FUNÇÕES DE CONTROLE DE ENDEREÇO
 function toggleAddress(show) {
