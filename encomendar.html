@@ -667,23 +667,26 @@
           document.getElementById("totalpedido").innerHTML = (totalSemFrete + frete).toFixed(2);
         }
         
-        // URL da planilha Google Sheets (SUBSTITUA pelo SEU link)
-        const SHEET_ID = "SUA_ID_DA_PLANILHA";
+        // Configurações da Planilha Google (substitua com SEUS dados)
+        const SHEET_ID = "1QKnR6pWhemrdT5csvGpsy-pLxq0qQuKjniY7yvH3d48";
         const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
         
-        // URL do Google Apps Script (SUBSTITUA pelo SEU)
-        const SCRIPT_URL = "https://script.google.com/macros/s/SEU_SCRIPT_ID/exec";
+        // Configuração do Google Apps Script (use SEU script)
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1cEDlLVNkI6H4nlE6h-w-oFUqYB9nPbX1n3PiGuo7/exec";
         
-        // Carrega estoque da planilha
+        // Função para carregar estoque da planilha
         async function carregarEstoque() {
           try {
             const response = await fetch(SHEET_URL);
             const text = await response.text();
             const json = JSON.parse(text.substr(47).slice(0, -2));
             
-            // Atualiza os dados locais
+            // Verifique no console a estrutura dos dados recebidos
+            console.log("Dados recebidos da planilha:", json.table.rows);
+            
+            // Ajuste os índices conforme sua planilha
             dados.estoque = {
-              mesas: json.table.rows[0].c[3].v,  // Coluna "Disponível"
+              mesas: json.table.rows[0].c[3].v,  // Coluna D (Disponível) - Linha 2
               cadeiras: json.table.rows[1].c[3].v,
               bancos: json.table.rows[2].c[3].v
             };
@@ -691,9 +694,10 @@
             exibirEstoque();
           } catch (error) {
             console.error("Erro ao carregar estoque:", error);
-            // Fallback para valores padrão
+            // Fallback para valores locais
             dados.estoque = { mesas: 50, cadeiras: 100, bancos: 30 };
             exibirEstoque();
+            alert("Estamos com problemas técnicos. Estoque pode não estar atualizado.");
           }
         }
         
