@@ -8,10 +8,6 @@
   <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   <link rel="icon" href="images/favicon.ico">
   <link rel="shortcut icon" href="images/favicon.ico">
-  <script src="backend/db.js"></script>
-  <script src="backend/server.js"></script>
-  <script src="backend/routes/estoque.js"></script>
-  <script src="backend/routes/pedido.js"></script>
   <style>
     /* --------------- CSS -------------- */
     /* RESET E ESTILOS GERAIS */
@@ -440,433 +436,390 @@
 <body>
 
   <!------------- JAVASCRIPT ------------>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-  <script>
-    // CONTROLE DO MENU MOBILE
-    document.addEventListener('DOMContentLoaded', function() {
-      const menuToggle = document.getElementById('menuToggle');
-      const mainNav = document.querySelector('.sf-menu');
-      
-      // Verifica se é mobile no carregamento
-      if (window.innerWidth <= 768) {
-        mainNav.style.display = 'none';
-      }
-      
-      // Controle do clique no botão
-      menuToggle.addEventListener('click', function() {
-        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
-          mainNav.style.display = 'flex';
-        } else {
-          mainNav.style.display = 'none';
-        }
-      });
-      
-      // Atualiza ao redimensionar a tela
-      window.addEventListener('resize', function() {
-        if (window.innerWidth > 768) {
-          mainNav.style.display = 'flex';
-        } else {
-          mainNav.style.display = 'none';
-        }
-      });
-
-      // Datepicker
-      $("#datepickerstart").datepicker({
-        dateFormat: "dd/mm/yy",
-        minDate: 0,
-        onSelect: function() {
-          let startDate = $("#datepickerstart").datepicker("getDate");
-          startDate.setDate(startDate.getDate() + 1);
-          $("#datepickerend").datepicker("option", "minDate", startDate);
-        }
-      });
-      
-      $("#datepickerend").datepicker({
-        dateFormat: "dd/mm/yy",
-        minDate: 1
-      });
-      
-      // Inicializa estoque
-      exibirEstoque();
-      
-      // Configura o modal
-      const closeModalBtn = document.getElementById("close-modal");
-      closeModalBtn.addEventListener("click", () => {
-        document.getElementById("fade").style.display = "none";
-        document.getElementById("modal").style.display = "none";
-        window.location.href = "customer_area.html";
-      });
-
-      // Mostra/oculta seção de endereço baseado na escolha inicial
-      toggleAddress(false);
-    });
-
-    // FUNÇÕES DE CONTROLE DE ENDEREÇO
-    function toggleAddress(show) {
-      document.getElementById('address-section').style.display = show ? 'block' : 'none';
-      document.getElementById('loja-info').style.display = show ? 'none' : 'block';
-      document.getElementById('frete-section').style.display = show ? 'block' : 'none';
-      if (!show) {
-        toggleAddressFields(false);
-      }
-    }
-
-    function toggleAddressFields(show) {
-      document.getElementById('novo-endereco-section').style.display = show ? 'block' : 'none';
-    }
-
-    // FUNÇÃO PARA BUSCAR CEP
-    function buscarCEP() {
-      const cep = document.getElementById('novo-cep').value.replace(/\D/g, '');
-      
-      if (cep.length !== 8) {
-        alert('CEP inválido. Digite os 8 números do CEP');
-        return;
-      }
-      
-      fetch(`https://viacep.com.br/ws/${cep}/json/`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.erro) {
-            alert('CEP não encontrado!');
-            return;
+        // Dados globais
+        let dados = {
+          estoque: { mesas: 50, cadeiras: 100, bancos: 30 },
+          pedidos: []
+        };
+        
+        // CONTROLE DO MENU MOBILE
+        document.addEventListener('DOMContentLoaded', function() {
+          const menuToggle = document.getElementById('menuToggle');
+          const mainNav = document.querySelector('.sf-menu');
+          
+          // Verifica se é mobile no carregamento
+          if (window.innerWidth <= 768) {
+            mainNav.style.display = 'none';
           }
           
-          // Preenche os campos com os dados da API
-          document.getElementById('novo-rua').value = data.logradouro || '';
-          document.getElementById('novo-bairro').value = data.bairro || '';
-          document.getElementById('novo-cidade').value = data.localidade || '';
-          document.getElementById('novo-estado').value = data.uf || '';
+          // Controle do clique no botão
+          menuToggle.addEventListener('click', function() {
+            if (mainNav.style.display === 'none' || mainNav.style.display === '') {
+              mainNav.style.display = 'flex';
+            } else {
+              mainNav.style.display = 'none';
+            }
+          });
           
-          // Foca no campo de número
-          document.getElementById('novo-numero').focus();
-        })
-        .catch(error => {
-          console.error('Erro ao buscar CEP:', error);
-          alert('Erro ao buscar CEP. Tente novamente mais tarde.');
+          // Atualiza ao redimensionar a tela
+          window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+              mainNav.style.display = 'flex';
+            } else {
+              mainNav.style.display = 'none';
+            }
+          });
+        
+          // Datepicker
+          $("#datepickerstart").datepicker({
+            dateFormat: "dd/mm/yy",
+            minDate: 0,
+            onSelect: function() {
+              let startDate = $("#datepickerstart").datepicker("getDate");
+              startDate.setDate(startDate.getDate() + 1);
+              $("#datepickerend").datepicker("option", "minDate", startDate);
+            }
+          });
+          
+          $("#datepickerend").datepicker({
+            dateFormat: "dd/mm/yy",
+            minDate: 1
+          });
+          
+          // Inicializa estoque
+          carregarEstoque();
+          
+          // Configura o modal
+          const closeModalBtn = document.getElementById("close-modal");
+          closeModalBtn.addEventListener("click", () => {
+            document.getElementById("fade").style.display = "none";
+            document.getElementById("modal").style.display = "none";
+            window.location.href = "customer_area.html";
+          });
+        
+          // Mostra/oculta seção de endereço baseado na escolha inicial
+          toggleAddress(false);
         });
-    }
-
-    // FUNÇÕES DE EXIBIÇÃO DOS MODELOS
-    function change1() {
-      document.getElementById("change").innerHTML = 
-        "<img src='images/page1_img1.jpg' style='max-width:100%;height:auto;'><br>" +
-        "<b>CONFORTO</b><br>Mesa R$15,00 /dia<br>Cadeira R$5,00 /dia<br>Banco R$3,00 /dia";
-    }
-
-    function change2() {
-      document.getElementById("change").innerHTML = 
-        "<img src='images/page1_img2.jpg' style='max-width:100%;height:auto;'><br>" +
-        "<b>MÉDIO</b><br>Mesa R$25,00 /dia<br>Cadeira R$8,00 /dia<br>Banco R$5,00 /dia";
-    }
-
-    function change3() {
-      document.getElementById("change").innerHTML = 
-        "<img src='images/page1_img3.jpg' style='max-width:100%;height:auto;'><br>" +
-        "<b>EXECUTIVO</b><br>Mesa R$40,00 /dia<br>Cadeira R$12,00 /dia<br>Banco R$8,00 /dia";
-    }
-
-    // FUNÇÃO DE CÁLCULO DO VALOR TOTAL
-    function valor() {
-      const startDate = $("#datepickerstart").datepicker("getDate");
-      const endDate = $("#datepickerend").datepicker("getDate");
-      
-      if (!startDate || !endDate) {
-        alert("Por favor, selecione as datas de início e término");
-        return;
-      }
-
-      const diffTime = Math.abs(endDate - startDate);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      const bancos = parseInt(document.getElementById("quantidadebancos").value) || 0;
-      const cadeiras = parseInt(document.getElementById("quantidadecadeiras").value) || 0;
-      const mesas = parseInt(document.getElementById("quantidademesas").value) || 0;
-      
-      let valorBanco, valorCadeira, valorMesa;
-      
-      if (document.getElementById("conforto").checked) {
-        valorBanco = 3;
-        valorCadeira = 5;
-        valorMesa = 15;
-      } else if (document.getElementById("medio").checked) {
-        valorBanco = 5;
-        valorCadeira = 8;
-        valorMesa = 25;
-      } else if (document.getElementById("executivo").checked) {
-        valorBanco = 8;
-        valorCadeira = 12;
-        valorMesa = 40;
-      } else {
-        alert("Por favor, selecione um modelo");
-        return;
-      }
-      
-      const totalBancos = bancos * valorBanco * diffDays;
-      const totalCadeiras = cadeiras * valorCadeira * diffDays;
-      const totalMesas = mesas * valorMesa * diffDays;
-      
-      document.getElementById("resbancos").innerHTML = totalBancos.toFixed(2);
-      document.getElementById("rescadeiras").innerHTML = totalCadeiras.toFixed(2);
-      document.getElementById("resmesas").innerHTML = totalMesas.toFixed(2);
-      
-      const totalDiaria = (bancos * valorBanco) + (cadeiras * valorCadeira) + (mesas * valorMesa);
-      const totalSemFrete = totalBancos + totalCadeiras + totalMesas;
-      
-      document.getElementById("totaldiaria").innerHTML = totalDiaria.toFixed(2);
-      document.getElementById("totalpedido_frete").innerHTML = totalSemFrete.toFixed(2);
-      
-      // Se for retirada, zera o frete
-      if (document.getElementById('retirada').checked) {
-        document.getElementById("frete-section").style.display = "none";
-        document.getElementById("totalpedido").innerHTML = totalSemFrete.toFixed(2);
-      } else {
-        // Mostra a seção de frete e calcula
-        document.getElementById("frete-section").style.display = "block";
-        calcularFrete(totalSemFrete);
-      }
-    }
-
-    // FUNÇÃO PARA CALCULAR FRETE
-    function calcularFrete(totalSemFrete) {
-      const isEntrega = document.getElementById('entrega').checked;
-      
-      if (!isEntrega) {
-        document.getElementById("valor_frete").innerHTML = "0.00";
-        document.getElementById("totalpedido").innerHTML = totalSemFrete.toFixed(2);
-        return;
-      }
-      
-      // Verifica se é endereço cadastrado ou novo
-      const usarEnderecoCadastrado = document.getElementById('endereco_cadastrado').checked;
-      let cep = '';
-      
-      if (usarEnderecoCadastrado) {
-        const loggedInUserEmail = localStorage.getItem('loggedInUser');
-        if (loggedInUserEmail) {
-          const userData = JSON.parse(localStorage.getItem(loggedInUserEmail));
-          if (userData && userData.cep) {
-            cep = userData.cep.replace(/\D/g, '');
+        
+        // FUNÇÕES DE CONTROLE DE ENDEREÇO
+        function toggleAddress(show) {
+          document.getElementById('address-section').style.display = show ? 'block' : 'none';
+          document.getElementById('loja-info').style.display = show ? 'none' : 'block';
+          document.getElementById('frete-section').style.display = show ? 'block' : 'none';
+          if (!show) {
+            toggleAddressFields(false);
           }
         }
-      } else {
-        cep = document.getElementById('novo-cep').value.replace(/\D/g, '');
-      }
-      
-      // Se não tem CEP, usa um valor padrão
-      if (!cep || cep.length !== 8) {
-        const fretePadrao = 50.00;
-        document.getElementById("valor_frete").innerHTML = fretePadrao.toFixed(2);
-        document.getElementById("totalpedido").innerHTML = (totalSemFrete + fretePadrao).toFixed(2);
-        return;
-      }
-      
-      // Simulação de cálculo de frete (substituir por API real)
-      const frete = Math.floor(Math.random() * 50) + 20; // Valor aleatório entre 20 e 70
-      document.getElementById("valor_frete").innerHTML = frete.toFixed(2);
-      document.getElementById("totalpedido").innerHTML = (totalSemFrete + frete).toFixed(2);
-    }
-
-    // FUNÇÃO PARA EXIBIR ESTOQUE (AGORA COM CHAMADA À API)
-    // Em exibirEstoque(), adicione um log para debug:
-    async function exibirEstoque() {
-      try {
-        console.log('Chamando API de estoque...'); // ← Adicione isto
         
-        const response = await fetch('http://localhost:3000/api/estoque'); // ← Use URL completa
-        console.log('Resposta da API:', response); // ← Adicione isto
-        
-        if (!response.ok) {
-          throw new Error(`Erro HTTP: ${response.status}`);
-        }
-    
-    const estoque = await response.json();
-    console.log('Dados recebidos:', estoque); // ← Adicione isto
-        
-        document.getElementById('estoqueMesas').innerText = `Mesas: ${estoque.data.estoqueMesas || 0}`;
-        document.getElementById('estoqueCadeiras').innerText = `Cadeiras: ${estoque.data.estoqueCadeiras || 0}`;
-        document.getElementById('estoqueBancos').innerText = `Bancos: ${estoque.data.estoqueBancos || 0}`;
-      } catch (error) {
-        console.error('Erro detalhado:', error); // ← Log mais detalhado
-        // Valores padrão caso a API falhe
-        document.getElementById('estoqueMesas').innerText = 'Mesas: 0';
-        document.getElementById('estoqueCadeiras').innerText = 'Cadeiras: 0';
-        document.getElementById('estoqueBancos').innerText = 'Bancos: 0';
-      }
-    }
-
-    // FUNÇÃO DE FINALIZAÇÃO DO PEDIDO (AGORA COM CHAMADA À API)
-    async function fim() {
-      // Verifica se todos os campos estão preenchidos
-      const requiredFields = [
-        'datepickerstart', 'datepickerend', 'quantidadebancos', 
-        'quantidadecadeiras', 'quantidademesas'
-      ];
-      
-      for (const fieldId of requiredFields) {
-        const field = document.getElementById(fieldId);
-        if (!field.value || parseInt(field.value) < 0) {
-          alert(`Por favor, preencha corretamente o campo ${fieldId.replace('-', ' ')}`);
-          return;
-        }
-      }
-      
-      if (!document.querySelector('input[name="opcao"]:checked')) {
-        alert("Por favor, selecione um modelo");
-        return;
-      }
-
-      // Verifica estoque via API
-      let estoqueDisponivel = false;
-      try {
-        const estoqueResponse = await fetch('/api/estoque');
-        if (!estoqueResponse.ok) {
-          throw new Error('Erro ao verificar estoque');
-        }
-        const estoque = await estoqueResponse.json();
-        
-        const bancos = parseInt(document.getElementById("quantidadebancos").value);
-        const cadeiras = parseInt(document.getElementById("quantidadecadeiras").value);
-        const mesas = parseInt(document.getElementById("quantidademesas").value);
-        
-        if (bancos > estoque.data.estoqueBancos || 
-            cadeiras > estoque.data.estoqueCadeiras || 
-            mesas > estoque.data.estoqueMesas) {
-          alert("Quantidade solicitada maior que o estoque disponível");
-          return;
+        function toggleAddressFields(show) {
+          document.getElementById('novo-endereco-section').style.display = show ? 'block' : 'none';
         }
         
-        estoqueDisponivel = true;
-      } catch (error) {
-        console.error('Erro ao verificar estoque:', error);
-        alert('Não foi possível verificar o estoque. Tente novamente.');
-        return;
-      }
-
-      // Verifica se é entrega e tem endereço válido
-      const isEntrega = document.getElementById('entrega').checked;
-      let enderecoEntrega = '';
-      
-      if (isEntrega) {
-        const usarEnderecoCadastrado = document.getElementById('endereco_cadastrado').checked;
-        
-        if (usarEnderecoCadastrado) {
-          const loggedInUserEmail = localStorage.getItem('loggedInUser');
-          if (!loggedInUserEmail) {
-            alert('Usuário não logado. Faça login para usar o endereço cadastrado.');
+        // FUNÇÃO PARA BUSCAR CEP
+        function buscarCEP() {
+          const cep = document.getElementById('novo-cep').value.replace(/\D/g, '');
+          
+          if (cep.length !== 8) {
+            alert('CEP inválido. Digite os 8 números do CEP');
             return;
           }
           
-          const userData = JSON.parse(localStorage.getItem(loggedInUserEmail));
-          if (!userData) {
-            alert('Dados do usuário não encontrados.');
-            return;
-          }
-          
-          enderecoEntrega = `${userData.rua}, ${userData.numero || 'S/N'}${userData.complemento ? ' - ' + userData.complemento : ''} - ${userData.bairro}, ${userData.cidade} - ${userData.estado}, CEP: ${userData.cep}`;
-        } else {
-          // Verifica campos do novo endereço
-          const novoCep = document.getElementById('novo-cep').value;
-          const novoRua = document.getElementById('novo-rua').value;
-          const novoNumero = document.getElementById('novo-numero').value;
-          const novoCidade = document.getElementById('novo-cidade').value;
-          const novoEstado = document.getElementById('novo-estado').value;
-          
-          if (!novoCep || !novoRua || !novoNumero || !novoCidade || !novoEstado) {
-            alert('Por favor, preencha todos os campos do endereço');
-            return;
-          }
-          
-          enderecoEntrega = `${novoRua}, ${novoNumero}${document.getElementById('novo-complemento').value ? ' - ' + document.getElementById('novo-complemento').value : ''} - ${document.getElementById('novo-bairro').value}, ${novoCidade} - ${novoEstado}, CEP: ${novoCep}`;
+          fetch(`https://viacep.com.br/ws/${cep}/json/`)
+            .then(response => response.json())
+            .then(data => {
+              if (data.erro) {
+                alert('CEP não encontrado!');
+                return;
+              }
+              
+              // Preenche os campos com os dados da API
+              document.getElementById('novo-rua').value = data.logradouro || '';
+              document.getElementById('novo-bairro').value = data.bairro || '';
+              document.getElementById('novo-cidade').value = data.localidade || '';
+              document.getElementById('novo-estado').value = data.uf || '';
+              
+              // Foca no campo de número
+              document.getElementById('novo-numero').focus();
+            })
+            .catch(error => {
+              console.error('Erro ao buscar CEP:', error);
+              alert('Erro ao buscar CEP. Tente novamente mais tarde.');
+            });
         }
-      } else {
-        enderecoEntrega = 'Av. Independência, 5110 - Barra Funda, Vinhedo - SP, 13280-000 (Retirada na loja)';
-      }
-      
-      // Calcula dias
-      const startDate = $("#datepickerstart").datepicker("getDate");
-      const endDate = $("#datepickerend").datepicker("getDate");
-      const diffTime = Math.abs(endDate - startDate);
-      const dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      // Prepara dados do pedido para a API
-      const pedidoData = {
-        dataInicio: document.getElementById("datepickerstart").value,
-        dataRetorno: document.getElementById("datepickerend").value,
-        modelo: document.querySelector('input[name="opcao"]:checked').value,
-        bancos: parseInt(document.getElementById("quantidadebancos").value),
-        cadeiras: parseInt(document.getElementById("quantidadecadeiras").value),
-        mesas: parseInt(document.getElementById("quantidademesas").value),
-        endereco: enderecoEntrega,
-        tipoEntrega: isEntrega ? 'entrega' : 'retirada',
-        totalDiario: parseFloat(document.getElementById("totaldiaria").innerHTML),
-        totalSemFrete: parseFloat(document.getElementById("totalpedido_frete").innerHTML),
-        frete: isEntrega ? parseFloat(document.getElementById("valor_frete").innerHTML) || 0 : 0,
-        total: parseFloat(document.getElementById("totalpedido").innerHTML),
-        status: 'pendente',
-        dataPedido: new Date().toISOString(),
-        dias: dias
-      };
-
-      // Obtém o ID do usuário logado (você precisará implementar isso no seu backend)
-      const loggedInUserEmail = localStorage.getItem('loggedInUser');
-      if (!loggedInUserEmail) {
-        alert('Usuário não logado. Faça login para continuar.');
-        return;
-      }
-
-      try {
-        // Primeiro: Envia o pedido para a API
-        const response = await fetch('/api/pedidos', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            ...pedidoData,
-            usuario_id: loggedInUserEmail // Aqui você deve usar o ID do usuário, não o email
-          })
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Erro ao criar pedido');
-        }
-
-        const result = await response.json();
-
-        // Segundo: Atualiza o estoque via API
-        const estoqueResponse = await fetch('/api/estoque/atualizar', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            mesas: pedidoData.mesas,
-            cadeiras: pedidoData.cadeiras,
-            bancos: pedidoData.bancos
-          })
-        });
-
-        if (!estoqueResponse.ok) {
-          throw new Error('Pedido criado, mas erro ao atualizar estoque');
-        }
-
-        // Exibe mensagem de sucesso
-        document.getElementById("corpo").innerHTML = `
-          <h4 style="color: #1b6222;">Pedido realizado com sucesso!</h4>
-          <p><strong>Número do Pedido:</strong> ${result.pedidoId}</p>
-          <p><strong>Total a Pagar:</strong> R$${pedidoData.total.toFixed(2)}</p>
-          <p><strong>${pedidoData.tipoEntrega === 'retirada' ? 'Local de Retirada' : 'Endereço de Entrega'}:</strong> ${pedidoData.endereco}</p>
-          <p><strong>Data de Retirada:</strong> ${pedidoData.dataInicio}</p>
-          <p><strong>Data de Devolução:</strong> ${pedidoData.dataRetorno}</p>
-          <p>Em breve entraremos em contato para confirmar os detalhes.</p>
-        `;
         
-        // Mostra o modal
-        document.getElementById("fade").style.display = "block";
-        document.getElementById("modal").style.display = "block";
+        // FUNÇÕES DE EXIBIÇÃO DOS MODELOS
+        function change1() {
+          document.getElementById("change").innerHTML = 
+            "<img src='images/page1_img1.jpg' style='max-width:100%;height:auto;'><br>" +
+            "<b>CONFORTO</b><br>Mesa R$15,00 /dia<br>Cadeira R$5,00 /dia<br>Banco R$3,00 /dia";
+        }
+        
+        function change2() {
+          document.getElementById("change").innerHTML = 
+            "<img src='images/page1_img2.jpg' style='max-width:100%;height:auto;'><br>" +
+            "<b>MÉDIO</b><br>Mesa R$25,00 /dia<br>Cadeira R$8,00 /dia<br>Banco R$5,00 /dia";
+        }
+        
+        function change3() {
+          document.getElementById("change").innerHTML = 
+            "<img src='images/page1_img3.jpg' style='max-width:100%;height:auto;'><br>" +
+            "<b>EXECUTIVO</b><br>Mesa R$40,00 /dia<br>Cadeira R$12,00 /dia<br>Banco R$8,00 /dia";
+        }
+        
+        // FUNÇÃO DE CÁLCULO DO VALOR TOTAL
+        function valor() {
+          const startDate = $("#datepickerstart").datepicker("getDate");
+          const endDate = $("#datepickerend").datepicker("getDate");
+          
+          if (!startDate || !endDate) {
+            alert("Por favor, selecione as datas de início e término");
+            return;
+          }
+        
+          const diffTime = Math.abs(endDate - startDate);
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          const bancos = parseInt(document.getElementById("quantidadebancos").value) || 0;
+          const cadeiras = parseInt(document.getElementById("quantidadecadeiras").value) || 0;
+          const mesas = parseInt(document.getElementById("quantidademesas").value) || 0;
+          
+          let valorBanco, valorCadeira, valorMesa;
+          
+          if (document.getElementById("conforto").checked) {
+            valorBanco = 3;
+            valorCadeira = 5;
+            valorMesa = 15;
+          } else if (document.getElementById("medio").checked) {
+            valorBanco = 5;
+            valorCadeira = 8;
+            valorMesa = 25;
+          } else if (document.getElementById("executivo").checked) {
+            valorBanco = 8;
+            valorCadeira = 12;
+            valorMesa = 40;
+          } else {
+            alert("Por favor, selecione um modelo");
+            return;
+          }
+          
+          const totalBancos = bancos * valorBanco * diffDays;
+          const totalCadeiras = cadeiras * valorCadeira * diffDays;
+          const totalMesas = mesas * valorMesa * diffDays;
+          
+          document.getElementById("resbancos").innerHTML = totalBancos.toFixed(2);
+          document.getElementById("rescadeiras").innerHTML = totalCadeiras.toFixed(2);
+          document.getElementById("resmesas").innerHTML = totalMesas.toFixed(2);
+          
+          const totalDiaria = (bancos * valorBanco) + (cadeiras * valorCadeira) + (mesas * valorMesa);
+          const totalSemFrete = totalBancos + totalCadeiras + totalMesas;
+          
+          document.getElementById("totaldiaria").innerHTML = totalDiaria.toFixed(2);
+          document.getElementById("totalpedido_frete").innerHTML = totalSemFrete.toFixed(2);
+          
+          // Se for retirada, zera o frete
+          if (document.getElementById('retirada').checked) {
+            document.getElementById("frete-section").style.display = "none";
+            document.getElementById("totalpedido").innerHTML = totalSemFrete.toFixed(2);
+          } else {
+            // Mostra a seção de frete e calcula
+            document.getElementById("frete-section").style.display = "block";
+            calcularFrete(totalSemFrete);
+          }
+        }
+        
+        // FUNÇÃO PARA CALCULAR FRETE
+        function calcularFrete(totalSemFrete) {
+          const isEntrega = document.getElementById('entrega').checked;
+          
+          if (!isEntrega) {
+            document.getElementById("valor_frete").innerHTML = "0.00";
+            document.getElementById("totalpedido").innerHTML = totalSemFrete.toFixed(2);
+            return;
+          }
+          
+          // Verifica se é endereço cadastrado ou novo
+          const usarEnderecoCadastrado = document.getElementById('endereco_cadastrado').checked;
+          let cep = '';
+          
+          if (usarEnderecoCadastrado) {
+            const loggedInUserEmail = localStorage.getItem('loggedInUser');
+            if (loggedInUserEmail) {
+              const userData = JSON.parse(localStorage.getItem(loggedInUserEmail));
+              if (userData && userData.cep) {
+                cep = userData.cep.replace(/\D/g, '');
+              }
+            }
+          } else {
+            cep = document.getElementById('novo-cep').value.replace(/\D/g, '');
+          }
+          
+          // Se não tem CEP, usa um valor padrão
+          if (!cep || cep.length !== 8) {
+            const fretePadrao = 50.00;
+            document.getElementById("valor_frete").innerHTML = fretePadrao.toFixed(2);
+            document.getElementById("totalpedido").innerHTML = (totalSemFrete + fretePadrao).toFixed(2);
+            return;
+          }
+          
+          // Simulação de cálculo de frete (substituir por API real)
+          const frete = Math.floor(Math.random() * 50) + 20; // Valor aleatório entre 20 e 70
+          document.getElementById("valor_frete").innerHTML = frete.toFixed(2);
+          document.getElementById("totalpedido").innerHTML = (totalSemFrete + frete).toFixed(2);
+        }
+        
+        // URL da planilha Google Sheets (SUBSTITUA pelo SEU link)
+        const SHEET_ID = "SUA_ID_DA_PLANILHA";
+        const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+        
+        // URL do Google Apps Script (SUBSTITUA pelo SEU)
+        const SCRIPT_URL = "https://script.google.com/macros/s/SEU_SCRIPT_ID/exec";
+        
+        // Carrega estoque da planilha
+        async function carregarEstoque() {
+          try {
+            const response = await fetch(SHEET_URL);
+            const text = await response.text();
+            const json = JSON.parse(text.substr(47).slice(0, -2));
+            
+            // Atualiza os dados locais
+            dados.estoque = {
+              mesas: json.table.rows[0].c[3].v,  // Coluna "Disponível"
+              cadeiras: json.table.rows[1].c[3].v,
+              bancos: json.table.rows[2].c[3].v
+            };
+            
+            exibirEstoque();
+          } catch (error) {
+            console.error("Erro ao carregar estoque:", error);
+            // Fallback para valores padrão
+            dados.estoque = { mesas: 50, cadeiras: 100, bancos: 30 };
+            exibirEstoque();
+          }
+        }
+        
+        function exibirEstoque() {
+          document.getElementById('estoqueMesas').innerText = `Mesas: ${dados.estoque.mesas}`;
+          document.getElementById('estoqueCadeiras').innerText = `Cadeiras: ${dados.estoque.cadeiras}`;
+          document.getElementById('estoqueBancos').innerText = `Bancos: ${dados.estoque.bancos}`;
+        }
+        
+        // Atualiza estoque na planilha
+        async function atualizarEstoque(item, quantidade) {
+          try {
+            await fetch(`${SCRIPT_URL}?item=${item}&quantidade=${quantidade}`, {
+              method: 'POST',
+              mode: 'no-cors'
+            });
+            
+            // Atualiza localmente enquanto espera a planilha atualizar
+            if (item === 'mesas') dados.estoque.mesas -= quantidade;
+            if (item === 'cadeiras') dados.estoque.cadeiras -= quantidade;
+            if (item === 'bancos') dados.estoque.bancos -= quantidade;
+            
+            exibirEstoque();
+            
+            // Recarrega após 2 segundos (tempo para planilha atualizar)
+            setTimeout(carregarEstoque, 2000);
+          } catch (error) {
+            console.error("Erro ao atualizar estoque:", error);
+            alert("Pedido realizado, mas não foi possível atualizar o estoque online. Atualize manualmente.");
+          }
+        }
+        
+        // FUNÇÃO DE FINALIZAÇÃO DO PEDIDO
+        async function fim() {
+          // Validações básicas
+          const requiredFields = ['datepickerstart', 'datepickerend', 'quantidadebancos', 'quantidadecadeiras', 'quantidademesas'];
+          for (const fieldId of requiredFields) {
+            const field = document.getElementById(fieldId);
+            if (!field.value || parseInt(field.value) < 0) {
+              alert(`Por favor, preencha o campo ${fieldId.replace('-', ' ')}`);
+              return;
+            }
+          }
+          
+          if (!document.querySelector('input[name="opcao"]:checked')) {
+            alert("Por favor, selecione um modelo");
+            return;
+          }
+        
+          // Obtém quantidades
+          const bancos = parseInt(document.getElementById("quantidadebancos").value);
+          const cadeiras = parseInt(document.getElementById("quantidadecadeiras").value);
+          const mesas = parseInt(document.getElementById("quantidademesas").value);
+          
+          // Verifica estoque
+          if (bancos > dados.estoque.bancos || cadeiras > dados.estoque.cadeiras || mesas > dados.estoque.mesas) {
+            alert("Quantidade solicitada maior que o estoque disponível");
+            return;
+          }
+        
+          // Verifica endereço se for entrega
+          const isEntrega = document.getElementById('entrega').checked;
+          let enderecoEntrega = '';
+          
+          if (isEntrega) {
+            const usarEnderecoCadastrado = document.getElementById('endereco_cadastrado').checked;
+            
+            if (usarEnderecoCadastrado) {
+              const loggedInUserEmail = localStorage.getItem('loggedInUser');
+              if (!loggedInUserEmail) {
+                alert('Usuário não logado. Faça login para usar o endereço cadastrado.');
+                return;
+              }
+              
+              const userData = JSON.parse(localStorage.getItem(loggedInUserEmail));
+              if (!userData) {
+                alert('Dados do usuário não encontrados.');
+                return;
+              }
+              
+              enderecoEntrega = `${userData.rua}, ${userData.numero || 'S/N'}${userData.complemento ? ' - ' + userData.complemento : ''} - ${userData.bairro}, ${userData.cidade} - ${userData.estado}, CEP: ${userData.cep}`;
+            } else {
+              const novoCep = document.getElementById('novo-cep').value;
+              const novoRua = document.getElementById('novo-rua').value;
+              const novoNumero = document.getElementById('novo-numero').value;
+              const novoCidade = document.getElementById('novo-cidade').value;
+              const novoEstado = document.getElementById('novo-estado').value;
+              
+              if (!novoCep || !novoRua || !novoNumero || !novoCidade || !novoEstado) {
+                alert('Por favor, preencha todos os campos do endereço');
+                return;
+              }
+              
+              enderecoEntrega = `${novoRua}, ${novoNumero}${document.getElementById('novo-complemento').value ? ' - ' + document.getElementById('novo-complemento').value : ''} - ${document.getElementById('novo-bairro').value}, ${novoCidade} - ${novoEstado}, CEP: ${novoCep}`;
+            }
+          } else {
+            enderecoEntrega = 'Av. Independência, 5110 - Barra Funda, Vinhedo - SP, 13280-000 (Retirada na loja)';
+          }
+        
+          // Atualiza estoque
+          await atualizarEstoque("mesas", mesas);
+          await atualizarEstoque("cadeiras", cadeiras);
+          await atualizarEstoque("bancos", bancos);
+        
+          // Calcula dias
+          const startDate = $("#datepickerstart").datepicker("getDate");
+          const endDate = $("#datepickerend").datepicker("getDate");
+          const diffTime = Math.abs(endDate - startDate);
+          const dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+          // Mostra mensagem de sucesso
+          document.getElementById("corpo").innerHTML = `
+            <h4 style="color: #1b6222;">Pedido realizado com sucesso!</h4>
+            <p><strong>Itens alugados:</strong></p>
+            <p>Mesas: ${mesas}</p>
+            <p>Cadeiras: ${cadeiras}</p>
+            <p>Bancos: ${bancos}</p>
+            <p><strong>Período:</strong> ${dias} dias</p>
+            <p><strong>${isEntrega ? 'Endereço de Entrega' : 'Local de Retirada'}:</strong> ${enderecoEntrega}</p>
+            <p><strong>Total:</strong> R$${document.getElementById("totalpedido").innerHTML}</p>
+            <p>Em breve entraremos em contato para confirmar.</p>
+          `;
+          
+          document.getElementById("fade").style.display = "block";
+          document.getElementById("modal").style.display = "block";
+        }
         
         // Atualiza exibição do estoque
         exibirEstoque();
