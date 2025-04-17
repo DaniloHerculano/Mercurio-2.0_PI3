@@ -501,60 +501,71 @@
   }
 
   async function carregarPedidosUsuario(email) {
-    try {
-      const response = await fetch(PEDIDOS_SHEET_URL);
-      const text = await response.text();
-      const json = JSON.parse(text.substr(47).slice(0, -2));
-      
-      const pedidosContainer = document.getElementById('meusPedidos');
-      pedidosContainer.innerHTML = '<p>Carregando seus pedidos...</p>';
-      
-      // Extrai os pedidos do usuário
-      const pedidos = json.table.rows
-        .map(row => ({
-          email: row.c[0]?.v,
-          dataInicio: row.c[1]?.v,
-          dataFim: row.c[2]?.v,
-          mesas: row.c[3]?.v,
-          cadeiras: row.c[4]?.v,
-          bancos: row.c[5]?.v,
-          endereco: row.c[6]?.v,
-          total: row.c[7]?.v,
-          status: row.c[8]?.v
-        }))
-        .filter(pedido => pedido.email === email);
-      
-      if (pedidos.length === 0) {
-        pedidosContainer.innerHTML = "<p>Você ainda não realizou nenhum pedido.</p>";
-        return;
-      }
-
-      pedidosContainer.innerHTML = '';
-      pedidos.forEach((pedido, index) => {
-        const pedidoDiv = document.createElement('div');
-        pedidoDiv.className = 'pedido-item';
-        pedidoDiv.innerHTML = `
-          <h4>Pedido ${index + 1}</h4>
-          <p><strong>Status:</strong> ${pedido.status || 'Confirmado'}</p>
-          <p><strong>Período:</strong> ${formatarData(pedido.dataInicio)} a ${formatarData(pedido.dataFim)}</p>
-          <p><strong>Endereço:</strong> ${pedido.endereco || 'Retirada na loja'}</p>
-          <p><strong>Itens:</strong> ${pedido.mesas || 0} mesas, ${pedido.cadeiras || 0} cadeiras, ${pedido.bancos || 0} bancos</p>
-          <p><strong>Valor Total:</strong> R$ ${pedido.total?.toFixed(2) || '0.00'}</p>
-          ${pedido.status === 'Ativo' ? 
-            `<button onclick="devolverPedido('${pedido.dataInicio}', ${pedido.mesas}, ${pedido.cadeiras}, ${pedido.bancos})" class="btn2">
-              Devolver Itens
-            </button>` : 
-            ''}
-        `;
-        pedidosContainer.appendChild(pedidoDiv);
-      });
-    } catch (error) {
-      console.error("Erro ao carregar pedidos:", error);
-      document.getElementById('meusPedidos').innerHTML = `
-        <p style="color: red;">Erro ao carregar seus pedidos. Tente novamente mais tarde.</p>
-      `;
+  showLoader(true);
+  try {
+    const response = await fetch(PEDIDOS_SHEET_URL);
+    const text = await response.text();
+    const json = JSON.parse(text.substr(47).slice(0, -2));
+    
+    const pedidosContainer = document.getElementById('meusPedidos');
+    pedidosContainer.innerHTML = '';
+    
+    const pedidos = json.table.rows.slice(1) // Pula cabeçalho
+      .map(row => ({
+        id: row.c[0]?.v,
+        email: row.c[1]?.v,
+        dataInicio: row.c[2]?.v,
+        dataFim: row.c[3]?.v,
+        mesas: row.c[4]?.v || 0,
+        cadeiras: row.c[5]?.v || 0,
+        bancos: row.c[6]?.v || 0,
+        endereco: row.c[7]?.v,
+        total: row.c[8]?.v,
+        status: row.c[9]?.v || 'Ativo'
+      }))
+      .filter(pedido => pedido.email === email);
+    
+    if (pedidos.length === 0) {
+      pedidosContainer.innerHTML = "<p>Nenhum pedido encontrado.</p>";
+      return;
     }
+
+    pedidos.forEach(pedido => {
+      const pedidoDiv = document.createElement('div');
+      pedidoDiv.className = 'pedido-item';
+      pedidoDiv.innerHTML = `
+        <div style="display: flex; justify-content: space-between;">
+          <h4>Pedido #${pedido.id}</h4>
+          <span style="background: ${pedido.status === 'Ativo' ? '#4CAF50' : '#607D8B'}; 
+                      color: white; 
+                      padding: 3px 8px; 
+                      border-radius: 10px;
+                      font-size: 0.8em;">
+            ${pedido.status}
+          </span>
+        </div>
+        <p><strong>Período:</strong> ${formatarData(pedido.dataInicio)} - ${formatarData(pedido.dataFim)}</p>
+        <p><strong>Itens:</strong> ${pedido.mesas} mesa(s), ${pedido.cadeiras} cadeira(s), ${pedido.bancos} banco(s)</p>
+        <p><strong>Total:</strong> R$ ${pedido.total?.toFixed(2) || '0.00'}</p>
+        <p><strong>Endereço:</strong> ${pedido.endereco || 'Retirada na loja'}</p>
+        ${pedido.status === 'Ativo' ? 
+          `<button onclick="devolverPedido('${pedido.id}', ${pedido.mesas}, ${pedido.cadeiras}, ${pedido.bancos})" 
+                  class="btn2"
+                  style="margin-top: 10px;">
+            Devolver Itens
+          </button>` : ''}
+      `;
+      pedidosContainer.appendChild(pedidoDiv);
+    });
+  } catch (error) {
+    console.error("Erro:", error);
+    pedidosContainer.innerHTML = `
+      <p style="color: red;">Erro ao carregar pedidos. Recarregue a página.</p>
+    `;
+  } finally {
+    showLoader(false);
   }
+}
 
   function formatarData(dataString) {
     if (!dataString) return 'Não definida';
@@ -598,6 +609,21 @@
       throw error;
     }
   }
+   
+  function showLoader(show) {
+  document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+}
+
+// Exemplo de uso:
+async function carregarDados() {
+  showLoader(true);
+  try {
+    await carregarEstoque();
+    await carregarPedidosUsuario();
+  } finally {
+    showLoader(false);
+  }
+} 
 </script>
 </body>
 </html>
