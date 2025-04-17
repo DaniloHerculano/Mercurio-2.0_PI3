@@ -421,9 +421,9 @@
     </div>
   </footer>
 
-  <!------------- JAVASCRIPT ------------>
-// Dados globais
-let dados = {
+ <script>
+  // Dados globais
+  let dados = {
     estoque: { mesas: 50, cadeiras: 100, bancos: 30 },
     pedidos: []
   };
@@ -435,8 +435,29 @@ let dados = {
     
   // CONTROLE DO MENU MOBILE
   document.addEventListener('DOMContentLoaded', function() {
-    // Restante do código JavaScript...
+    const menuToggle = document.getElementById('menuToggle');
+    const mainNav = document.querySelector('.sf-menu');
     
+    if (window.innerWidth <= 768) {
+      mainNav.style.display = 'none';
+    }
+    
+    menuToggle.addEventListener('click', function() {
+      if (mainNav.style.display === 'none' || mainNav.style.display === '') {
+        mainNav.style.display = 'flex';
+      } else {
+        mainNav.style.display = 'none';
+      }
+    });
+    
+    window.addEventListener('resize', function() {
+      if (window.innerWidth > 768) {
+        mainNav.style.display = 'flex';
+      } else {
+        mainNav.style.display = 'none';
+      }
+    });
+
     // Datepicker
     $("#datepickerstart").datepicker({
       dateFormat: "dd/mm/yy",
@@ -465,311 +486,301 @@ let dados = {
     toggleAddress(false);
   });
 
-// FUNÇÕES DE CONTROLE DE ENDEREÇO
-function toggleAddress(show) {
-  document.getElementById('address-section').style.display = show ? 'block' : 'none';
-  document.getElementById('loja-info').style.display = show ? 'none' : 'block';
-  document.getElementById('frete-section').style.display = show ? 'block' : 'none';
-  if (!show) {
-    toggleAddressFields(false);
-  }
-}
-
-function toggleAddressFields(show) {
-  document.getElementById('novo-endereco-section').style.display = show ? 'block' : 'none';
-}
-
-// FUNÇÃO PARA BUSCAR CEP
-function buscarCEP() {
-  const cep = document.getElementById('novo-cep').value.replace(/\D/g, '');
-  
-  if (cep.length !== 8) {
-    alert('CEP inválido. Digite os 8 números do CEP');
-    return;
-  }
-  
-  fetch(`https://viacep.com.br/ws/${cep}/json/`)
-    .then(response => response.json())
-    .then(data => {
-      if (data.erro) {
-        alert('CEP não encontrado!');
-        return;
-      }
-      
-      document.getElementById('novo-rua').value = data.logradouro || '';
-      document.getElementById('novo-bairro').value = data.bairro || '';
-      document.getElementById('novo-cidade').value = data.localidade || '';
-      document.getElementById('novo-estado').value = data.uf || '';
-      document.getElementById('novo-numero').focus();
-    })
-    .catch(error => {
-      console.error('Erro ao buscar CEP:', error);
-      alert('Erro ao buscar CEP. Tente novamente mais tarde.');
-    });
-}
-
-// FUNÇÕES DE EXIBIÇÃO DOS MODELOS
-function change1() {
-  document.getElementById("change").innerHTML = 
-    "<img src='images/page1_img1.jpg' style='max-width:100%;height:auto;'><br>" +
-    "<b>CONFORTO</b><br>Mesa R$15,00 /dia<br>Cadeira R$5,00 /dia<br>Banco R$3,00 /dia";
-}
-
-function change2() {
-  document.getElementById("change").innerHTML = 
-    "<img src='images/page1_img2.jpg' style='max-width:100%;height:auto;'><br>" +
-    "<b>MÉDIO</b><br>Mesa R$25,00 /dia<br>Cadeira R$8,00 /dia<br>Banco R$5,00 /dia";
-}
-
-function change3() {
-  document.getElementById("change").innerHTML = 
-    "<img src='images/page1_img3.jpg' style='max-width:100%;height:auto;'><br>" +
-    "<b>EXECUTIVO</b><br>Mesa R$40,00 /dia<br>Cadeira R$12,00 /dia<br>Banco R$8,00 /dia";
-}
-
-// FUNÇÃO DE CÁLCULO DO VALOR TOTAL
-function valor() {
-  const startDate = $("#datepickerstart").datepicker("getDate");
-  const endDate = $("#datepickerend").datepicker("getDate");
-  
-  if (!startDate || !endDate) {
-    alert("Por favor, selecione as datas de início e término");
-    return;
-  }
-
-  const diffTime = Math.abs(endDate - startDate);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  const bancos = parseInt(document.getElementById("quantidadebancos").value) || 0;
-  const cadeiras = parseInt(document.getElementById("quantidadecadeiras").value) || 0;
-  const mesas = parseInt(document.getElementById("quantidademesas").value) || 0;
-  
-  let valorBanco, valorCadeira, valorMesa;
-  
-  if (document.getElementById("conforto").checked) {
-    valorBanco = 3;
-    valorCadeira = 5;
-    valorMesa = 15;
-  } else if (document.getElementById("medio").checked) {
-    valorBanco = 5;
-    valorCadeira = 8;
-    valorMesa = 25;
-  } else if (document.getElementById("executivo").checked) {
-    valorBanco = 8;
-    valorCadeira = 12;
-    valorMesa = 40;
-  } else {
-    alert("Por favor, selecione um modelo");
-    return;
-  }
-  
-  const totalBancos = bancos * valorBanco * diffDays;
-  const totalCadeiras = cadeiras * valorCadeira * diffDays;
-  const totalMesas = mesas * valorMesa * diffDays;
-  
-  document.getElementById("resbancos").innerHTML = totalBancos.toFixed(2);
-  document.getElementById("rescadeiras").innerHTML = totalCadeiras.toFixed(2);
-  document.getElementById("resmesas").innerHTML = totalMesas.toFixed(2);
-  
-  const totalDiaria = (bancos * valorBanco) + (cadeiras * valorCadeira) + (mesas * valorMesa);
-  const totalSemFrete = totalBancos + totalCadeiras + totalMesas;
-  
-  document.getElementById("totaldiaria").innerHTML = totalDiaria.toFixed(2);
-  document.getElementById("totalpedido_frete").innerHTML = totalSemFrete.toFixed(2);
-  
-  if (document.getElementById('retirada').checked) {
-    document.getElementById("frete-section").style.display = "none";
-    document.getElementById("totalpedido").innerHTML = totalSemFrete.toFixed(2);
-  } else {
-    document.getElementById("frete-section").style.display = "block";
-    calcularFrete(totalSemFrete);
-  }
-}
-
-// FUNÇÃO PARA CALCULAR FRETE
-function calcularFrete(totalSemFrete) {
-  const isEntrega = document.getElementById('entrega').checked;
-  
-  if (!isEntrega) {
-    document.getElementById("valor_frete").innerHTML = "0.00";
-    document.getElementById("totalpedido").innerHTML = totalSemFrete.toFixed(2);
-    return;
-  }
-  
-  const usarEnderecoCadastrado = document.getElementById('endereco_cadastrado').checked;
-  let cep = '';
-  
-  if (usarEnderecoCadastrado) {
-    const loggedInUserEmail = localStorage.getItem('loggedInUser');
-    if (loggedInUserEmail) {
-      const userData = JSON.parse(localStorage.getItem(loggedInUserEmail));
-      if (userData && userData.cep) {
-        cep = userData.cep.replace(/\D/g, '');
-      }
+  // FUNÇÕES DE CONTROLE DE ENDEREÇO
+  function toggleAddress(show) {
+    document.getElementById('address-section').style.display = show ? 'block' : 'none';
+    document.getElementById('loja-info').style.display = show ? 'none' : 'block';
+    document.getElementById('frete-section').style.display = show ? 'block' : 'none';
+    if (!show) {
+      toggleAddressFields(false);
     }
-  } else {
-    cep = document.getElementById('novo-cep').value.replace(/\D/g, '');
   }
-  
-  if (!cep || cep.length !== 8) {
-    const fretePadrao = 50.00;
-    document.getElementById("valor_frete").innerHTML = fretePadrao.toFixed(2);
-    document.getElementById("totalpedido").innerHTML = (totalSemFrete + fretePadrao).toFixed(2);
-    return;
+
+  function toggleAddressFields(show) {
+    document.getElementById('novo-endereco-section').style.display = show ? 'block' : 'none';
   }
-  
-  const frete = Math.floor(Math.random() * 50) + 20;
-  document.getElementById("valor_frete").innerHTML = frete.toFixed(2);
-  document.getElementById("totalpedido").innerHTML = (totalSemFrete + frete).toFixed(2);
-}
 
-// FUNÇÕES PARA INTEGRAÇÃO COM GOOGLE SHEETS
-async function carregarEstoque() {
-  try {
-    const response = await fetch(SHEET_URL);
-    const text = await response.text();
-    const json = JSON.parse(text.substr(47).slice(0, -2));
+  // FUNÇÃO PARA BUSCAR CEP
+  function buscarCEP() {
+    const cep = document.getElementById('novo-cep').value.replace(/\D/g, '');
     
-    console.log("Dados da planilha:", json.table.rows);
-    
-    dados.estoque = {
-      mesas: json.table.rows[0].c[3].v,
-      cadeiras: json.table.rows[1].c[3].v,
-      bancos: json.table.rows[2].c[3].v
-    };
-    
-    exibirEstoque();
-  } catch (error) {
-    console.error("Erro ao carregar estoque:", error);
-    dados.estoque = { mesas: 50, cadeiras: 100, bancos: 30 };
-    exibirEstoque();
-  }
-}
-
-function exibirEstoque() {
-  document.getElementById('estoqueMesas').innerText = `Mesas: ${dados.estoque.mesas}`;
-  document.getElementById('estoqueCadeiras').innerText = `Cadeiras: ${dados.estoque.cadeiras}`;
-  document.getElementById('estoqueBancos').innerText = `Bancos: ${dados.estoque.bancos}`;
-}
-
-async function atualizarEstoque(item, quantidade) {
-  try {
-    await fetch(`${SCRIPT_URL}?item=${item}&quantidade=${quantidade}`, {
-      method: 'POST',
-      mode: 'no-cors'
-    });
-    
-    // Atualização otimista (antes da confirmação)
-    if (item === 'mesas') dados.estoque.mesas -= quantidade;
-    if (item === 'cadeiras') dados.estoque.cadeiras -= quantidade;
-    if (item === 'bancos') dados.estoque.bancos -= quantidade;
-    
-    exibirEstoque();
-    
-    // Recarrega após 2 segundos
-    setTimeout(carregarEstoque, 2000);
-  } catch (error) {
-    console.error("Erro ao atualizar estoque:", error);
-  }
-}
-
-// FUNÇÃO DE FINALIZAÇÃO DO PEDIDO
-async function fim() {
-  const requiredFields = ['datepickerstart', 'datepickerend', 'quantidadebancos', 'quantidadecadeiras', 'quantidademesas'];
-  for (const fieldId of requiredFields) {
-    const field = document.getElementById(fieldId);
-    if (!field.value || parseInt(field.value) < 0) {
-      alert(`Por favor, preencha o campo ${fieldId.replace('-', ' ')}`);
+    if (cep.length !== 8) {
+      alert('CEP inválido. Digite os 8 números do CEP');
       return;
     }
-  }
-  
-  if (!document.querySelector('input[name="opcao"]:checked')) {
-    alert("Por favor, selecione um modelo");
-    return;
+    
+    fetch(`https://viacep.com.br/ws/${cep}/json/`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.erro) {
+          alert('CEP não encontrado!');
+          return;
+        }
+        
+        document.getElementById('novo-rua').value = data.logradouro || '';
+        document.getElementById('novo-bairro').value = data.bairro || '';
+        document.getElementById('novo-cidade').value = data.localidade || '';
+        document.getElementById('novo-estado').value = data.uf || '';
+        document.getElementById('novo-numero').focus();
+      })
+      .catch(error => {
+        console.error('Erro ao buscar CEP:', error);
+        alert('Erro ao buscar CEP. Tente novamente mais tarde.');
+      });
   }
 
-  const bancos = parseInt(document.getElementById("quantidadebancos").value);
-  const cadeiras = parseInt(document.getElementById("quantidadecadeiras").value);
-  const mesas = parseInt(document.getElementById("quantidademesas").value);
-  
-  if (bancos > dados.estoque.bancos || cadeiras > dados.estoque.cadeiras || mesas > dados.estoque.mesas) {
-    alert("Quantidade solicitada maior que o estoque disponível");
-    return;
+  // FUNÇÕES DE EXIBIÇÃO DOS MODELOS
+  function change1() {
+    document.getElementById("change").innerHTML = 
+      "<img src='images/page1_img1.jpg' style='max-width:100%;height:auto;'><br>" +
+      "<b>CONFORTO</b><br>Mesa R$15,00 /dia<br>Cadeira R$5,00 /dia<br>Banco R$3,00 /dia";
   }
 
-  const isEntrega = document.getElementById('entrega').checked;
-  let enderecoEntrega = '';
-  
-  if (isEntrega) {
+  function change2() {
+    document.getElementById("change").innerHTML = 
+      "<img src='images/page1_img2.jpg' style='max-width:100%;height:auto;'><br>" +
+      "<b>MÉDIO</b><br>Mesa R$25,00 /dia<br>Cadeira R$8,00 /dia<br>Banco R$5,00 /dia";
+  }
+
+  function change3() {
+    document.getElementById("change").innerHTML = 
+      "<img src='images/page1_img3.jpg' style='max-width:100%;height:auto;'><br>" +
+      "<b>EXECUTIVO</b><br>Mesa R$40,00 /dia<br>Cadeira R$12,00 /dia<br>Banco R$8,00 /dia";
+  }
+
+  // FUNÇÃO DE CÁLCULO DO VALOR TOTAL
+  function valor() {
+    const startDate = $("#datepickerstart").datepicker("getDate");
+    const endDate = $("#datepickerend").datepicker("getDate");
+    
+    if (!startDate || !endDate) {
+      alert("Por favor, selecione as datas de início e término");
+      return;
+    }
+
+    const diffTime = Math.abs(endDate - startDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    const bancos = parseInt(document.getElementById("quantidadebancos").value) || 0;
+    const cadeiras = parseInt(document.getElementById("quantidadecadeiras").value) || 0;
+    const mesas = parseInt(document.getElementById("quantidademesas").value) || 0;
+    
+    let valorBanco, valorCadeira, valorMesa;
+    
+    if (document.getElementById("conforto").checked) {
+      valorBanco = 3;
+      valorCadeira = 5;
+      valorMesa = 15;
+    } else if (document.getElementById("medio").checked) {
+      valorBanco = 5;
+      valorCadeira = 8;
+      valorMesa = 25;
+    } else if (document.getElementById("executivo").checked) {
+      valorBanco = 8;
+      valorCadeira = 12;
+      valorMesa = 40;
+    } else {
+      alert("Por favor, selecione um modelo");
+      return;
+    }
+    
+    const totalBancos = bancos * valorBanco * diffDays;
+    const totalCadeiras = cadeiras * valorCadeira * diffDays;
+    const totalMesas = mesas * valorMesa * diffDays;
+    
+    document.getElementById("resbancos").innerHTML = totalBancos.toFixed(2);
+    document.getElementById("rescadeiras").innerHTML = totalCadeiras.toFixed(2);
+    document.getElementById("resmesas").innerHTML = totalMesas.toFixed(2);
+    
+    const totalDiaria = (bancos * valorBanco) + (cadeiras * valorCadeira) + (mesas * valorMesa);
+    const totalSemFrete = totalBancos + totalCadeiras + totalMesas;
+    
+    document.getElementById("totaldiaria").innerHTML = totalDiaria.toFixed(2);
+    document.getElementById("totalpedido_frete").innerHTML = totalSemFrete.toFixed(2);
+    
+    if (document.getElementById('retirada').checked) {
+      document.getElementById("frete-section").style.display = "none";
+      document.getElementById("totalpedido").innerHTML = totalSemFrete.toFixed(2);
+    } else {
+      document.getElementById("frete-section").style.display = "block";
+      calcularFrete(totalSemFrete);
+    }
+  }
+
+  // FUNÇÃO PARA CALCULAR FRETE
+  function calcularFrete(totalSemFrete) {
+    const isEntrega = document.getElementById('entrega').checked;
+    
+    if (!isEntrega) {
+      document.getElementById("valor_frete").innerHTML = "0.00";
+      document.getElementById("totalpedido").innerHTML = totalSemFrete.toFixed(2);
+      return;
+    }
+    
     const usarEnderecoCadastrado = document.getElementById('endereco_cadastrado').checked;
+    let cep = '';
     
     if (usarEnderecoCadastrado) {
       const loggedInUserEmail = localStorage.getItem('loggedInUser');
-      if (!loggedInUserEmail) {
-        alert('Usuário não logado. Faça login para usar o endereço cadastrado.');
-        return;
+      if (loggedInUserEmail) {
+        const userData = JSON.parse(localStorage.getItem(loggedInUserEmail));
+        if (userData && userData.cep) {
+          cep = userData.cep.replace(/\D/g, '');
+        }
       }
-      
-      const userData = JSON.parse(localStorage.getItem(loggedInUserEmail));
-      if (!userData) {
-        alert('Dados do usuário não encontrados.');
-        return;
-      }
-      
-      enderecoEntrega = `${userData.rua}, ${userData.numero || 'S/N'}${userData.complemento ? ' - ' + userData.complemento : ''} - ${userData.bairro}, ${userData.cidade} - ${userData.estado}, CEP: ${userData.cep}`;
     } else {
-      const novoCep = document.getElementById('novo-cep').value;
-      const novoRua = document.getElementById('novo-rua').value;
-      const novoNumero = document.getElementById('novo-numero').value;
-      const novoCidade = document.getElementById('novo-cidade').value;
-      const novoEstado = document.getElementById('novo-estado').value;
-      
-      if (!novoCep || !novoRua || !novoNumero || !novoCidade || !novoEstado) {
-        alert('Por favor, preencha todos os campos do endereço');
-        return;
-      }
-      
-      enderecoEntrega = `${novoRua}, ${novoNumero}${document.getElementById('novo-complemento').value ? ' - ' + document.getElementById('novo-complemento').value : ''} - ${document.getElementById('novo-bairro').value}, ${novoCidade} - ${novoEstado}, CEP: ${novoCep}`;
+      cep = document.getElementById('novo-cep').value.replace(/\D/g, '');
     }
-  } else {
-    enderecoEntrega = 'Av. Independência, 5110 - Barra Funda, Vinhedo - SP, 13280-000 (Retirada na loja)';
+    
+    if (!cep || cep.length !== 8) {
+      const fretePadrao = 50.00;
+      document.getElementById("valor_frete").innerHTML = fretePadrao.toFixed(2);
+      document.getElementById("totalpedido").innerHTML = (totalSemFrete + fretePadrao).toFixed(2);
+      return;
+    }
+    
+    const frete = Math.floor(Math.random() * 50) + 20;
+    document.getElementById("valor_frete").innerHTML = frete.toFixed(2);
+    document.getElementById("totalpedido").innerHTML = (totalSemFrete + frete).toFixed(2);
   }
 
-  await atualizarEstoque("mesas", mesas);
-  await atualizarEstoque("cadeiras", cadeiras);
-  await atualizarEstoque("bancos", bancos);
+  // FUNÇÕES PARA INTEGRAÇÃO COM GOOGLE SHEETS
+  async function carregarEstoque() {
+    try {
+      const response = await fetch(SHEET_URL);
+      const text = await response.text();
+      const json = JSON.parse(text.substr(47).slice(0, -2));
+      
+      console.log("Dados da planilha:", json.table.rows);
+      
+      dados.estoque = {
+        mesas: json.table.rows[0].c[3].v,
+        cadeiras: json.table.rows[1].c[3].v,
+        bancos: json.table.rows[2].c[3].v
+      };
+      
+      exibirEstoque();
+    } catch (error) {
+      console.error("Erro ao carregar estoque:", error);
+      dados.estoque = { mesas: 50, cadeiras: 100, bancos: 30 };
+      exibirEstoque();
+    }
+  }
 
-  const startDate = $("#datepickerstart").datepicker("getDate");
-  const endDate = $("#datepickerend").datepicker("getDate");
-  const diffTime = Math.abs(endDate - startDate);
-  const dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  function exibirEstoque() {
+    document.getElementById('estoqueMesas').innerText = `Mesas: ${dados.estoque.mesas}`;
+    document.getElementById('estoqueCadeiras').innerText = `Cadeiras: ${dados.estoque.cadeiras}`;
+    document.getElementById('estoqueBancos').innerText = `Bancos: ${dados.estoque.bancos}`;
+  }
 
-  document.getElementById("corpo").innerHTML = `
-    <h4 style="color: #1b6222;">Pedido realizado com sucesso!</h4>
-    <p><strong>Itens alugados:</strong></p>
-    <p>Mesas: ${mesas}</p>
-    <p>Cadeiras: ${cadeiras}</p>
-    <p>Bancos: ${bancos}</p>
-    <p><strong>Período:</strong> ${dias} dias</p>
-    <p><strong>${isEntrega ? 'Endereço de Entrega' : 'Local de Retirada'}:</strong> ${enderecoEntrega}</p>
-    <p><strong>Total:</strong> R$${document.getElementById("totalpedido").innerHTML}</p>
-    <p>Em breve entraremos em contato para confirmar.</p>
-  `;
-  
-  document.getElementById("fade").style.display = "block";
-  document.getElementById("modal").style.display = "block";
-}
-        }
-        
-        // Atualiza exibição do estoque
-        exibirEstoque();
+  async function atualizarEstoque(item, quantidade) {
+    try {
+      await fetch(`${SCRIPT_URL}?item=${item}&quantidade=${quantidade}`, {
+        method: 'POST',
+        mode: 'no-cors'
+      });
+      
+      // Atualização otimista (antes da confirmação)
+      if (item === 'mesas') dados.estoque.mesas -= quantidade;
+      if (item === 'cadeiras') dados.estoque.cadeiras -= quantidade;
+      if (item === 'bancos') dados.estoque.bancos -= quantidade;
+      
+      exibirEstoque();
+      
+      // Recarrega após 2 segundos
+      setTimeout(carregarEstoque, 2000);
+    } catch (error) {
+      console.error("Erro ao atualizar estoque:", error);
+    }
+  }
 
-      } catch (error) {
-        console.error('Erro ao finalizar pedido:', error);
-        alert(`Erro ao finalizar pedido: ${error.message}`);
+  // FUNÇÃO DE FINALIZAÇÃO DO PEDIDO
+  async function fim() {
+    const requiredFields = ['datepickerstart', 'datepickerend', 'quantidadebancos', 'quantidadecadeiras', 'quantidademesas'];
+    for (const fieldId of requiredFields) {
+      const field = document.getElementById(fieldId);
+      if (!field.value || parseInt(field.value) < 0) {
+        alert(`Por favor, preencha o campo ${fieldId.replace('-', ' ')}`);
+        return;
       }
     }
+    
+    if (!document.querySelector('input[name="opcao"]:checked')) {
+      alert("Por favor, selecione um modelo");
+      return;
+    }
+
+    const bancos = parseInt(document.getElementById("quantidadebancos").value);
+    const cadeiras = parseInt(document.getElementById("quantidadecadeiras").value);
+    const mesas = parseInt(document.getElementById("quantidademesas").value);
+    
+    if (bancos > dados.estoque.bancos || cadeiras > dados.estoque.cadeiras || mesas > dados.estoque.mesas) {
+      alert("Quantidade solicitada maior que o estoque disponível");
+      return;
+    }
+
+    const isEntrega = document.getElementById('entrega').checked;
+    let enderecoEntrega = '';
+    
+    if (isEntrega) {
+      const usarEnderecoCadastrado = document.getElementById('endereco_cadastrado').checked;
+      
+      if (usarEnderecoCadastrado) {
+        const loggedInUserEmail = localStorage.getItem('loggedInUser');
+        if (!loggedInUserEmail) {
+          alert('Usuário não logado. Faça login para usar o endereço cadastrado.');
+          return;
+        }
+        
+        const userData = JSON.parse(localStorage.getItem(loggedInUserEmail));
+        if (!userData) {
+          alert('Dados do usuário não encontrados.');
+          return;
+        }
+        
+        enderecoEntrega = `${userData.rua}, ${userData.numero || 'S/N'}${userData.complemento ? ' - ' + userData.complemento : ''} - ${userData.bairro}, ${userData.cidade} - ${userData.estado}, CEP: ${userData.cep}`;
+      } else {
+        const novoCep = document.getElementById('novo-cep').value;
+        const novoRua = document.getElementById('novo-rua').value;
+        const novoNumero = document.getElementById('novo-numero').value;
+        const novoCidade = document.getElementById('novo-cidade').value;
+        const novoEstado = document.getElementById('novo-estado').value;
+        
+        if (!novoCep || !novoRua || !novoNumero || !novoCidade || !novoEstado) {
+          alert('Por favor, preencha todos os campos do endereço');
+          return;
+        }
+        
+        enderecoEntrega = `${novoRua}, ${novoNumero}${document.getElementById('novo-complemento').value ? ' - ' + document.getElementById('novo-complemento').value : ''} - ${document.getElementById('novo-bairro').value}, ${novoCidade} - ${novoEstado}, CEP: ${novoCep}`;
+      }
+    } else {
+      enderecoEntrega = 'Av. Independência, 5110 - Barra Funda, Vinhedo - SP, 13280-000 (Retirada na loja)';
+    }
+
+    await atualizarEstoque("mesas", mesas);
+    await atualizarEstoque("cadeiras", cadeiras);
+    await atualizarEstoque("bancos", bancos);
+
+    const startDate = $("#datepickerstart").datepicker("getDate");
+    const endDate = $("#datepickerend").datepicker("getDate");
+    const diffTime = Math.abs(endDate - startDate);
+    const dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    document.getElementById("corpo").innerHTML = `
+      <h4 style="color: #1b6222;">Pedido realizado com sucesso!</h4>
+      <p><strong>Itens alugados:</strong></p>
+      <p>Mesas: ${mesas}</p>
+      <p>Cadeiras: ${cadeiras}</p>
+      <p>Bancos: ${bancos}</p>
+      <p><strong>Período:</strong> ${dias} dias</p>
+      <p><strong>${isEntrega ? 'Endereço de Entrega' : 'Local de Retirada'}:</strong> ${enderecoEntrega}</p>
+      <p><strong>Total:</strong> R$${document.getElementById("totalpedido").innerHTML}</p>
+      <p>Em breve entraremos em contato para confirmar.</p>
+    `;
+    
+    document.getElementById("fade").style.display = "block";
+    document.getElementById("modal").style.display = "block";
+  }
   </script>
 </body>
 </html>
