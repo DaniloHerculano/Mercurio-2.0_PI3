@@ -352,19 +352,28 @@
     </div>
   </footer>
 
-  <!------------- JAVASCRIPT ------------>
+<!------------- JAVASCRIPT ATUALIZADO ------------>
   <script>
-    // CONTROLE DO MENU MOBILE
+    // Configurações da Planilha Google (usando as mesmas do seu sistema de encomendas)
+    const SHEET_ID = "1QKnR6pWhemrdT5csvGpsy-pLxq0qQuKjniY7yvH3d48";
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlWH6q0Fvuweh0nCu5jNaBD1k0BTi0-sMgkMF-S2u_0tR9VxoyNohJHW0PhRa0vqTG/exec";
+
+    // Dados globais
+    let dados = {
+      estoque: { mesas: 0, cadeiras: 0, bancos: 0 },
+      pedidos: []
+    };
+
     document.addEventListener('DOMContentLoaded', function() {
+      // Controle do menu mobile (mesmo código)
       const menuToggle = document.getElementById('menuToggle');
       const mainNav = document.querySelector('.sf-menu');
       
-      // Verifica se é mobile no carregamento
       if (window.innerWidth <= 768) {
         mainNav.style.display = 'none';
       }
       
-      // Controle do clique no botão
       menuToggle.addEventListener('click', function() {
         if (mainNav.style.display === 'none' || mainNav.style.display === '') {
           mainNav.style.display = 'flex';
@@ -373,7 +382,6 @@
         }
       });
       
-      // Atualiza ao redimensionar a tela
       window.addEventListener('resize', function() {
         if (window.innerWidth > 768) {
           mainNav.style.display = 'flex';
@@ -382,15 +390,13 @@
         }
       });
 
-      // Exibir informações do usuário
+      // Carrega dados do usuário (mantido do localStorage)
       const loggedInUserEmail = localStorage.getItem('loggedInUser');
       if (loggedInUserEmail) {
         const userData = JSON.parse(localStorage.getItem(loggedInUserEmail));
         
         if (userData) {
           const userInfoDiv = document.getElementById('userInfo');
-          
-          // Formatando a data de cadastro
           const registrationDate = new Date(userData.registrationDate);
           const formattedDate = registrationDate.toLocaleDateString('pt-BR', {
             day: '2-digit',
@@ -400,7 +406,6 @@
             minute: '2-digit'
           });
           
-          // Montando o endereço completo
           let enderecoHTML = '';
           if (userData.rua || userData.cep) {
             enderecoHTML = `
@@ -439,42 +444,8 @@
         window.location.href = "login.html";
       }
 
-      // Exibir estoque
-      const estoqueAtual = JSON.parse(localStorage.getItem('estoque')) || { mesas: 500, cadeiras: 500, bancos: 500 };
-      const estoqueContainer = document.getElementById('estoqueAtual');
-      estoqueContainer.innerHTML = `
-        <p><strong>Mesas disponíveis:</strong> ${estoqueAtual.mesas}</p>
-        <p><strong>Cadeiras disponíveis:</strong> ${estoqueAtual.cadeiras}</p>
-        <p><strong>Bancos disponíveis:</strong> ${estoqueAtual.bancos}</p>
-      `;
-
-      // Exibir pedidos realizados
-      const pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
-      const pedidosContainer = document.getElementById('meusPedidos');
-      
-      if (pedidos.length > 0) {
-        pedidos.forEach((pedido, index) => {
-          pedidosContainer.innerHTML += `
-            <div class="pedido-item">
-              <h4>Pedido ${index + 1}</h4>
-              <p><strong>Data de Retirada:</strong> ${pedido.dataInicio || 'Não especificada'}</p>
-              <p><strong>Data de Devolução:</strong> ${pedido.dataRetorno || 'Não especificada'}</p>
-              <p><strong>Quantidade de Dias:</strong> ${pedido.dias || 'Não especificada'}</p>
-              <p><strong>Endereço de Entrega:</strong> ${pedido.endereco}</p>
-              <p><strong>Quantidade de Mesas:</strong> ${pedido.mesas}</p>
-              <p><strong>Quantidade de Cadeiras:</strong> ${pedido.cadeiras}</p>
-              <p><strong>Quantidade de Bancos:</strong> ${pedido.bancos}</p>
-              <p><strong>Valor Diário dos Produtos:</strong> R$${parseFloat(pedido.totalDiario).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-              <p><strong>Valor Total dos Produtos (sem frete):</strong> R$${parseFloat(pedido.totalSemFrete).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-              <p><strong>Frete:</strong> R$${parseFloat(pedido.frete).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-              <p><strong>Total a Pagar:</strong> R$${parseFloat(pedido.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-              <button onclick="devolverEstoque(${index})" class="btn2">Devolver Estoque</button>
-            </div>
-          `;
-        });
-      } else {
-        pedidosContainer.innerHTML = "<p>Você ainda não realizou nenhum pedido.</p>";
-      }
+      // Carrega estoque e pedidos
+      carregarDados();
 
       // Função de Logout
       document.getElementById('logout').addEventListener('click', function(event) {
@@ -484,24 +455,143 @@
       });
     });
 
-    // Função para devolver o estoque
-    function devolverEstoque(index) {
-      let pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
-      const estoqueAtual = JSON.parse(localStorage.getItem('estoque')) || { mesas: 500, cadeiras: 500, bancos: 500 };
-
-      const pedido = pedidos[index];
-      if (pedido) {
-        estoqueAtual.mesas += pedido.mesas;
-        estoqueAtual.cadeiras += pedido.cadeiras;
-        estoqueAtual.bancos += pedido.bancos;
+    // Função para carregar estoque e pedidos
+    async function carregarDados() {
+      try {
+        // Carrega estoque
+        await carregarEstoque();
         
-        // Atualiza o estoque no Local Storage
-        localStorage.setItem('estoque', JSON.stringify(estoqueAtual));
+        // Carrega pedidos do usuário
+        await carregarPedidosUsuario();
+        
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+        alert("Erro ao carregar dados. Tente recarregar a página.");
+      }
+    }
+
+    // Função para carregar estoque da planilha
+    async function carregarEstoque() {
+      try {
+        const response = await fetch(SHEET_URL);
+        const text = await response.text();
+        const json = JSON.parse(text.substr(47).slice(0, -2));
+        
+        dados.estoque = {
+          mesas: json.table.rows[0].c[3].v,
+          cadeiras: json.table.rows[1].c[3].v,
+          bancos: json.table.rows[2].c[3].v
+        };
+        
+        // Atualiza a exibição do estoque
+        const estoqueContainer = document.getElementById('estoqueAtual');
+        estoqueContainer.innerHTML = `
+          <p><strong>Mesas disponíveis:</strong> ${dados.estoque.mesas}</p>
+          <p><strong>Cadeiras disponíveis:</strong> ${dados.estoque.cadeiras}</p>
+          <p><strong>Bancos disponíveis:</strong> ${dados.estoque.bancos}</p>
+        `;
+      } catch (error) {
+        console.error("Erro ao carregar estoque:", error);
+        // Exibe valores padrão em caso de erro
+        const estoqueContainer = document.getElementById('estoqueAtual');
+        estoqueContainer.innerHTML = `
+          <p><strong>Mesas disponíveis:</strong> 50</p>
+          <p><strong>Cadeiras disponíveis:</strong> 100</p>
+          <p><strong>Bancos disponíveis:</strong> 30</p>
+          <p style="color: red;">Obs: Estoque pode não estar atualizado</p>
+        `;
+      }
+    }
+
+    // Função para carregar pedidos do usuário
+    async function carregarPedidosUsuario() {
+      try {
+        const loggedInUserEmail = localStorage.getItem('loggedInUser');
+        if (!loggedInUserEmail) return;
+        
+        // Aqui você precisaria implementar a lógica para buscar os pedidos do usuário
+        // Pode ser de um localStorage específico ou de uma API
+        // Vou manter o exemplo com localStorage para compatibilidade
+        
+        const pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
+        const pedidosContainer = document.getElementById('meusPedidos');
+        pedidosContainer.innerHTML = '';
+        
+        if (pedidos.length > 0) {
+          pedidos.forEach((pedido, index) => {
+            pedidosContainer.innerHTML += `
+              <div class="pedido-item">
+                <h4>Pedido ${index + 1}</h4>
+                <p><strong>Data de Retirada:</strong> ${pedido.dataInicio || 'Não especificada'}</p>
+                <p><strong>Data de Devolução:</strong> ${pedido.dataRetorno || 'Não especificada'}</p>
+                <p><strong>Quantidade de Dias:</strong> ${pedido.dias || 'Não especificada'}</p>
+                <p><strong>Endereço de Entrega:</strong> ${pedido.endereco}</p>
+                <p><strong>Quantidade de Mesas:</strong> ${pedido.mesas}</p>
+                <p><strong>Quantidade de Cadeiras:</strong> ${pedido.cadeiras}</p>
+                <p><strong>Quantidade de Bancos:</strong> ${pedido.bancos}</p>
+                <p><strong>Valor Diário dos Produtos:</strong> R$${parseFloat(pedido.totalDiario).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                <p><strong>Valor Total dos Produtos (sem frete):</strong> R$${parseFloat(pedido.totalSemFrete).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                <p><strong>Frete:</strong> R$${parseFloat(pedido.frete).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                <p><strong>Total a Pagar:</strong> R$${parseFloat(pedido.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                <button onclick="devolverEstoque(${index})" class="btn2">Devolver Estoque</button>
+              </div>
+            `;
+          });
+        } else {
+          pedidosContainer.innerHTML = "<p>Você ainda não realizou nenhum pedido.</p>";
+        }
+      } catch (error) {
+        console.error("Erro ao carregar pedidos:", error);
+        document.getElementById('meusPedidos').innerHTML = 
+          "<p>Erro ao carregar seus pedidos. Tente recarregar a página.</p>";
+      }
+    }
+
+    // Função para devolver o estoque (atualizada para usar a API)
+    async function devolverEstoque(index) {
+      try {
+        const pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
+        const pedido = pedidos[index];
+        
+        if (!pedido) {
+          alert("Pedido não encontrado!");
+          return;
+        }
+
+        // Confirmação do usuário
+        if (!confirm(`Tem certeza que deseja devolver:\n${pedido.mesas} mesas\n${pedido.cadeiras} cadeiras\n${pedido.bancos} bancos?`)) {
+          return;
+        }
+
+        // Atualiza o estoque na planilha
+        await atualizarEstoqueAPI("mesas", pedido.mesas);
+        await atualizarEstoqueAPI("cadeiras", pedido.cadeiras);
+        await atualizarEstoqueAPI("bancos", pedido.bancos);
 
         // Remove o pedido do histórico
         pedidos.splice(index, 1);
         localStorage.setItem('pedidos', JSON.stringify(pedidos));
-        location.reload(); // Recarrega a página para atualizar as informações
+        
+        // Recarrega os dados
+        await carregarDados();
+        alert("Estoque devolvido com sucesso!");
+
+      } catch (error) {
+        console.error("Erro ao devolver estoque:", error);
+        alert("Erro ao devolver estoque. Tente novamente.");
+      }
+    }
+
+    // Função para atualizar estoque na API
+    async function atualizarEstoqueAPI(item, quantidade) {
+      try {
+        await fetch(`${SCRIPT_URL}?item=${item}&quantidade=${quantidade}`, {
+          method: 'POST',
+          mode: 'no-cors'
+        });
+      } catch (error) {
+        console.error(`Erro ao atualizar estoque (${item}):`, error);
+        throw error;
       }
     }
   </script>
