@@ -413,140 +413,160 @@
   </footer>
 
   <!------------- JAVASCRIPT ------------>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Controle do Menu Mobile
-      const menuToggle = document.getElementById('menuToggle');
-      const mainNav = document.querySelector('.sf-menu');
-      
-      if (window.innerWidth <= 768) {
-        mainNav.style.display = 'none';
-      }
-      
-      menuToggle.addEventListener('click', function() {
-        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
-          mainNav.style.display = 'flex';
-        } else {
+   <script>
+      // Configurações da Planilha Google
+      const SHEET_ID = "1QKnR6pWhemrdT5csvGpsy-pLxq0qQuKjniY7yvH3d48";
+      const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlWH6q0Fvuweh0nCu5jNaBD1k0BTi0-sMgkMF-S2u_0tR9VxoyNohJHW0PhRa0vqTG/exec";
+  
+      document.addEventListener('DOMContentLoaded', function() {
+        // Controle do Menu Mobile
+        const menuToggle = document.getElementById('menuToggle');
+        const mainNav = document.querySelector('.sf-menu');
+        
+        if (window.innerWidth <= 768) {
           mainNav.style.display = 'none';
         }
-      });
-      
-      window.addEventListener('resize', function() {
-        if (window.innerWidth > 768) {
-          mainNav.style.display = 'flex';
-        } else {
-          mainNav.style.display = 'none';
-        }
-      });
-
-      // Função de Registro
-      document.getElementById('registerForm').addEventListener('submit', function(event) {
-        event.preventDefault();
         
-        // Validação de senha
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirm-password').value;
+        menuToggle.addEventListener('click', function() {
+          if (mainNav.style.display === 'none' || mainNav.style.display === '') {
+            mainNav.style.display = 'flex';
+          } else {
+            mainNav.style.display = 'none';
+          }
+        });
         
-        if (password !== confirmPassword) {
-          alert('As senhas não coincidem!');
-          return;
-        }
-        
-        // Verificar se o e-mail já está cadastrado
-        const email = document.getElementById('email').value;
-        if (localStorage.getItem(email)) {
-          alert('Este e-mail já está cadastrado. Por favor, faça login ou use outro e-mail.');
-          return;
-        }
-        
-        // Criar objeto com todos os campos necessários
-        const userData = {
-          firstname: document.getElementById('firstname').value,
-          lastname: document.getElementById('lastname').value,
-          username: document.getElementById('username').value,
-          email: email,
-          password: password, // Em produção, usar hash!
-          age: document.getElementById('age').value,
-          gender: document.getElementById('gender').value,
-          cep: document.getElementById('cep').value,
-          rua: document.getElementById('rua').value,
-          numero: document.getElementById('numero').value,
-          complemento: document.getElementById('complemento').value,
-          bairro: document.getElementById('bairro').value,
-          cidade: document.getElementById('cidade').value,
-          estado: document.getElementById('estado').value,
-          pais: document.getElementById('pais').value,
-          phone: document.getElementById('phone').value,
-          registrationDate: new Date().toISOString(),
-          lastLogin: null,
-          isActive: true
-        };
-        
-        // Salvar no Local Storage usando o email como chave
-        localStorage.setItem(email, JSON.stringify(userData));
-        
-        // Feedback e redirecionamento
-        alert('Cadastro realizado com sucesso! Você será redirecionado para a página de login.');
-        window.location.href = 'login.html';
-      });
-    });
-
-    // Formatar CEP (adiciona o traço automaticamente)
-    function formatarCEP(input) {
-      // Remove tudo que não é dígito
-      let cep = input.value.replace(/\D/g, '');
-      
-      // Formata o CEP com traço
-      if (cep.length > 5) {
-        cep = cep.substring(0, 5) + '-' + cep.substring(5, 8);
-      }
-      
-      // Atualiza o campo
-      input.value = cep;
-    }
-
-    // Pesquisar CEP usando ViaCEP
-    function pesquisarCEP() {
-      const cep = document.getElementById('cep').value.replace(/\D/g, '');
-      
-      if (cep.length !== 8) {
-        alert('CEP inválido! Digite os 8 dígitos.');
-        return;
-      }
-
-      // Mostra mensagem de carregamento
-      const btnCep = document.querySelector('.btn-cep');
-      btnCep.textContent = 'Buscando...';
-      btnCep.disabled = true;
-
-      fetch(`https://viacep.com.br/ws/${cep}/json/`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.erro) {
-            alert('CEP não encontrado!');
+        window.addEventListener('resize', function() {
+          if (window.innerWidth > 768) {
+            mainNav.style.display = 'flex';
+          } else {
+            mainNav.style.display = 'none';
+          }
+        });
+  
+        // Função de Registro
+        document.getElementById('registerForm').addEventListener('submit', async function(event) {
+          event.preventDefault();
+          
+          // Validação de senha
+          const password = document.getElementById('password').value;
+          const confirmPassword = document.getElementById('confirm-password').value;
+          
+          if (password !== confirmPassword) {
+            alert('As senhas não coincidem!');
             return;
           }
           
-          // Preenche os campos com os dados da API
-          document.getElementById('rua').value = data.logradouro || '';
-          document.getElementById('bairro').value = data.bairro || '';
-          document.getElementById('cidade').value = data.localidade || '';
-          document.getElementById('estado').value = data.uf || '';
+          // Criar objeto com todos os campos necessários
+          const userData = {
+            firstname: document.getElementById('firstname').value,
+            lastname: document.getElementById('lastname').value,
+            username: document.getElementById('username').value,
+            email: document.getElementById('email').value,
+            password: password,
+            age: document.getElementById('age').value,
+            gender: document.getElementById('gender').value,
+            cep: document.getElementById('cep').value,
+            rua: document.getElementById('rua').value,
+            numero: document.getElementById('numero').value,
+            complemento: document.getElementById('complemento').value,
+            bairro: document.getElementById('bairro').value,
+            cidade: document.getElementById('cidade').value,
+            estado: document.getElementById('estado').value,
+            pais: document.getElementById('pais').value,
+            phone: document.getElementById('phone').value
+          };
           
-          // Foca no campo de número se a rua foi preenchida
-          if (data.logradouro) {
-            document.getElementById('numero').focus();
+          try {
+            // Mostrar loading
+            const btn = document.querySelector('.btn');
+            const originalBtnText = btn.textContent;
+            btn.textContent = 'Cadastrando...';
+            btn.disabled = true;
+            
+            // Enviar dados para a API do Google Sheets
+            const response = await fetch(SCRIPT_URL, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                action: 'register_user',
+                ...userData
+              })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+              alert('Cadastro realizado com sucesso! Você será redirecionado para a página de login.');
+              window.location.href = 'login.html';
+            } else {
+              alert(result.message || 'Erro ao cadastrar usuário');
+            }
+          } catch (error) {
+            console.error('Erro:', error);
+            alert('Erro ao conectar com o servidor. Tente novamente mais tarde.');
+          } finally {
+            // Restaurar botão
+            if (btn) {
+              btn.textContent = originalBtnText;
+              btn.disabled = false;
+            }
           }
-        })
-        .catch(error => {
-          console.error('Erro ao buscar CEP:', error);
-          alert('Erro ao buscar CEP. Tente novamente mais tarde.');
-        })
-        .finally(() => {
-          btnCep.textContent = 'Procurar CEP';
-          btnCep.disabled = false;
         });
-    }
+      });
+  
+      // Formatar CEP (adiciona o traço automaticamente)
+      function formatarCEP(input) {
+        let cep = input.value.replace(/\D/g, '');
+        if (cep.length > 5) {
+          cep = cep.substring(0, 5) + '-' + cep.substring(5, 8);
+        }
+        input.value = cep;
+      }
+  
+      // Pesquisar CEP usando ViaCEP
+      function pesquisarCEP() {
+        const cep = document.getElementById('cep').value.replace(/\D/g, '');
+        
+        if (cep.length !== 8) {
+          alert('CEP inválido! Digite os 8 dígitos.');
+          return;
+        }
+  
+        // Mostra mensagem de carregamento
+        const btnCep = document.querySelector('.btn-cep');
+        btnCep.textContent = 'Buscando...';
+        btnCep.disabled = true;
+  
+        fetch(`https://viacep.com.br/ws/${cep}/json/`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.erro) {
+              alert('CEP não encontrado!');
+              return;
+            }
+            
+            // Preenche os campos com os dados da API
+            document.getElementById('rua').value = data.logradouro || '';
+            document.getElementById('bairro').value = data.bairro || '';
+            document.getElementById('cidade').value = data.localidade || '';
+            document.getElementById('estado').value = data.uf || '';
+            
+            // Foca no campo de número se a rua foi preenchida
+            if (data.logradouro) {
+              document.getElementById('numero').focus();
+            }
+          })
+          .catch(error => {
+            console.error('Erro ao buscar CEP:', error);
+            alert('Erro ao buscar CEP. Tente novamente mais tarde.');
+          })
+          .finally(() => {
+            btnCep.textContent = 'Procurar CEP';
+            btnCep.disabled = false;
+          });
+      }
   </script>
 </body>
 </html>
