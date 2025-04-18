@@ -444,97 +444,88 @@
 
         // Função de Registro Corrigida
         document.getElementById('registerForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            clearStatusMessage();
+    event.preventDefault();
+    clearStatusMessage();
 
-            // Validações
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
-            
-            if (password !== confirmPassword) {
-                showStatusMessage('As senhas não coincidem!', 'error');
-                return;
-            }
+    // Validações
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+    
+    if (password !== confirmPassword) {
+        showStatusMessage('As senhas não coincidem!', 'error');
+        return;
+    }
 
-            const age = parseInt(document.getElementById('age').value);
-            if (age < 18 || isNaN(age)) {
-                showStatusMessage('Você deve ter pelo menos 18 anos para se cadastrar', 'error');
-                return;
-            }
+    const age = parseInt(document.getElementById('age').value);
+    if (age < 18 || isNaN(age)) {
+        showStatusMessage('Você deve ter pelo menos 18 anos para se cadastrar', 'error');
+        return;
+    }
 
-            const btn = document.querySelector('.btn');
-            btn.disabled = true;
-            btn.textContent = 'Cadastrando...';
+    const btn = document.querySelector('.btn');
+    btn.disabled = true;
+    btn.textContent = 'Cadastrando...';
 
-            try {
-                // Preparar dados
-                const userData = {
-                    firstname: document.getElementById('firstname').value.trim(),
-                    lastname: document.getElementById('lastname').value.trim(),
-                    username: document.getElementById('username').value.trim(),
-                    email: document.getElementById('email').value.trim(),
-                    password: password,
-                    age: age,
-                    gender: document.getElementById('gender').value,
-                    cep: document.getElementById('cep').value.replace(/\D/g, ''),
-                    rua: document.getElementById('rua').value.trim(),
-                    numero: document.getElementById('numero').value.trim(),
-                    complemento: document.getElementById('complemento').value.trim(),
-                    bairro: document.getElementById('bairro').value.trim(),
-                    cidade: document.getElementById('cidade').value.trim(),
-                    estado: document.getElementById('estado').value.trim(),
-                    pais: document.getElementById('pais').value.trim(),
-                    phone: document.getElementById('phone').value.replace(/\D/g, '')
-                };
+    try {
+        // Preparar dados
+        const userData = {
+            firstname: document.getElementById('firstname').value.trim(),
+            lastname: document.getElementById('lastname').value.trim(),
+            username: document.getElementById('username').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            password: password,
+            age: age,
+            gender: document.getElementById('gender').value,
+            cep: document.getElementById('cep').value.replace(/\D/g, ''),
+            rua: document.getElementById('rua').value.trim(),
+            numero: document.getElementById('numero').value.trim(),
+            complemento: document.getElementById('complemento').value.trim(),
+            bairro: document.getElementById('bairro').value.trim(),
+            cidade: document.getElementById('cidade').value.trim(),
+            estado: document.getElementById('estado').value.trim(),
+            pais: document.getElementById('pais').value.trim(),
+            phone: document.getElementById('phone').value.replace(/\D/g, '')
+        };
 
-                // Envio CORRETO para o Google Apps Script
-                const formData = new FormData();
-                formData.append('action', 'register_user');
-                formData.append('data', JSON.stringify(userData));
+        // Envio para o Google Apps Script
+        const formData = new FormData();
+        formData.append('action', 'register_user');
+        formData.append('data', JSON.stringify(userData));
 
-                try {
-                const response = await fetch(SCRIPT_URL, {
-                  method: 'POST',
-                  body: formData
-                });
-              
-                if (!response.ok) {
-                  const errorText = await response.text();
-                  throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
-                }
-                
-                const result = await response.json();
-                console.log('Resposta completa:', result); // Adicione este log
-                
-                if (result.success) {
-                  showStatusMessage('Cadastro realizado! Redirecionando...', 'success');
-                  setTimeout(() => window.location.href = 'login.html', 1500);
-                } else {
-                  throw new Error(result.message || result.error || 'Erro no cadastro');
-                }
-              } catch (error) {
-                console.error('Erro completo:', error);
-                showStatusMessage('Erro ao cadastrar: ' + (error.message || 'Erro interno no servidor'), 'error');
-              }
-
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showStatusMessage('Cadastro realizado! Redirecionando...', 'success');
-                    setTimeout(() => window.location.href = 'login.html', 1500);
-                } else {
-                    throw new Error(result.message || 'Erro no cadastro');
-                }
-            } catch (error) {
-                console.error('Erro completo:', error);
-                showStatusMessage('Erro ao cadastrar: ' + error.message, 'error');
-            } finally {
-                btn.textContent = 'Cadastrar';
-                btn.disabled = false;
-            }
+        // Adicionado tratamento mais robusto da resposta
+        const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: formData
         });
+
+        const responseData = await response.text(); // Primeiro obtém o texto
+        let result;
+        
+        try {
+            result = JSON.parse(responseData); // Tenta parsear como JSON
+        } catch (e) {
+            console.error('Resposta não é JSON válido:', responseData);
+            throw new Error('Resposta inválida do servidor');
+        }
+
+        if (!response.ok) {
+            throw new Error(result.message || `Erro HTTP: ${response.status}`);
+        }
+
+        if (result.success) {
+            showStatusMessage('Cadastro realizado! Redirecionando...', 'success');
+            setTimeout(() => window.location.href = 'login.html', 1500);
+        } else {
+            throw new Error(result.message || 'Erro no cadastro');
+        }
+    } catch (error) {
+        console.error('Erro completo:', error);
+        showStatusMessage('Erro ao cadastrar: ' + (error.message || 'Erro interno no servidor'), 'error');
+    } finally {
+        btn.textContent = 'Cadastrar';
+        btn.disabled = false;
+    }
+});
 
         // Funções auxiliares (mantidas as originais)
         function formatarCEP(input) {
