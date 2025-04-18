@@ -492,10 +492,30 @@
                 formData.append('action', 'register_user');
                 formData.append('data', JSON.stringify(userData));
 
+                try {
                 const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: formData
+                  method: 'POST',
+                  body: formData
                 });
+              
+                if (!response.ok) {
+                  const errorText = await response.text();
+                  throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
+                }
+                
+                const result = await response.json();
+                console.log('Resposta completa:', result); // Adicione este log
+                
+                if (result.success) {
+                  showStatusMessage('Cadastro realizado! Redirecionando...', 'success');
+                  setTimeout(() => window.location.href = 'login.html', 1500);
+                } else {
+                  throw new Error(result.message || result.error || 'Erro no cadastro');
+                }
+              } catch (error) {
+                console.error('Erro completo:', error);
+                showStatusMessage('Erro ao cadastrar: ' + (error.message || 'Erro interno no servidor'), 'error');
+              }
 
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 
