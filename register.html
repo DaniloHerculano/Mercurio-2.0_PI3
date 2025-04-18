@@ -436,159 +436,151 @@
 
   <!------------- JAVASCRIPT ------------>
 <script>
-    // URL corrigida da sua API
+    // Configurações
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrtF0NjX5cjjvYneSQr9Tncmgf6si5cvcbTqFjwxpyXKtQvlQnvBiNG3PkmZz5J1PR/exec";
 
-    // Função para teste de conexão com sua API
-    async function testarAPIDoGoogle() {
-      try {
-        const startTime = Date.now();
-        const response = await fetch(`${SCRIPT_URL}?action=test`);
-        const data = await response.json();
-        const latency = Date.now() - startTime;
-        
-        console.log(`Resposta da API:`, data);
-        console.log(`Latência: ${latency}ms`);
-        return { success: true, latency };
-      } catch (error) {
-        console.error("Falha ao testar API:", error);
-        return { success: false, error: error.message };
-      }
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+        // ... (código do menu mobile permanece igual) ...
 
-    // Função de pesquisa de CEP aprimorada
-    async function pesquisarCEP() {
-      const cepInput = document.getElementById('cep');
-      const cep = cepInput.value.replace(/\D/g, '');
-      
-      if (cep.length !== 8) {
-        showStatusMessage('CEP inválido! Digite os 8 dígitos.', 'error');
-        cepInput.focus();
-        return;
-      }
+        // Função de Registro Corrigida
+        document.getElementById('registerForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            clearStatusMessage();
 
-      const btnCep = document.querySelector('.btn-cep');
-      btnCep.disabled = true;
-      btnCep.textContent = 'Buscando...';
+            // Validações
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (password !== confirmPassword) {
+                showStatusMessage('As senhas não coincidem!', 'error');
+                return;
+            }
 
-      try {
-        // Teste de conexão primeiro
-        const testeConexao = await testarAPIDoGoogle();
-        if (!testeConexao.success) {
-          throw new Error("Sem conexão com o servidor");
-        }
+            const age = parseInt(document.getElementById('age').value);
+            if (age < 18 || isNaN(age)) {
+                showStatusMessage('Você deve ter pelo menos 18 anos para se cadastrar', 'error');
+                return;
+            }
 
-        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+            const btn = document.querySelector('.btn');
+            btn.disabled = true;
+            btn.textContent = 'Cadastrando...';
 
-        const data = await response.json();
-        
-        if (data.erro) {
-          showStatusMessage('CEP não encontrado!', 'error');
-          return;
-        }
-        
-        // Preenche os campos
-        document.getElementById('rua').value = data.logradouro || '';
-        document.getElementById('bairro').value = data.bairro || '';
-        document.getElementById('cidade').value = data.localidade || '';
-        document.getElementById('estado').value = data.uf || '';
-        
-        if (data.logradouro) {
-          document.getElementById('numero').focus();
-        }
-        
-        showStatusMessage('Endereço preenchido com sucesso!', 'success');
-      } catch (error) {
-        console.error('Erro ao buscar CEP:', error);
-        showStatusMessage('Erro ao consultar CEP. Tente novamente.', 'error');
-      } finally {
-        btnCep.textContent = 'Procurar CEP';
-        btnCep.disabled = false;
-      }
-    }
+            try {
+                // Preparar dados
+                const userData = {
+                    firstname: document.getElementById('firstname').value.trim(),
+                    lastname: document.getElementById('lastname').value.trim(),
+                    username: document.getElementById('username').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    password: password,
+                    age: age,
+                    gender: document.getElementById('gender').value,
+                    cep: document.getElementById('cep').value.replace(/\D/g, ''),
+                    rua: document.getElementById('rua').value.trim(),
+                    numero: document.getElementById('numero').value.trim(),
+                    complemento: document.getElementById('complemento').value.trim(),
+                    bairro: document.getElementById('bairro').value.trim(),
+                    cidade: document.getElementById('cidade').value.trim(),
+                    estado: document.getElementById('estado').value.trim(),
+                    pais: document.getElementById('pais').value.trim(),
+                    phone: document.getElementById('phone').value.replace(/\D/g, '')
+                };
 
-    // Função de cadastro com tratamento completo
-    async function handleRegister(event) {
-      event.preventDefault();
-      clearStatusMessage();
+                // Envio CORRETO para o Google Apps Script
+                const formData = new FormData();
+                formData.append('action', 'register_user');
+                formData.append('data', JSON.stringify(userData));
 
-      // Validações (mantidas as que você já tinha)
-      // ... (código de validação anterior) ...
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData
+                });
 
-      const btn = document.querySelector('.btn');
-      btn.disabled = true;
-      btn.textContent = 'Cadastrando...';
-
-      try {
-        // Testar conexão com ambas APIs primeiro
-        const [apiCorreios, apiGoogle] = await Promise.all([
-          fetch('https://viacep.com.br/ws/01001000/json/').then(res => res.json()),
-          fetch(`${SCRIPT_URL}?action=test`).then(res => res.json())
-        ]);
-
-        if (!apiGoogle.success) {
-          throw new Error("API do Google indisponível");
-        }
-
-        // Preparar dados
-        const userData = { /* ...seus campos de formulário... */ };
-
-        // Enviar para sua API
-        const response = await fetch(SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'register_user',
-            ...userData
-          })
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatusMessage('Cadastro realizado! Redirecionando...', 'success');
+                    setTimeout(() => window.location.href = 'login.html', 1500);
+                } else {
+                    throw new Error(result.message || 'Erro no cadastro');
+                }
+            } catch (error) {
+                console.error('Erro completo:', error);
+                showStatusMessage('Erro ao cadastrar: ' + error.message, 'error');
+            } finally {
+                btn.textContent = 'Cadastrar';
+                btn.disabled = false;
+            }
         });
 
-        const result = await response.json();
-        
-        if (result.success) {
-          showStatusMessage('Cadastro realizado! Redirecionando...', 'success');
-          setTimeout(() => window.location.href = 'login.html', 1500);
-        } else {
-          throw new Error(result.message || 'Erro no cadastro');
+        // Funções auxiliares (mantidas as originais)
+        function formatarCEP(input) {
+            let cep = input.value.replace(/\D/g, '');
+            if (cep.length > 5) cep = cep.substring(0, 5) + '-' + cep.substring(5, 8);
+            input.value = cep;
         }
-      } catch (error) {
-        console.error('Erro completo:', error);
-        
-        let errorMessage = 'Erro ao cadastrar';
-        if (error.message.includes('NetworkError')) {
-          errorMessage = 'Sem conexão com a internet';
-        } else if (error.message.includes('API do Google')) {
-          errorMessage = 'Servidor temporariamente indisponível';
-        }
-        
-        showStatusMessage(errorMessage, 'error');
-      } finally {
-        btn.textContent = 'Cadastrar';
-        btn.disabled = false;
-      }
-    }
 
-    // Inicialização
-    document.addEventListener('DOMContentLoaded', function() {
-      // Seu código de menu mobile...
-      
-      document.getElementById('registerForm').addEventListener('submit', handleRegister);
-      
-      // Configurar CEP
-      document.getElementById('cep').addEventListener('blur', pesquisarCEP);
-      document.getElementById('cep').addEventListener('keyup', function(e) {
-        formatarCEP(this);
-        if (e.key === 'Enter') pesquisarCEP();
-      });
-      
-      // Configurar telefone
-      document.getElementById('phone').addEventListener('input', function() {
-        formatarTelefone(this);
-      });
+        function formatarTelefone(input) {
+            let numero = input.value.replace(/\D/g, '');
+            if (numero.length > 2) numero = `(${numero.substring(0, 2)}) ${numero.substring(2)}`;
+            if (numero.length > 10) numero = `${numero.substring(0, 10)}-${numero.substring(10, 15)}`;
+            input.value = numero;
+        }
+
+        async function pesquisarCEP() {
+            const cepInput = document.getElementById('cep');
+            const cep = cepInput.value.replace(/\D/g, '');
+            
+            if (cep.length !== 8) {
+                showStatusMessage('CEP inválido! Digite os 8 dígitos.', 'error');
+                cepInput.focus();
+                return;
+            }
+
+            const btnCep = document.querySelector('.btn-cep');
+            btnCep.disabled = true;
+            btnCep.textContent = 'Buscando...';
+
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                const data = await response.json();
+                
+                if (data.erro) {
+                    showStatusMessage('CEP não encontrado!', 'error');
+                    return;
+                }
+                
+                document.getElementById('rua').value = data.logradouro || '';
+                document.getElementById('bairro').value = data.bairro || '';
+                document.getElementById('cidade').value = data.localidade || '';
+                document.getElementById('estado').value = data.uf || '';
+                
+                if (data.logradouro) document.getElementById('numero').focus();
+                
+            } catch (error) {
+                console.error('Erro ao buscar CEP:', error);
+                showStatusMessage('Erro ao consultar CEP. Tente novamente.', 'error');
+            } finally {
+                btnCep.textContent = 'Procurar CEP';
+                btnCep.disabled = false;
+            }
+        }
+
+        function showStatusMessage(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message status-${type}`;
+            statusDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function clearStatusMessage() {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = '';
+            statusDiv.className = 'status-message';
+        }
     });
 </script>
 </body>
