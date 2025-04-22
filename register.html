@@ -469,88 +469,104 @@
 
         // Função de Registro
         document.getElementById('registerForm').addEventListener('submit', async function(event) {
-        event.preventDefault();
-        clearStatusMessage();
-    
-        // Validações
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirm-password').value;
+            event.preventDefault();
+            clearStatusMessage();
         
-        if (password !== confirmPassword) {
-            showStatusMessage('As senhas não coincidem!', 'error');
-            return;
-        }
-    
-        const age = parseInt(document.getElementById('age').value);
-        if (age < 18 || isNaN(age)) {
-            showStatusMessage('Você deve ter pelo menos 18 anos para se cadastrar', 'error');
-            return;
-        }
-    
-        const btn = document.querySelector('.btn');
-        btn.disabled = true;
-        btn.textContent = 'Cadastrando...';
-    
-        try {
-            // Preparar dados
-            const userData = {
-                firstname: document.getElementById('firstname').value.trim(),
-                lastname: document.getElementById('lastname').value.trim(),
-                username: document.getElementById('username').value.trim(),
-                email: document.getElementById('email').value.trim(),
-                password: password,
-                age: age,
-                gender: document.getElementById('gender').value,
-                cep: document.getElementById('cep').value.replace(/\D/g, ''),
-                rua: document.getElementById('rua').value.trim(),
-                numero: document.getElementById('numero').value.trim(),
-                complemento: document.getElementById('complemento').value.trim(),
-                bairro: document.getElementById('bairro').value.trim(),
-                cidade: document.getElementById('cidade').value.trim(),
-                estado: document.getElementById('estado').value.trim(),
-                pais: document.getElementById('pais').value.trim(),
-                phone: document.getElementById('phone').value.replace(/\D/g, '')
-            };
-    
-            // Envio para o Google Apps Script
-            const formData = new FormData();
-            formData.append('action', 'register_user');
-            formData.append('data', JSON.stringify(userData));
-    
-            // Adicionado tratamento mais robusto da resposta
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: formData
-            });
-    
-            const responseData = await response.text(); // Primeiro obtém o texto
-            let result;
+            // Validações básicas
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
             
+            // Verifica se as senhas coincidem
+            if (password !== confirmPassword) {
+                showStatusMessage('As senhas não coincidem!', 'error');
+                return;
+            }
+        
+            // Verifica idade mínima
+            const age = parseInt(document.getElementById('age').value);
+            if (age < 18 || isNaN(age)) {
+                showStatusMessage('Você deve ter pelo menos 18 anos para se cadastrar', 'error');
+                return;
+            }
+        
+            // Desabilita o botão durante o processamento
+            const btn = document.querySelector('.btn');
+            btn.disabled = true;
+            btn.textContent = 'Cadastrando...';
+        
             try {
-                result = JSON.parse(responseData); // Tenta parsear como JSON
-            } catch (e) {
-                console.error('Resposta não é JSON válido:', responseData);
-                throw new Error('Resposta inválida do servidor');
+                // Prepara os dados do usuário
+                const userData = {
+                    firstname: document.getElementById('firstname').value.trim(),
+                    lastname: document.getElementById('lastname').value.trim(),
+                    username: document.getElementById('username').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    password: password,
+                    age: age,
+                    gender: document.getElementById('gender').value,
+                    cep: document.getElementById('cep').value.replace(/\D/g, ''),
+                    rua: document.getElementById('rua').value.trim(),
+                    numero: document.getElementById('numero').value.trim(),
+                    complemento: document.getElementById('complemento').value.trim(),
+                    bairro: document.getElementById('bairro').value.trim(),
+                    cidade: document.getElementById('cidade').value.trim(),
+                    estado: document.getElementById('estado').value.trim(),
+                    pais: document.getElementById('pais').value.trim(),
+                    phone: document.getElementById('phone').value.replace(/\D/g, '')
+                };
+        
+                // Validação adicional dos campos obrigatórios
+                const requiredFields = ['firstname', 'lastname', 'email', 'password', 'confirm-password', 'age', 'gender'];
+                for (const fieldId of requiredFields) {
+                    const field = document.getElementById(fieldId);
+                    if (!field.value.trim()) {
+                        showStatusMessage(`Por favor, preencha o campo ${field.labels[0].textContent}`, 'error');
+                        field.focus();
+                        btn.textContent = 'Cadastrar';
+                        btn.disabled = false;
+                        return;
+                    }
+                }
+        
+                // Prepara o FormData para envio
+                const formData = new FormData();
+                formData.append('action', 'register_user');
+                formData.append('data', JSON.stringify(userData));
+        
+                // Faz a requisição para a API
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+        
+                // Verifica se a resposta é JSON válido
+                let result;
+                try {
+                    result = await response.json();
+                } catch (e) {
+                    throw new Error('Resposta inválida do servidor');
+                }
+        
+                // Verifica se houve erro na resposta
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'Erro no cadastro');
+                }
+        
+                // Sucesso no cadastro
+                showStatusMessage('Cadastro realizado com sucesso! Redirecionando...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+        
+            } catch (error) {
+                console.error('Erro no cadastro:', error);
+                showStatusMessage('Erro ao cadastrar: ' + error.message, 'error');
+            } finally {
+                // Reabilita o botão independente do resultado
+                btn.textContent = 'Cadastrar';
+                btn.disabled = false;
             }
-    
-            if (!response.ok) {
-                throw new Error(result.message || `Erro HTTP: ${response.status}`);
-            }
-    
-            if (result.success) {
-                showStatusMessage('Cadastro realizado! Redirecionando...', 'success');
-                setTimeout(() => window.location.href = 'login.html', 1500);
-            } else {
-                throw new Error(result.message || 'Erro no cadastro');
-            }
-        } catch (error) {
-            console.error('Erro completo:', error);
-            showStatusMessage('Erro ao cadastrar: ' + (error.message || 'Erro interno no servidor'), 'error');
-        } finally {
-            btn.textContent = 'Cadastrar';
-            btn.disabled = false;
-        }
-    });
+        });
 
         // Funções auxiliares (mantidas as originais)
         function formatarCEP(input) {
