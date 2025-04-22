@@ -569,6 +569,9 @@
                       phone: document.getElementById('phone').value.replace(/\D/g, '')
                   };
           
+                  // Debug: Mostra os dados que serão enviados
+                  console.log("Dados preparados para envio:", userData);
+          
                   // Envio para o Google Sheets
                   const response = await fetch(SCRIPT_URL, {
                       method: 'POST',
@@ -578,17 +581,26 @@
                       body: `action=register_user&data=${encodeURIComponent(JSON.stringify(userData))}`
                   });
           
-                  const result = await response.json();
-                  
-                  if (!result.success) {
-                      throw new Error(result.message || 'Erro no cadastro');
+                  // Verifica se a resposta é JSON válido
+                  let result;
+                  try {
+                      result = await response.json();
+                  } catch (e) {
+                      throw new Error("Resposta inválida do servidor");
                   }
           
-                  showStatusMessage('Cadastro realizado com sucesso!', 'success');
+                  // Debug: Mostra a resposta completa
+                  console.log("Resposta completa da API:", result);
+          
+                  if (!result.success) {
+                      throw new Error(result.message || result.error || 'Erro no cadastro');
+                  }
+          
+                  showStatusMessage('Cadastro realizado com sucesso! Redirecionando...', 'success');
                   setTimeout(() => window.location.href = 'login.html', 2000);
           
               } catch (error) {
-                  console.error('Erro:', error);
+                  console.error('Erro completo:', error);
                   showStatusMessage('Erro ao cadastrar: ' + error.message, 'error');
               } finally {
                   btn.disabled = false;
