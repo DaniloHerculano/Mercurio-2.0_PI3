@@ -534,8 +534,8 @@
           document.getElementById('registerForm').addEventListener('submit', async function(event) {
               event.preventDefault();
               clearStatusMessage();
-              
-              // Validações básicas
+          
+              // Validações
               const password = document.getElementById('password').value;
               const confirmPassword = document.getElementById('confirm-password').value;
               
@@ -543,17 +543,11 @@
                   showStatusMessage('As senhas não coincidem!', 'error');
                   return;
               }
-              
-              const age = parseInt(document.getElementById('age').value);
-              if (age < 18 || isNaN(age)) {
-                  showStatusMessage('Você deve ter pelo menos 18 anos', 'error');
-                  return;
-              }
-              
+          
               const btn = document.querySelector('.btn');
               btn.disabled = true;
               btn.textContent = 'Cadastrando...';
-              
+          
               try {
                   // Prepara os dados
                   const userData = {
@@ -562,7 +556,7 @@
                       username: document.getElementById('username').value.trim(),
                       email: document.getElementById('email').value.trim(),
                       password: password,
-                      age: age,
+                      age: document.getElementById('age').value,
                       gender: document.getElementById('gender').value,
                       cep: document.getElementById('cep').value.replace(/\D/g, ''),
                       rua: document.getElementById('rua').value.trim(),
@@ -574,8 +568,8 @@
                       pais: document.getElementById('pais').value.trim(),
                       phone: document.getElementById('phone').value.replace(/\D/g, '')
                   };
-                  
-                  // Envia para a API
+          
+                  // Envio para o Google Sheets
                   const response = await fetch(SCRIPT_URL, {
                       method: 'POST',
                       headers: {
@@ -583,15 +577,18 @@
                       },
                       body: `action=register_user&data=${encodeURIComponent(JSON.stringify(userData))}`
                   });
-                  
+          
                   const result = await response.json();
-                  if (!result.success) throw new Error(result.message || 'Erro no cadastro');
                   
-                  showStatusMessage('Cadastro realizado! Redirecionando...', 'success');
-                  setTimeout(() => window.location.href = 'login.html', 1500);
-                  
+                  if (!result.success) {
+                      throw new Error(result.message || 'Erro no cadastro');
+                  }
+          
+                  showStatusMessage('Cadastro realizado com sucesso!', 'success');
+                  setTimeout(() => window.location.href = 'login.html', 2000);
+          
               } catch (error) {
-                  console.error('Erro no cadastro:', error);
+                  console.error('Erro:', error);
                   showStatusMessage('Erro ao cadastrar: ' + error.message, 'error');
               } finally {
                   btn.disabled = false;
