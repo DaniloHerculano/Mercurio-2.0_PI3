@@ -564,25 +564,6 @@
         }
     });
 
-        // Funções formatar CEP
-        function formatarCEP(input) {o
-            let cep = input.value.replace(/\D/g, '');
-            
-            if (cep.length > 8) {
-                cep = cep.substring(0, 8);
-            }
-            
-            if (cep.length > 5) {
-                cep = cep.replace(/(\d{5})(\d{0,3})/, '$1-$2');
-            }
-            
-            input.value = cep;
-            
-            if (cep.length === 9) {
-                pesquisarCEP();
-            }
-        }
-
         function formatarTelefone(input) {
             let numero = input.value.replace(/\D/g, '');
             if (numero.length > 2) numero = `(${numero.substring(0, 2)}) ${numero.substring(2)}`;
@@ -590,6 +571,25 @@
             input.value = numero;
         }
 
+        // Função para formatar o CEP enquanto digita
+        function formatarCEP(input) {
+            // Remove tudo que não é dígito
+            let cep = input.value.replace(/\D/g, '');
+            
+            // Limita a 8 caracteres
+            if (cep.length > 8) {
+                cep = cep.substring(0, 8);
+            }
+            
+            // Aplica a máscara (xxxxx-xxx)
+            if (cep.length > 5) {
+                cep = cep.replace(/(\d{5})(\d{0,3})/, '$1-$2');
+            }
+            
+            input.value = cep;
+        }
+        
+        // Função principal de busca de CEP
         async function pesquisarCEP() {
             const cepInput = document.getElementById('cep');
             const cep = cepInput.value.replace(/\D/g, '');
@@ -601,56 +601,57 @@
             }
         
             const btnCep = document.querySelector('.btn-cep');
+            const originalText = btnCep.textContent;
             btnCep.disabled = true;
             btnCep.textContent = 'Buscando...';
         
             try {
-                // Usando uma abordagem alternativa com XMLHttpRequest que funciona melhor em alguns casos
-                const data = await new Promise((resolve, reject) => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('GET', `https://viacep.com.br/ws/${cep}/json/`);
-                    xhr.onload = () => {
-                        if (xhr.status === 200) {
-                            try {
-                                resolve(JSON.parse(xhr.responseText));
-                            } catch (e) {
-                                reject(new Error('Resposta inválida da API'));
-                            }
-                        } else {
-                            reject(new Error(`Erro ${xhr.status}: ${xhr.statusText}`));
-                        }
-                    };
-                    xhr.onerror = () => reject(new Error('Falha na conexão'));
-                    xhr.send();
-                });
-        
+                // Mostra que está carregando
+                cepInput.style.background = "#fffde7";
+                
+                // Tentamos primeiro diretamente
+                let response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                
+                // Se falhar, tentamos com proxy CORS
+                if (!response.ok) {
+                    response = await fetch(`https://corsproxy.io/?https://viacep.com.br/ws/${cep}/json/`);
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`Erro ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
                 if (data.erro) {
                     throw new Error('CEP não encontrado');
                 }
         
-                // Preenche os campos
+                // Preenche os campos do formulário
                 document.getElementById('rua').value = data.logradouro || '';
                 document.getElementById('bairro').value = data.bairro || '';
                 document.getElementById('cidade').value = data.localidade || '';
                 document.getElementById('estado').value = data.uf || '';
                 
-                // Formata o CEP no campo
+                // Formata o CEP corretamente
                 cepInput.value = data.cep || cep.replace(/(\d{5})(\d{3})/, '$1-$2');
                 
-                // Foca no campo número
+                // Foca no próximo campo
                 document.getElementById('numero').focus();
-        
+                
             } catch (error) {
                 console.error('Erro ao buscar CEP:', error);
                 showStatusMessage(
-                    error.message.includes('Falha na conexão') 
-                        ? 'Serviço de CEP indisponível. Tente novamente mais tarde.'
-                        : error.message,
+                    error.message.includes('Failed to fetch') ? 
+                    'Serviço temporariamente indisponível' : 
+                    'CEP não encontrado. Verifique o número.',
                     'error'
                 );
             } finally {
-                btnCep.textContent = 'Procurar CEP';
+                // Restaura o estado original
                 btnCep.disabled = false;
+                btnCep.textContent = originalText;
+                cepInput.style.background = "";
             }
         }
 
