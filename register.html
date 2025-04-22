@@ -593,44 +593,59 @@
             btnCep.textContent = 'Buscando...';
         
             try {
-                // 1. Primeiro tentamos com HTTPS diretamente
-                let response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                // Tentamos 3 métodos diferentes para garantir que funcione
+                const urls = [
+                    `https://viacep.com.br/ws/${cep}/json/`,
+                    `https://proxy.cors.sh/https://viacep.com.br/ws/${cep}/json/`,
+                    `https://cors-anywhere.herokuapp.com/https://viacep.com.br/ws/${cep}/json/`
+                ];
                 
-                // 2. Se falhar, tentamos com CORS proxy
-                if (!response.ok) {
-                    response = await fetch(`https://cors-anywhere.herokuapp.com/https://viacep.com.br/ws/${cep}/json/`);
+                let data;
+                let lastError;
+                
+                for (const url of urls) {
+                    try {
+                        const response = await fetch(url, {
+                            headers: {
+                                'Accept': 'application/json'
+                            }
+                        });
+                        
+                        if (!response.ok) continue;
+                        
+                        data = await response.json();
+                        if (!data.erro) break;
+                        
+                    } catch (error) {
+                        lastError = error;
+                        continue;
+                    }
                 }
                 
-                // Verifica se a resposta é válida
-                if (!response.ok) {
-                    throw new Error(`Erro na requisição: ${response.status}`);
+                if (!data || data.erro) {
+                    throw lastError || new Error('CEP não encontrado');
                 }
                 
-                const data = await response.json();
-                
-                // Verifica se o CEP foi encontrado
-                if (data.erro) {
-                    showStatusMessage('CEP não encontrado!', 'error');
-                    return;
-                }
-                
-                // Preenche os campos do formulário
+                // Preenche os campos
                 document.getElementById('rua').value = data.logradouro || '';
                 document.getElementById('bairro').value = data.bairro || '';
                 document.getElementById('cidade').value = data.localidade || '';
                 document.getElementById('estado').value = data.uf || '';
                 
-                // Formata o CEP no campo (12345-678)
+                // Formata o CEP
                 cepInput.value = cep.replace(/(\d{5})(\d{3})/, '$1-$2');
                 
-                // Foca no campo número se a rua foi preenchida
-                if (data.logradouro) {
-                    document.getElementById('numero').focus();
-                }
+                // Foca no próximo campo
+                document.getElementById('numero').focus();
                 
             } catch (error) {
-                console.error('Erro ao buscar CEP:', error);
-                showStatusMessage('Erro ao consultar CEP. Tente novamente ou preencha manualmente.', 'error');
+                console.error('Falha ao buscar CEP:', error);
+                showStatusMessage(
+                    error.message.includes('Failed to fetch') 
+                        ? 'Serviço de CEP indisponível. Tente mais tarde.' 
+                        : 'CEP não encontrado. Verifique o número.',
+                    'error'
+                );
             } finally {
                 btnCep.textContent = 'Procurar CEP';
                 btnCep.disabled = false;
