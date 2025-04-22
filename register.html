@@ -436,254 +436,173 @@
 
   <!------------- JAVASCRIPT ------------>
 <script>
-    // Configurações
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrtF0NjX5cjjvYneSQr9Tncmgf6si5cvcbTqFjwxpyXKtQvlQnvBiNG3PkmZz5J1PR/exec";
-
-    // CONTROLE DO MENU MOBILE
-    document.addEventListener('DOMContentLoaded', function() {
-      const menuToggle = document.getElementById('menuToggle');
-      const mainNav = document.querySelector('.sf-menu');
+      // Configurações
+      const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrtF0NjX5cjjvYneSQr9Tncmgf6si5cvcbTqFjwxpyXKtQvlQnvBiNG3PkmZz5J1PR/exec";
       
-      // Verifica se é mobile no carregamento
-      if (window.innerWidth <= 768) {
-        mainNav.style.display = 'none';
+      // Funções auxiliares
+      function showStatusMessage(message, type) {
+          const statusDiv = document.getElementById('statusMessage');
+          statusDiv.textContent = message;
+          statusDiv.className = `status-message status-${type}`;
+          statusDiv.style.display = 'block';
+          console.log(`Status: ${type} - ${message}`);
       }
       
-      // Controle do clique no botão
-      menuToggle.addEventListener('click', function() {
-        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
-          mainNav.style.display = 'flex';
-        } else {
-          mainNav.style.display = 'none';
-        }
-      });
+      function clearStatusMessage() {
+          const statusDiv = document.getElementById('statusMessage');
+          statusDiv.textContent = '';
+          statusDiv.className = 'status-message';
+      }
       
-      // Atualiza ao redimensionar a tela
-      window.addEventListener('resize', function() {
-        if (window.innerWidth > 768) {
-          mainNav.style.display = 'flex';
-        } else {
-          mainNav.style.display = 'none';
-        }
+      function formatarCEP(input) {
+          let cep = input.value.replace(/\D/g, '');
+          if (cep.length > 8) cep = cep.substring(0, 8);
+          if (cep.length > 5) cep = cep.replace(/(\d{5})(\d{0,3})/, '$1-$2');
+          input.value = cep;
+      }
+      
+      function formatarTelefone(input) {
+          let numero = input.value.replace(/\D/g, '');
+          if (numero.length > 2) numero = `(${numero.substring(0, 2)}) ${numero.substring(2)}`;
+          if (numero.length > 10) numero = `${numero.substring(0, 10)}-${numero.substring(10, 15)}`;
+          input.value = numero;
+      }
+      
+      async function pesquisarCEP() {
+          const cepInput = document.getElementById('cep');
+          const cep = cepInput.value.replace(/\D/g, '');
+          const btnCep = document.querySelector('.btn-cep');
+          
+          if (cep.length !== 8) {
+              showStatusMessage('CEP deve conter 8 dígitos', 'error');
+              return;
+          }
+      
+          btnCep.disabled = true;
+          btnCep.textContent = 'Buscando...';
+          
+          try {
+              // Tentativa 1: ViaCEP direto
+              let response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+              
+              // Tentativa 2: Com proxy se falhar
+              if (!response.ok) {
+                  response = await fetch(`https://corsproxy.io/?https://viacep.com.br/ws/${cep}/json/`);
+              }
+              
+              if (!response.ok) throw new Error("Serviço indisponível");
+              
+              const data = await response.json();
+              if (data.erro) throw new Error("CEP não encontrado");
+      
+              // Preenche os campos
+              document.getElementById('rua').value = data.logradouro || '';
+              document.getElementById('bairro').value = data.bairro || '';
+              document.getElementById('cidade').value = data.localidade || '';
+              document.getElementById('estado').value = data.uf || '';
+              
+              showStatusMessage('Endereço preenchido automaticamente', 'success');
+              
+          } catch (error) {
+              console.error('Erro ao buscar CEP:', error);
+              showStatusMessage(error.message, 'error');
+          } finally {
+              btnCep.disabled = false;
+              btnCep.textContent = 'Procurar CEP';
+          }
+      }
+      
+      // Inicialização
+      document.addEventListener('DOMContentLoaded', function() {
+          // Menu mobile
+          const menuToggle = document.getElementById('menuToggle');
+          const mainNav = document.querySelector('.sf-menu');
+          
+          if (window.innerWidth <= 768) {
+              mainNav.style.display = 'none';
+          }
+          
+          menuToggle.addEventListener('click', function() {
+              mainNav.style.display = mainNav.style.display === 'none' ? 'flex' : 'none';
+          });
+          
+          window.addEventListener('resize', function() {
+              mainNav.style.display = window.innerWidth > 768 ? 'flex' : 'none';
+          });
+      
+          // Formulário de cadastro
+          document.getElementById('registerForm').addEventListener('submit', async function(event) {
+              event.preventDefault();
+              clearStatusMessage();
+              
+              // Validações básicas
+              const password = document.getElementById('password').value;
+              const confirmPassword = document.getElementById('confirm-password').value;
+              
+              if (password !== confirmPassword) {
+                  showStatusMessage('As senhas não coincidem!', 'error');
+                  return;
+              }
+              
+              const age = parseInt(document.getElementById('age').value);
+              if (age < 18 || isNaN(age)) {
+                  showStatusMessage('Você deve ter pelo menos 18 anos', 'error');
+                  return;
+              }
+              
+              const btn = document.querySelector('.btn');
+              btn.disabled = true;
+              btn.textContent = 'Cadastrando...';
+              
+              try {
+                  // Prepara os dados
+                  const userData = {
+                      firstname: document.getElementById('firstname').value.trim(),
+                      lastname: document.getElementById('lastname').value.trim(),
+                      username: document.getElementById('username').value.trim(),
+                      email: document.getElementById('email').value.trim(),
+                      password: password,
+                      age: age,
+                      gender: document.getElementById('gender').value,
+                      cep: document.getElementById('cep').value.replace(/\D/g, ''),
+                      rua: document.getElementById('rua').value.trim(),
+                      numero: document.getElementById('numero').value.trim(),
+                      complemento: document.getElementById('complemento').value.trim(),
+                      bairro: document.getElementById('bairro').value.trim(),
+                      cidade: document.getElementById('cidade').value.trim(),
+                      estado: document.getElementById('estado').value.trim(),
+                      pais: document.getElementById('pais').value.trim(),
+                      phone: document.getElementById('phone').value.replace(/\D/g, '')
+                  };
+                  
+                  // Envia para a API
+                  const response = await fetch(SCRIPT_URL, {
+                      method: 'POST',
+                      headers: {
+                          'Content-Type': 'application/x-www-form-urlencoded',
+                      },
+                      body: `action=register_user&data=${encodeURIComponent(JSON.stringify(userData))}`
+                  });
+                  
+                  const result = await response.json();
+                  if (!result.success) throw new Error(result.message || 'Erro no cadastro');
+                  
+                  showStatusMessage('Cadastro realizado! Redirecionando...', 'success');
+                  setTimeout(() => window.location.href = 'login.html', 1500);
+                  
+              } catch (error) {
+                  console.error('Erro no cadastro:', error);
+                  showStatusMessage('Erro ao cadastrar: ' + error.message, 'error');
+              } finally {
+                  btn.disabled = false;
+                  btn.textContent = 'Cadastrar';
+              }
+          });
+          
+          // Evento de CEP
+          document.querySelector('.btn-cep').addEventListener('click', pesquisarCEP);
+          document.getElementById('cep').addEventListener('blur', pesquisarCEP);
       });
-
-        // Função de Registro
-        document.getElementById('registerForm').addEventListener('submit', async function(event) {
-        event.preventDefault();
-        clearStatusMessage();
-    
-        // Validações básicas
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirm-password').value;
-        
-        if (password !== confirmPassword) {
-            showStatusMessage('As senhas não coincidem!', 'error');
-            return;
-        }
-    
-        const age = parseInt(document.getElementById('age').value);
-        if (age < 18 || isNaN(age)) {
-            showStatusMessage('Você deve ter pelo menos 18 anos para se cadastrar', 'error');
-            return;
-        }
-    
-        const btn = document.querySelector('.btn');
-        btn.disabled = true;
-        btn.textContent = 'Cadastrando...';
-    
-        try {
-            // Prepara os dados do usuário
-            const userData = {
-                firstname: document.getElementById('firstname').value.trim(),
-                lastname: document.getElementById('lastname').value.trim(),
-                username: document.getElementById('username').value.trim(),
-                email: document.getElementById('email').value.trim(),
-                password: password,
-                age: age,
-                gender: document.getElementById('gender').value,
-                cep: document.getElementById('cep').value.replace(/\D/g, ''),
-                rua: document.getElementById('rua').value.trim(),
-                numero: document.getElementById('numero').value.trim(),
-                complemento: document.getElementById('complemento').value.trim(),
-                bairro: document.getElementById('bairro').value.trim(),
-                cidade: document.getElementById('cidade').value.trim(),
-                estado: document.getElementById('estado').value.trim(),
-                pais: document.getElementById('pais').value.trim(),
-                phone: document.getElementById('phone').value.replace(/\D/g, '')
-            };
-    
-            // Validação adicional dos campos obrigatórios
-            const requiredFields = ['firstname', 'lastname', 'email', 'password'];
-            for (const field of requiredFields) {
-                if (!userData[field]) {
-                    throw new Error(`O campo ${field} é obrigatório`);
-                }
-            }
-    
-            // Envio para a API
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `action=register_user&data=${encodeURIComponent(JSON.stringify(userData))}`
-            });
-    
-            // Verifica a resposta
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || 'Erro na requisição');
-            }
-    
-            const result = await response.json();
-            
-            if (!result.success) {
-                throw new Error(result.message || 'Erro no cadastro');
-            }
-    
-            showStatusMessage('Cadastro realizado com sucesso! Redirecionando...', 'success');
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 1500);
-    
-        } catch (error) {
-            console.error('Erro no cadastro:', error);
-            let errorMessage = 'Erro ao cadastrar';
-            
-            try {
-                const errorObj = JSON.parse(error.message);
-                errorMessage += ': ' + (errorObj.message || error.message);
-            } catch (e) {
-                errorMessage += ': ' + error.message;
-            }
-            
-            showStatusMessage(errorMessage, 'error');
-        } finally {
-            btn.textContent = 'Cadastrar';
-            btn.disabled = false;
-        }
-    });
-
-        function formatarTelefone(input) {
-            let numero = input.value.replace(/\D/g, '');
-            if (numero.length > 2) numero = `(${numero.substring(0, 2)}) ${numero.substring(2)}`;
-            if (numero.length > 10) numero = `${numero.substring(0, 10)}-${numero.substring(10, 15)}`;
-            input.value = numero;
-        }
-
-        // Debug completo do sistema de CEP
-        console.log("Sistema de CEP inicializando...");
-        
-        // Função para mostrar mensagens de status
-        function showStatusMessage(message, type) {
-            console.log(`Status: ${type} - ${message}`);
-            const statusDiv = document.getElementById('statusMessage');
-            statusDiv.textContent = message;
-            statusDiv.className = `status-message status-${type}`;
-            statusDiv.style.display = 'block';
-        }
-
-        // Função para formatar CEP
-        function formatarCEP(input) {
-            console.log("Formatando CEP...", input.value);
-            let cep = input.value.replace(/\D/g, '');
-            if (cep.length > 8) cep = cep.substring(0, 8);
-            if (cep.length > 5) cep = cep.replace(/(\d{5})(\d{0,3})/, '$1-$2');
-            input.value = cep;
-            console.log("CEP formatado:", input.value);
-        }
-        
-        // Função principal para buscar CEP
-        async function pesquisarCEP() {
-            console.log("Iniciando pesquisa de CEP...");
-            const cepInput = document.getElementById('cep');
-            const btnCep = document.querySelector('.btn-cep');
-            
-            try {
-                // 1. Validação do CEP
-                const cep = cepInput.value.replace(/\D/g, '');
-                console.log("CEP digitado:", cep);
-                
-                if (cep.length !== 8) {
-                    throw new Error("CEP deve conter 8 dígitos");
-                }
-        
-                // 2. Atualiza UI durante a busca
-                btnCep.disabled = true;
-                btnCep.textContent = 'Buscando...';
-                showStatusMessage("Consultando CEP...", "success");
-        
-                // 3. Faz a requisição (com fallback)
-                console.log("Fazendo requisição para ViaCEP...");
-                let response;
-                
-                try {
-                    // Tentativa direta
-                    response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-                    console.log("Resposta direta:", response.status);
-                } catch (e) {
-                    console.log("Falha na requisição direta, tentando com proxy...");
-                    response = await fetch(`https://proxy.cors.sh/https://viacep.com.br/ws/${cep}/json/`, {
-                        headers: {
-                            'x-cors-api-key': 'temp_0a69a4e9a1b3e5b5a3a9a1b3e5b5a3a9'
-                        }
-                    });
-                    console.log("Resposta via proxy:", response.status);
-                }
-        
-                // 4. Processa a resposta
-                if (!response.ok) throw new Error("Serviço indisponível");
-                
-                const data = await response.json();
-                console.log("Dados recebidos:", data);
-                
-                if (data.erro) throw new Error("CEP não encontrado");
-        
-                // 5. Preenche os campos
-                document.getElementById('rua').value = data.logradouro || '';
-                document.getElementById('bairro').value = data.bairro || '';
-                document.getElementById('cidade').value = data.localidade || '';
-                document.getElementById('estado').value = data.uf || '';
-                
-                console.log("Campos preenchidos com sucesso!");
-                showStatusMessage("CEP encontrado!", "success");
-        
-            } catch (error) {
-                console.error("Erro na busca de CEP:", error);
-                showStatusMessage(error.message, "error");
-            } finally {
-                btnCep.disabled = false;
-                btnCep.textContent = 'Procurar CEP';
-                console.log("Processo de busca finalizado");
-            }
-        }
-        
-        // Vincular eventos
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("Documento carregado, vinculando eventos...");
-            
-            // Vincula o evento de clique ao botão
-            document.querySelector('.btn-cep').addEventListener('click', pesquisarCEP);
-            
-            // Vincula o evento de blur (quando sai do campo)
-            document.getElementById('cep').addEventListener('blur', pesquisarCEP);
-            
-            console.log("Eventos vinculados com sucesso!");
-        });
-
-        function showStatusMessage(message, type) {
-            const statusDiv = document.getElementById('statusMessage');
-            statusDiv.textContent = message;
-            statusDiv.className = `status-message status-${type}`;
-            statusDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-
-        function clearStatusMessage() {
-            const statusDiv = document.getElementById('statusMessage');
-            statusDiv.textContent = '';
-            statusDiv.className = 'status-message';
-        }
-    });
 </script>
 </body>
 </html>
