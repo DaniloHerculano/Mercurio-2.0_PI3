@@ -454,7 +454,7 @@
           statusDiv.className = 'status-message';
       }
       
-      function formatarCEP(input) {
+      Function formatarCEP(input) {
           let cep = input.value.replace(/\D/g, '');
           if (cep.length > 8) cep = cep.substring(0, 8);
           if (cep.length > 5) cep = cep.replace(/(\d{5})(\d{0,3})/, '$1-$2');
@@ -482,7 +482,13 @@
           btnCep.textContent = 'Buscando...';
           
           try {
-              let response = await fetch(`https://corsproxy.io/?https://viacep.com.br/ws/${cep}/json/`);
+              // Tentativa 1: ViaCEP direto
+              let response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+              
+              // Tentativa 2: Com proxy se falhar
+              if (!response.ok) {
+                  response = await fetch(`https://corsproxy.io/?https://viacep.com.br/ws/${cep}/json/`);
+              }
               
               if (!response.ok) throw new Error("Serviço indisponível");
               
