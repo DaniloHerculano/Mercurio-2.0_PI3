@@ -436,9 +436,115 @@
 
 <!------------- JAVASCRIPT ------------>
   <script>
-      // Configurações
-     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrtF0NjX5cjjvYneSQr9Tncmgf6si5cvcbTqFjwxpyXKtQvlQnvBiNG3PkmZz5J1PR/exec";
+      // Configuração
+      const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrtF0NjX5cjjvYneSQr9Tncmgf6si5cvcbTqFjwxpyXKtQvlQnvBiNG3PkmZz5J1PR/exec";
       
+      // Sistema de verificação melhorado
+      const verificarCadastro = async (email) => {
+          let tentativas = 0;
+          const maxTentativas = 5;
+          const intervalo = 2000; // 2 segundos
+          
+          while (tentativas < maxTentativas) {
+              tentativas++;
+              try {
+                  const response = await fetch(`${SCRIPT_URL}?action=check_user&email=${encodeURIComponent(email)}&t=${Date.now()}`);
+                  if (!response.ok) throw new Error("Erro na resposta");
+                  
+                  const result = await response.json();
+                  if (result.exists) return true;
+                  
+                  await new Promise(resolve => setTimeout(resolve, intervalo));
+              } catch (error) {
+                  console.warn(`Tentativa ${tentativas} falhou:`, error);
+                  if (tentativas === maxTentativas) throw error;
+                  await new Promise(resolve => setTimeout(resolve, intervalo));
+              }
+          }
+          throw new Error("Cadastro não confirmado após várias tentativas");
+      };
+  
+      // Função de envio robusta
+      const enviarDados = async (userData) => {
+          try {
+              // Método 1: Tentativa com FormData
+              try {
+                  const formData = new FormData();
+                  formData.append('action', 'register_user');
+                  formData.append('data', JSON.stringify(userData));
+                  
+                  const response = await fetch(SCRIPT_URL, {
+                      method: 'POST',
+                      body: formData,
+                      mode: 'no-cors'
+                  });
+                  return { success: true };
+              } catch (error) {
+                  console.warn("Método FormData falhou, tentando método alternativo...");
+              }
+              
+              // Método 2: Tentativa com JSONP
+              return await new Promise((resolve, reject) => {
+                  const callbackName = `callback_${Date.now()}`;
+                  const script = document.createElement('script');
+                  
+                  window[callbackName] = response => {
+                      delete window[callbackName];
+                      document.body.removeChild(script);
+                      resolve(response);
+                  };
+                  
+                  script.src = `${SCRIPT_URL}?action=register_user&data=${encodeURIComponent(JSON.stringify(userData))}&callback=${callbackName}`;
+                  script.onerror = () => {
+                      delete window[callbackName];
+                      document.body.removeChild(script);
+                      reject(new Error('Falha no método JSONP'));
+                  };
+                  
+                  document.body.appendChild(script);
+              });
+          } catch (error) {
+              console.error("Todos os métodos falharam:", error);
+              throw error;
+          }
+      };
+  
+      // Função principal de cadastro
+      document.getElementById('registerForm').addEventListener('submit', async (event) => {
+          event.preventDefault();
+          clearStatusMessage();
+          
+          if (!validarFormulario()) return;
+          
+          const btn = document.querySelector('.btn');
+          btn.disabled = true;
+          btn.textContent = 'Cadastrando...';
+          
+          try {
+              const userData = coletarDadosFormulario();
+              console.log("Dados do formulário:", userData);
+              
+              // Etapa 1: Envio dos dados
+              await enviarDados(userData);
+              showStatusMessage('Enviando dados...', 'success');
+              
+              // Etapa 2: Verificação robusta
+              await verificarCadastro(userData.email);
+              
+              showStatusMessage('Cadastro confirmado! Redirecionando...', 'success');
+              setTimeout(() => window.location.href = 'login.html', 1500);
+              
+          } catch (error) {
+              console.error("Falha no cadastro:", error);
+              showStatusMessage('Cadastro não confirmado. Por favor, tente novamente ou entre em contato.', 'error');
+          } finally {
+              btn.disabled = false;
+              btn.textContent = 'Cadastrar';
+          }
+      });
+
+    ///////////////////////////
+    
       // Funções auxiliares
       const showStatusMessage = (message, type) => {
           const statusDiv = document.getElementById('statusMessage');
@@ -508,31 +614,6 @@
               btnCep.textContent = 'Procurar CEP';
           }
       };
-  
-      // Função para enviar dados usando FormData (alternativa ao JSONP)
-      const enviarDados = async (userData) => {
-        try {
-            // Cria um formulário HTML virtual
-            const formData = new FormData();
-            formData.append('action', 'register_user');
-            formData.append('data', JSON.stringify(userData));
-            
-            // Envia usando fetch com mode 'no-cors'
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: formData,
-                mode: 'no-cors' // Fundamental para contornar CORS
-            });
-            
-            // Como não podemos ler a resposta em mode 'no-cors',
-            // assumimos que foi enviado e verificamos depois
-            return { success: true };
-            
-        } catch (error) {
-            console.error("Erro no envio:", error);
-            throw error;
-        }
-    };
   
       // Função para coletar dados do formulário
       const coletarDadosFormulario = () => {
@@ -612,39 +693,6 @@
               mainNav.style.display = window.innerWidth > 768 ? 'flex' : 'none';
           });
       
-          // Formulário de cadastro
-          document.getElementById('registerForm').addEventListener('submit', async (event) => {
-              event.preventDefault();
-              clearStatusMessage();
-          
-              if (!validarFormulario()) return;
-          
-              const btn = document.querySelector('.btn');
-              btn.disabled = true;
-              btn.textContent = 'Cadastrando...';
-          
-              try {
-                  const userData = coletarDadosFormulario();
-                  console.log("Dados coletados:", userData);
-                  
-                  // Envia os dados
-                  await enviarDados(userData);
-                  
-                  // Verificação manual (opcional)
-                  await verificarCadastro(userData.email);
-                  
-                  showStatusMessage('Cadastro realizado! Redirecionando...', 'success');
-                  setTimeout(() => window.location.href = 'login.html', 1500);
-                  
-              } catch (error) {
-                  console.error("Erro no cadastro:", error);
-                  showStatusMessage('Erro ao cadastrar. Tente novamente.', 'error');
-              } finally {
-                  btn.disabled = false;
-                  btn.textContent = 'Cadastrar';
-              }
-          });
-
         // Função para verificar se o cadastro foi realizado
         async function verificarCadastro(email) {
             try {
