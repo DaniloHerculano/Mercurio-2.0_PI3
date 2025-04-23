@@ -383,15 +383,6 @@
     // Configurações
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyFXc4ftO2DOagIdZKvxHjzAz8uCAsaFn6owP_VYxJl16-vlLywsmCEcllMFI-mQ16g/exec";
     
-    // Funções auxiliares
-    function showStatusMessage(message, type) {
-        const statusDiv = document.createElement('div');
-        statusDiv.className = `status-message status-${type}`;
-        statusDiv.textContent = message;
-        document.getElementById('loginForm').prepend(statusDiv);
-        setTimeout(() => statusDiv.remove(), 5000);
-    }
-    
     // Menu Mobile
     document.addEventListener('DOMContentLoaded', function() {
         const menuToggle = document.getElementById('menuToggle');
@@ -404,7 +395,7 @@
         menuToggle.addEventListener('click', function() {
             mainNav.style.display = mainNav.style.display === 'none' ? 'flex' : 'none';
         });
-    
+
         // Função de Login
         document.getElementById('loginForm').addEventListener('submit', async function(event) {
             event.preventDefault();
@@ -415,7 +406,7 @@
             
             btn.disabled = true;
             btn.textContent = 'Entrando...';
-    
+        
             try {
                 // Envia para a API
                 const response = await fetch(SCRIPT_URL, {
@@ -423,16 +414,16 @@
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    body: `action=login_user&email=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`
+                    body: `action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`
                 });
-    
+        
                 const result = await response.json();
                 
                 if (!result.success) {
                     throw new Error(result.message || 'Credenciais inválidas');
                 }
-    
-                // Armazena os dados do usuário na sessão
+        
+                // Armazena os dados do usuário
                 sessionStorage.setItem('user', JSON.stringify(result.user));
                 window.location.href = "customer_area.html";
                 
@@ -444,17 +435,19 @@
                 btn.textContent = 'Entrar';
             }
         });
-    
-        // Modal de Recuperação de Senha
-        document.getElementById('forgot-password').addEventListener('click', function(e) {
-            e.preventDefault();
-            document.getElementById('password-recovery-modal').style.display = 'flex';
-        });
-    
-        document.getElementById('close-modal').addEventListener('click', function() {
-            document.getElementById('password-recovery-modal').style.display = 'none';
-        });
-    });
+        
+        // Função para exibir mensagens
+        function showStatusMessage(message, type) {
+            // Remove mensagens anteriores
+            const oldMessage = document.querySelector('.status-message');
+            if (oldMessage) oldMessage.remove();
+            
+            // Cria nova mensagem
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status-message status-${type}`;
+            statusDiv.textContent = message;
+            document.getElementById('loginForm').prepend(statusDiv);
+        }
     
     // Estilos dinâmicos para mensagens
     const style = document.createElement('style');
