@@ -442,16 +442,15 @@
       // Sistema de verificação melhorado
       const verificarCadastro = async (email) => {
           let tentativas = 0;
-          const maxTentativas = 5;
-          const intervalo = 2000; // 2 segundos
+          const maxTentativas = 10; // Aumente o número de tentativas
+          const intervalo = 3000; // Aumente o intervalo para 3 segundos
           
           while (tentativas < maxTentativas) {
               tentativas++;
               try {
                   const response = await fetch(`${SCRIPT_URL}?action=check_user&email=${encodeURIComponent(email)}&t=${Date.now()}`);
-                  if (!response.ok) throw new Error("Erro na resposta");
-                  
                   const result = await response.json();
+                  
                   if (result.exists) return true;
                   
                   await new Promise(resolve => setTimeout(resolve, intervalo));
