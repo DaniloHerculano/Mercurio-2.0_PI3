@@ -380,102 +380,101 @@
 
   <!------------- JAVASCRIPT ------------>
   <script>
-    // CONTROLE DO MENU MOBILE
+    // Configurações
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyFXc4ftO2DOagIdZKvxHjzAz8uCAsaFn6owP_VYxJl16-vlLywsmCEcllMFI-mQ16g/exec";
+    
+    // Funções auxiliares
+    function showStatusMessage(message, type) {
+        const statusDiv = document.createElement('div');
+        statusDiv.className = `status-message status-${type}`;
+        statusDiv.textContent = message;
+        document.getElementById('loginForm').prepend(statusDiv);
+        setTimeout(() => statusDiv.remove(), 5000);
+    }
+    
+    // Menu Mobile
     document.addEventListener('DOMContentLoaded', function() {
-      const menuToggle = document.getElementById('menuToggle');
-      const mainNav = document.querySelector('.sf-menu');
-      
-      // Verifica se é mobile no carregamento
-      if (window.innerWidth <= 768) {
-        mainNav.style.display = 'none';
-      }
-      
-      // Controle do clique no botão
-      menuToggle.addEventListener('click', function() {
-        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
-          mainNav.style.display = 'flex';
-        } else {
-          mainNav.style.display = 'none';
-        }
-      });
-      
-      // Atualiza ao redimensionar a tela
-      window.addEventListener('resize', function() {
-        if (window.innerWidth > 768) {
-          mainNav.style.display = 'flex';
-        } else {
-          mainNav.style.display = 'none';
-        }
-      });
-
-      // Função de Login
-      document.getElementById('loginForm').addEventListener('submit', function(event) {
-        event.preventDefault();
+        const menuToggle = document.getElementById('menuToggle');
+        const mainNav = document.querySelector('.sf-menu');
         
-        const login = document.getElementById('login').value;
-        const password = document.getElementById('password').value;
-        let userFound = null;
-
-        // Verifica se o login contém @ (é um e-mail)
-        if (login.includes('@')) {
-          // Busca por e-mail
-          const userData = JSON.parse(localStorage.getItem(login));
-          if (userData && userData.password === password) {
-            userFound = userData;
-          }
-        } else {
-          // Busca por nome de usuário
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            // Ignora chaves do sistema
-            if (key !== 'loggedInUser' && key !== 'estoque' && key !== 'pedidos') {
-              const userData = JSON.parse(localStorage.getItem(key));
-              if (userData.username === login && userData.password === password) {
-                userFound = userData;
-                break;
-              }
+        if (window.innerWidth <= 768) {
+            mainNav.style.display = 'none';
+        }
+        
+        menuToggle.addEventListener('click', function() {
+            mainNav.style.display = mainNav.style.display === 'none' ? 'flex' : 'none';
+        });
+    
+        // Função de Login
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const login = document.getElementById('login').value.trim();
+            const password = document.getElementById('password').value;
+            const btn = this.querySelector('.btn');
+            
+            btn.disabled = true;
+            btn.textContent = 'Entrando...';
+    
+            try {
+                // Envia para a API
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `action=login_user&email=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`
+                });
+    
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.message || 'Credenciais inválidas');
+                }
+    
+                // Armazena os dados do usuário na sessão
+                sessionStorage.setItem('user', JSON.stringify(result.user));
+                window.location.href = "customer_area.html";
+                
+            } catch (error) {
+                console.error('Erro no login:', error);
+                showStatusMessage(error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Entrar';
             }
-          }
-        }
-
-        if (userFound) {
-          // Armazena o e-mail do usuário logado no Local Storage
-          localStorage.setItem('loggedInUser', userFound.email);
-          alert('Login bem-sucedido!');
-          window.location.href = "customer_area.html";
-        } else {
-          alert('Credenciais inválidas. Por favor, verifique seus dados e tente novamente.');
-        }
-      });
-
-      // Exibir Modal de Recuperação de Senha
-      document.getElementById('forgot-password').addEventListener('click', function(e) {
-        e.preventDefault();
-        document.getElementById('password-recovery-modal').style.display = 'flex';
-      });
-
-      // Função de Recuperação de Senha
-      document.getElementById('recover-password').addEventListener('click', function() {
-        const recoveryEmail = document.getElementById('recovery-email').value;
-        const userData = JSON.parse(localStorage.getItem(recoveryEmail));
-        const messageElement = document.getElementById('recovery-message');
-
-        if (userData && userData.password) {
-          messageElement.textContent = `Sua senha é: ${userData.password}`;
-          messageElement.style.color = 'green';
-        } else {
-          messageElement.textContent = "E-mail não encontrado. Verifique e tente novamente.";
-          messageElement.style.color = 'red';
-        }
-      });
-
-      // Fechar o Modal
-      document.getElementById('close-modal').addEventListener('click', function() {
-        document.getElementById('password-recovery-modal').style.display = 'none';
-        document.getElementById('recovery-message').textContent = '';
-        document.getElementById('recovery-email').value = '';
-      });
+        });
+    
+        // Modal de Recuperação de Senha
+        document.getElementById('forgot-password').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('password-recovery-modal').style.display = 'flex';
+        });
+    
+        document.getElementById('close-modal').addEventListener('click', function() {
+            document.getElementById('password-recovery-modal').style.display = 'none';
+        });
     });
+    
+    // Estilos dinâmicos para mensagens
+    const style = document.createElement('style');
+    style.textContent = `
+        .status-message {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    `;
+    document.head.appendChild(style);
   </script>
 </body>
 </html>
