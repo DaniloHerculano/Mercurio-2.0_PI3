@@ -439,52 +439,45 @@
             
             const login = document.getElementById('login').value.trim();
             const password = document.getElementById('password').value;
-            const btn = this.querySelector('.btn');
             
             if (!login || !password) {
                 showStatusMessage('Por favor, preencha todos os campos', 'error');
                 return;
             }
         
+            const btn = this.querySelector('.btn');
             btn.disabled = true;
             btn.textContent = 'Entrando...';
         
             try {
-                // Modificação crucial: Enviar como query string no corpo
-                const body = `action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`;
+                // URL alternativa com parâmetros na query string
+                const url = `${SCRIPT_URL}?action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`;
                 
-                console.log('Enviando dados:', body); // Log para depuração
-                
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: body
+                console.log('URL completa:', url);
+                const response = await fetch(url, {
+                    method: 'POST', // Mantém como POST mesmo com parâmetros na URL
+                    mode: 'no-cors'
                 });
         
                 const result = await response.json();
-                console.log('Resposta completa:', result);
+                console.log('Resposta:', result);
                 
                 if (!result.success) {
-                    throw new Error(result.message || 'Credenciais inválidas');
+                    throw new Error(result.message || 'Login falhou');
                 }
         
                 sessionStorage.setItem('user', JSON.stringify(result.user));
-                showStatusMessage('Login bem-sucedido! Redirecionando...', 'success');
-                setTimeout(() => {
-                    window.location.href = "customer_area.html";
-                }, 1000);
+                window.location.href = "customer_area.html";
                 
             } catch (error) {
-                console.error('Erro completo:', error);
-                showStatusMessage('Erro ao conectar com o servidor. Tente novamente.', 'error');
+                console.error('Erro:', error);
+                showStatusMessage('Falha no login. Tente novamente.', 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Entrar';
             }
         });
-
+      
         // Modal de recuperação de senha
         const forgotPassword = document.getElementById('forgot-password');
         const modal = document.getElementById('password-recovery-modal');
