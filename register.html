@@ -467,44 +467,22 @@
       // Função de envio robusta
       const enviarDados = async (userData) => {
           try {
-              // Método 1: Tentativa com FormData
-              try {
-                  const formData = new FormData();
-                  formData.append('action', 'register_user');
-                  formData.append('data', JSON.stringify(userData));
-                  
-                  const response = await fetch(SCRIPT_URL, {
-                      method: 'POST',
-                      body: formData,
-                      mode: 'no-cors'
-                  });
-                  return { success: true };
-              } catch (error) {
-                  console.warn("Método FormData falhou, tentando método alternativo...");
-              }
-              
-              // Método 2: Tentativa com JSONP
-              return await new Promise((resolve, reject) => {
-                  const callbackName = `callback_${Date.now()}`;
-                  const script = document.createElement('script');
-                  
-                  window[callbackName] = response => {
-                      delete window[callbackName];
-                      document.body.removeChild(script);
-                      resolve(response);
-                  };
-                  
-                  script.src = `${SCRIPT_URL}?action=register_user&data=${encodeURIComponent(JSON.stringify(userData))}&callback=${callbackName}`;
-                  script.onerror = () => {
-                      delete window[callbackName];
-                      document.body.removeChild(script);
-                      reject(new Error('Falha no método JSONP'));
-                  };
-                  
-                  document.body.appendChild(script);
+              const response = await fetch(SCRIPT_URL, {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                      action: 'register_user',
+                      data: userData
+                  })
               });
+              
+              if (!response.ok) throw new Error("Erro na resposta do servidor");
+              
+              return await response.json();
           } catch (error) {
-              console.error("Todos os métodos falharam:", error);
+              console.error("Erro ao enviar dados:", error);
               throw error;
           }
       };
