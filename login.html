@@ -429,14 +429,14 @@
                 
             } catch (error) {
                 console.error('Erro no login:', error);
-                showStatusMessage(error.message, 'error');
+                showStatusMessage(error.message || 'Erro ao fazer login. Tente novamente.', 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Entrar';
             }
         });
         
-        // Função para exibir mensagens
+        // Adicione esta função para melhorar as mensagens de status
         function showStatusMessage(message, type) {
             // Remove mensagens anteriores
             const oldMessage = document.querySelector('.status-message');
@@ -447,6 +447,11 @@
             statusDiv.className = `status-message status-${type}`;
             statusDiv.textContent = message;
             document.getElementById('loginForm').prepend(statusDiv);
+            
+            // Remove após 5 segundos
+            setTimeout(() => {
+                statusDiv.remove();
+            }, 5000);
         }
     
     // Estilos dinâmicos para mensagens
