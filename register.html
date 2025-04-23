@@ -593,21 +593,6 @@
           
           return true;
       };
-
-      // Função para verificar se o cadastro foi realizado
-      async function verificarCadastro(email) {
-          try {
-              const response = await fetch(`${SCRIPT_URL}?action=check_user&email=${encodeURIComponent(email)}`);
-              const result = await response.json();
-              
-              if (!result.exists) {
-                  throw new Error("Cadastro não confirmado na planilha");
-              }
-          } catch (error) {
-              console.warn("Verificação falhou:", error);
-              // Não impede o fluxo, apenas registra o erro
-          }
-      }
   
       // Inicialização
       document.addEventListener('DOMContentLoaded', () => {
@@ -659,6 +644,21 @@
                   btn.textContent = 'Cadastrar';
               }
           });
+
+        // Função para verificar se o cadastro foi realizado
+        async function verificarCadastro(email) {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=check_user&email=${encodeURIComponent(email)}`);
+                const result = await response.json();
+                
+                if (!result.exists) {
+                    throw new Error("Cadastro não confirmado na planilha");
+                }
+            } catch (error) {
+                console.warn("Verificação falhou:", error);
+                // Não impede o fluxo, apenas registra o erro
+            }
+        }
           
           // Eventos de CEP
           document.querySelector('.btn-cep').addEventListener('click', pesquisarCEP);
