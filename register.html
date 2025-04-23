@@ -437,7 +437,7 @@
 <!------------- JAVASCRIPT ------------>
   <script>
       // Configuração
-      const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrtF0NjX5cjjvYneSQr9Tncmgf6si5cvcbTqFjwxpyXKtQvlQnvBiNG3PkmZz5J1PR/exec";
+      const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyFXc4ftO2DOagIdZKvxHjzAz8uCAsaFn6owP_VYxJl16-vlLywsmCEcllMFI-mQ16g/exec";
       
       // Sistema de verificação melhorado
       const verificarCadastro = async (email) => {
@@ -531,6 +531,7 @@
               // Envia para o Google Apps Script
               const response = await fetch(SCRIPT_URL, {
                   method: 'POST',
+                  mode: 'no-cors',
                   headers: {
                       'Content-Type': 'application/x-www-form-urlencoded',
                   },
@@ -543,16 +544,15 @@
               const result = await response.json();
               console.log("Resposta parseada:", result);
       
-              if (!result.success) {
-                  throw new Error(result.message || 'Erro no servidor ao processar cadastro');
+              if (!response.ok) throw new Error('Erro na comunicação');
               }
       
               showStatusMessage('Cadastro realizado com sucesso! Redirecionando...', 'success');
               setTimeout(() => window.location.href = 'login.html', 2000);
       
           } catch (error) {
-              console.error('Erro completo:', error);
-              showStatusMessage('Cadastro não confirmado. ' + error.message, 'error');
+              console.error('Erro detalhado:', error);
+              showStatusMessage('Erro de conexão. Tente novamente mais tarde.', 'error');
           } finally {
               btn.disabled = false;
               btn.textContent = 'Cadastrar';
