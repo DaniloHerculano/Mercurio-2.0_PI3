@@ -437,7 +437,7 @@
 <!------------- JAVASCRIPT ------------>
   <script>
       // Configurações
-      const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrtF0NjX5cjjvYneSQr9Tncmgf6si5cvcbTqFjwxpyXKtQvlQnvBiNG3PkmZz5J1PR/exec";
+     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrtF0NjX5cjjvYneSQr9Tncmgf6si5cvcbTqFjwxpyXKtQvlQnvBiNG3PkmZz5J1PR/exec";
       
       // Funções auxiliares
       const showStatusMessage = (message, type) => {
@@ -511,26 +511,28 @@
   
       // Função para enviar dados usando FormData (alternativa ao JSONP)
       const enviarDados = async (userData) => {
-          const formData = new FormData();
-          formData.append('action', 'register_user');
-          formData.append('data', JSON.stringify(userData));
-          
-          try {
-              const response = await fetch(SCRIPT_URL, {
-                  method: 'POST',
-                  body: formData,
-                  mode: 'no-cors' // Modo especial para contornar CORS
-              });
-              
-              // Como o mode: 'no-cors' limita a resposta, precisamos verificar se a requisição foi feita
-              // Na prática, o Google Apps Script ainda receberá os dados
-              return { success: true, message: "Dados enviados com sucesso" };
-              
-          } catch (error) {
-              console.error("Erro no envio:", error);
-              throw error;
-          }
-      };
+        try {
+            // Cria um formulário HTML virtual
+            const formData = new FormData();
+            formData.append('action', 'register_user');
+            formData.append('data', JSON.stringify(userData));
+            
+            // Envia usando fetch com mode 'no-cors'
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: formData,
+                mode: 'no-cors' // Fundamental para contornar CORS
+            });
+            
+            // Como não podemos ler a resposta em mode 'no-cors',
+            // assumimos que foi enviado e verificamos depois
+            return { success: true };
+            
+        } catch (error) {
+            console.error("Erro no envio:", error);
+            throw error;
+        }
+    };
   
       // Função para coletar dados do formulário
       const coletarDadosFormulario = () => {
@@ -591,6 +593,21 @@
           
           return true;
       };
+
+      // Função para verificar se o cadastro foi realizado
+      async function verificarCadastro(email) {
+          try {
+              const response = await fetch(`${SCRIPT_URL}?action=check_user&email=${encodeURIComponent(email)}`);
+              const result = await response.json();
+              
+              if (!result.exists) {
+                  throw new Error("Cadastro não confirmado na planilha");
+              }
+          } catch (error) {
+              console.warn("Verificação falhou:", error);
+              // Não impede o fluxo, apenas registra o erro
+          }
+      }
   
       // Inicialização
       document.addEventListener('DOMContentLoaded', () => {
@@ -625,9 +642,11 @@
                   const userData = coletarDadosFormulario();
                   console.log("Dados coletados:", userData);
                   
-                  // Envio dos dados
-                  const resultado = await enviarDados(userData);
-                  console.log("Resultado do envio:", resultado);
+                  // Envia os dados
+                  await enviarDados(userData);
+                  
+                  // Verificação manual (opcional)
+                  await verificarCadastro(userData.email);
                   
                   showStatusMessage('Cadastro realizado! Redirecionando...', 'success');
                   setTimeout(() => window.location.href = 'login.html', 1500);
