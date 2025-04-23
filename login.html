@@ -442,17 +442,24 @@
             const password = document.getElementById('password').value;
             const btn = this.querySelector('.btn');
             
+            if (!login || !password) {
+                showStatusMessage('Por favor, preencha todos os campos', 'error');
+                return;
+            }
+        
             btn.disabled = true;
             btn.textContent = 'Entrando...';
         
             try {
-                // Envia para a API
+                // Modifique a forma de enviar os dados
+                const formData = new FormData();
+                formData.append('action', 'login_user');
+                formData.append('login', login);
+                formData.append('password', password);
+        
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`
+                    body: formData
                 });
         
                 const result = await response.json();
@@ -462,7 +469,6 @@
                     throw new Error(result.message || 'Credenciais inválidas');
                 }
         
-                // Armazena os dados do usuário
                 sessionStorage.setItem('user', JSON.stringify(result.user));
                 showStatusMessage('Login bem-sucedido! Redirecionando...', 'success');
                 setTimeout(() => {
@@ -471,7 +477,7 @@
                 
             } catch (error) {
                 console.error('Erro no login:', error);
-                showStatusMessage(error.message || 'Erro ao fazer login. Verifique suas credenciais e tente novamente.', 'error');
+                showStatusMessage(error.message || 'Erro ao fazer login. Tente novamente.', 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Entrar';
