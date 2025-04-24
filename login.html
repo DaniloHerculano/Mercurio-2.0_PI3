@@ -435,32 +435,51 @@
         });
 
       document.getElementById('loginForm').addEventListener('submit', async function(event) {
-          event.preventDefault();
-          
-          const login = document.getElementById('login').value.trim();
-          const password = document.getElementById('password').value;
-          const btn = this.querySelector('.btn');
-          
-          if (!login || !password) {
-              showStatusMessage('Por favor, preencha todos os campos', 'error');
-              return;
-          }
-      
-          btn.disabled = true;
-          btn.textContent = 'Entrando...';
-      
-          try {
-              // Método 1: JSONP como fallback
-              await jsonpLogin(login, password);
-              
-          } catch (error) {
-              console.error('Erro completo:', error);
-              showStatusMessage('Falha no login. Tente novamente.', 'error');
-          } finally {
-              btn.disabled = false;
-              btn.textContent = 'Entrar';
-          }
-      });
+            event.preventDefault();
+            
+            const login = document.getElementById('login').value.trim();
+            const password = document.getElementById('password').value;
+            const btn = this.querySelector('.btn');
+            
+            if (!login || !password) {
+                showStatusMessage('Por favor, preencha todos os campos', 'error');
+                return;
+            }
+        
+            btn.disabled = true;
+            btn.textContent = 'Entrando...';
+        
+            try {
+                // Método moderno usando Proxy CORS
+                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                const targetUrl = `${SCRIPT_URL}?action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`;
+                
+                const response = await fetch(proxyUrl + targetUrl, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+        
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.message || 'Credenciais inválidas');
+                }
+        
+                // Armazena os dados do usuário localmente
+                localStorage.setItem('userData', JSON.stringify(result.user));
+                showStatusMessage('Login bem-sucedido!', 'success');
+                setTimeout(() => window.location.href = "customer_area.html", 1000);
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                showStatusMessage('Falha no login. Tente novamente.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Entrar';
+            }
+        });
       
       // Implementação do JSONP
       function jsonpLogin(login, password) {
