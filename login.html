@@ -434,70 +434,58 @@
             mainNav.style.display = mainNav.style.display === 'none' ? 'flex' : 'none';
         });
 
-        document.getElementById('loginForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            
-            const login = document.getElementById('login').value.trim();
-            const password = document.getElementById('password').value;
-            const btn = this.querySelector('.btn');
-            
-            if (!login || !password) {
-                showStatusMessage('Por favor, preencha todos os campos', 'error');
-                return;
-            }
-        
-            btn.disabled = true;
-            btn.textContent = 'Entrando...';
-        
-            try {
-                // Método 1: Tentativa com CORS
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: `action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`,
-                    mode: 'cors'
-                });
-        
-                // Verifica se a resposta está vazia
-                if (!response.ok) {
-                    throw new Error(`Erro HTTP: ${response.status}`);
-                }
-        
-                const text = await response.text();
-                console.log('Resposta bruta:', text);
-                
-                let result;
-                try {
-                    result = text ? JSON.parse(text) : {};
-                } catch (e) {
-                    console.error('Erro ao parsear JSON:', e);
-                    throw new Error('Resposta inválida do servidor');
-                }
-        
-                if (!result.success) {
-                    throw new Error(result.message || 'Credenciais inválidas');
-                }
-        
-                sessionStorage.setItem('user', JSON.stringify(result.user));
-                showStatusMessage('Login bem-sucedido!', 'success');
-                setTimeout(() => window.location.href = "customer_area.html", 1000);
-                
-            } catch (error) {
-                console.error('Erro completo:', error);
-                showStatusMessage(error.message || 'Erro ao conectar com o servidor', 'error');
-                
-                // Método 2: Fallback com JSONP (para contornar CORS)
-                if (error.message.includes('Failed to fetch') || error.message.includes('cors')) {
-                    console.log('Tentando fallback JSONP...');
-                    await jsonpLogin(login, password);
-                }
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Entrar';
-            }
-        });
+      document.getElementById('loginForm').addEventListener('submit', async function(event) {
+          event.preventDefault();
+          
+          const login = document.getElementById('login').value.trim();
+          const password = document.getElementById('password').value;
+          const btn = this.querySelector('.btn');
+          
+          if (!login || !password) {
+              showStatusMessage('Por favor, preencha todos os campos', 'error');
+              return;
+          }
+      
+          btn.disabled = true;
+          btn.textContent = 'Entrando...';
+      
+          try {
+              // Método 1: Envio como JSON
+              const response = await fetch(SCRIPT_URL, {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                      action: 'login_user',
+                      login: login,
+                      password: password
+                  })
+              });
+      
+              if (!response.ok) {
+                  throw new Error(`Erro HTTP: ${response.status}`);
+              }
+      
+              const result = await response.json();
+              console.log('Resposta completa:', result);
+              
+              if (!result.success) {
+                  throw new Error(result.message || 'Credenciais inválidas');
+              }
+      
+              sessionStorage.setItem('user', JSON.stringify(result.user));
+              showStatusMessage('Login bem-sucedido! Redirecionando...', 'success');
+              setTimeout(() => window.location.href = "customer_area.html", 1000);
+              
+          } catch (error) {
+              console.error('Erro completo:', error);
+              showStatusMessage('Falha no login. Verifique suas credenciais.', 'error');
+          } finally {
+              btn.disabled = false;
+              btn.textContent = 'Entrar';
+          }
+      });
         
         // Fallback JSONP para contornar problemas de CORS
         function jsonpLogin(login, password) {
