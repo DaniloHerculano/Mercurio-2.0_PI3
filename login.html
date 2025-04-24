@@ -415,26 +415,17 @@
             }
         }
     
-        // Função para fazer login via Fetch API
-        async function fazerLogin(login, password) {
-            try {
-                // Usamos um proxy CORS para contornar as restrições
-                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-                const response = await fetch(proxyUrl + SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: `action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`
-                });
-    
-                const result = await response.json();
-                return result;
-            } catch (error) {
-                console.error('Erro na requisição:', error);
-                return {success: false, message: "Erro ao conectar com o servidor"};
-            }
+        // Função para fazer login via JSONP
+        function fazerLoginJSONP(login, password, callback) {
+            const callbackName = 'jsonpCallback_' + Date.now();
+            window[callbackName] = function(response) {
+                delete window[callbackName];
+                callback(response);
+            };
+            
+            const script = document.createElement('script');
+            script.src = `${SCRIPT_URL}?action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}&callback=${callbackName}`;
+            document.body.appendChild(script);
         }
     
         // Menu Mobile e inicialização
@@ -451,7 +442,7 @@
             });
     
             // Event listener do formulário
-            document.getElementById('loginForm').addEventListener('submit', async function(event) {
+            document.getElementById('loginForm').addEventListener('submit', function(event) {
                 event.preventDefault();
                 
                 const login = document.getElementById('login').value.trim();
@@ -466,9 +457,8 @@
                 btn.disabled = true;
                 btn.textContent = 'Entrando...';
     
-                try {
-                    const result = await fazerLogin(login, password);
-                    
+                // Usando JSONP para contornar CORS
+                fazerLoginJSONP(login, password, function(result) {
                     if (result.success) {
                         // Armazena os dados do usuário e redireciona
                         sessionStorage.setItem('user', JSON.stringify(result.user));
@@ -476,16 +466,12 @@
                     } else {
                         showStatusMessage(result.message || 'Credenciais inválidas', 'error');
                     }
-                } catch (error) {
-                    console.error('Erro no login:', error);
-                    showStatusMessage('Erro ao processar login', 'error');
-                } finally {
                     btn.disabled = false;
                     btn.textContent = 'Entrar';
-                }
+                });
             });
           
-            // Modal de recuperação de senha (mantido igual)
+            // Modal de recuperação de senha
             const forgotPassword = document.getElementById('forgot-password');
             const modal = document.getElementById('password-recovery-modal');
             const closeModal = document.getElementById('close-modal');
@@ -506,5 +492,5 @@
             });
         });
     </script>
-</body>
+  </body>
 </html>
