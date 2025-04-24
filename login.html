@@ -395,139 +395,132 @@
       </div>
     </div>
   </footer>
-
-  <!------------- JAVASCRIPT ------------>
+<!------------- JAVASCRIPT ------------>
   <script>
-    // Configurações
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyFXc4ftO2DOagIdZKvxHjzAz8uCAsaFn6owP_VYxJl16-vlLywsmCEcllMFI-mQ16g/exec";
-    
-    // Função para exibir mensagens de status
-    function showStatusMessage(message, type) {
-        // Remove mensagens anteriores
-        const oldMessage = document.querySelector('.status-message');
-        if (oldMessage) oldMessage.remove();
-        
-        // Cria nova mensagem
-        const statusDiv = document.createElement('div');
-        statusDiv.className = `status-message status-${type}`;
-        statusDiv.textContent = message;
-        document.getElementById('loginForm').prepend(statusDiv);
-        
-        // Remove após 5 segundos
-        if (type === 'error') {
-            setTimeout(() => {
-                statusDiv.remove();
-            }, 5000);
-        }
-    }
-
-    // Menu Mobile
-    document.addEventListener('DOMContentLoaded', function() {
-        const menuToggle = document.getElementById('menuToggle');
-        const mainNav = document.querySelector('.sf-menu');
-        
-        if (window.innerWidth <= 768) {
-            mainNav.style.display = 'none';
-        }
-        
-        menuToggle.addEventListener('click', function() {
-            mainNav.style.display = mainNav.style.display === 'none' ? 'flex' : 'none';
-        });
-
-      document.getElementById('loginForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            
-            const login = document.getElementById('login').value.trim();
-            const password = document.getElementById('password').value;
-            const btn = this.querySelector('.btn');
-            
-            if (!login || !password) {
-                showStatusMessage('Por favor, preencha todos os campos', 'error');
-                return;
-            }
-        
-            btn.disabled = true;
-            btn.textContent = 'Entrando...';
-        
-            try {
-                // Método moderno usando Proxy CORS
-                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-                const targetUrl = `${SCRIPT_URL}?action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`;
-                
-                const response = await fetch(proxyUrl + targetUrl, {
-                    method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-        
-                const result = await response.json();
-                
-                if (!result.success) {
-                    throw new Error(result.message || 'Credenciais inválidas');
-                }
-        
-                // Armazena os dados do usuário localmente
-                localStorage.setItem('userData', JSON.stringify(result.user));
-                showStatusMessage('Login bem-sucedido!', 'success');
-                setTimeout(() => window.location.href = "customer_area.html", 1000);
-                
-            } catch (error) {
-                console.error('Erro:', error);
-                showStatusMessage('Falha no login. Tente novamente.', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Entrar';
-            }
-        });
+      // Configurações
+      const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyFXc4ftO2DOagIdZKvxHjzAz8uCAsaFn6owP_VYxJl16-vlLywsmCEcllMFI-mQ16g/exec";
       
-      // Implementação do JSONP
-      function jsonpLogin(login, password) {
-          return new Promise((resolve, reject) => {
-              const callbackName = 'jsonpCallback_' + Math.round(100000 * Math.random());
-              const script = document.createElement('script');
-              
-              window[callbackName] = function(data) {
-                  delete window[callbackName];
-                  document.body.removeChild(script);
-                  
-                  if (data.success) {
-                      sessionStorage.setItem('user', JSON.stringify(data.user));
-                      showStatusMessage('Login bem-sucedido!', 'success');
-                      setTimeout(() => window.location.href = "customer_area.html", 1000);
-                      resolve();
-                  } else {
-                      showStatusMessage(data.message || 'Credenciais inválidas', 'error');
-                      reject(new Error(data.message));
-                  }
-              };
-      
-              const url = `${SCRIPT_URL}?action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}&callback=${callbackName}`;
-              script.src = url;
-              document.body.appendChild(script);
-          });
+      // Função para exibir mensagens de status
+      function showStatusMessage(message, type) {
+          // Remove mensagens anteriores
+          const oldMessage = document.querySelector('.status-message');
+          if (oldMessage) oldMessage.remove();
+          
+          // Cria nova mensagem
+          const statusDiv = document.createElement('div');
+          statusDiv.className = `status-message status-${type}`;
+          statusDiv.textContent = message;
+          document.getElementById('loginForm').prepend(statusDiv);
+          
+          // Remove após 5 segundos
+          if (type === 'error') {
+              setTimeout(() => {
+                  statusDiv.remove();
+              }, 5000);
+          }
       }
-      
-        // Modal de recuperação de senha
-        const forgotPassword = document.getElementById('forgot-password');
-        const modal = document.getElementById('password-recovery-modal');
-        const closeModal = document.getElementById('close-modal');
+  
+      // Função de login usando formulário oculto
+      async function handleLogin(login, password) {
+          try {
+              // Cria um formulário dinâmico
+              const form = document.createElement('form');
+              form.method = 'POST';
+              form.action = SCRIPT_URL;
+              form.style.display = 'none';
+              
+              // Adiciona campos ao formulário
+              const addField = (name, value) => {
+                  const input = document.createElement('input');
+                  input.type = 'hidden';
+                  input.name = name;
+                  input.value = value;
+                  form.appendChild(input);
+              };
+              
+              addField('action', 'login_user');
+              addField('login', login);
+              addField('password', password);
+              
+              // Adiciona o formulário à página e submete
+              document.body.appendChild(form);
+              form.submit();
+              
+              return true;
+          } catch (error) {
+              console.error('Erro no login:', error);
+              return false;
+          }
+      }
+  
+      // Menu Mobile e inicialização
+      document.addEventListener('DOMContentLoaded', function() {
+          const menuToggle = document.getElementById('menuToggle');
+          const mainNav = document.querySelector('.sf-menu');
+          
+          // Verifica se há erros de login anteriores
+          const loginError = localStorage.getItem('loginError');
+          if (loginError) {
+              showStatusMessage(loginError, 'error');
+              localStorage.removeItem('loginError');
+          }
+          
+          // Configuração do menu mobile
+          if (window.innerWidth <= 768) {
+              mainNav.style.display = 'none';
+          }
+          
+          menuToggle.addEventListener('click', function() {
+              mainNav.style.display = mainNav.style.display === 'none' ? 'flex' : 'none';
+          });
+  
+          // Event listener do formulário
+          document.getElementById('loginForm').addEventListener('submit', async function(event) {
+              event.preventDefault();
+              
+              const login = document.getElementById('login').value.trim();
+              const password = document.getElementById('password').value;
+              const btn = this.querySelector('.btn');
+              
+              if (!login || !password) {
+                  showStatusMessage('Por favor, preencha todos os campos', 'error');
+                  return;
+              }
+  
+              btn.disabled = true;
+              btn.textContent = 'Entrando...';
+  
+              // Executa o login
+              const success = await handleLogin(login, password);
+              
+              if (!success) {
+                  showStatusMessage('Erro ao processar login', 'error');
+                  btn.disabled = false;
+                  btn.textContent = 'Entrar';
+              }
+              // O redirecionamento será tratado pela resposta do Google Apps Script
+          });
         
-        forgotPassword.addEventListener('click', function(e) {
-            e.preventDefault();
-            modal.style.display = 'flex';
-        });
-        
-        closeModal.addEventListener('click', function() {
-            modal.style.display = 'none';
-        });
-        
-        window.addEventListener('click', function(event) {
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-    });
-</script>
+          // Modal de recuperação de senha
+          const forgotPassword = document.getElementById('forgot-password');
+          const modal = document.getElementById('password-recovery-modal');
+          const closeModal = document.getElementById('close-modal');
+          
+          forgotPassword.addEventListener('click', function(e) {
+              e.preventDefault();
+              modal.style.display = 'flex';
+          });
+          
+          closeModal.addEventListener('click', function() {
+              modal.style.display = 'none';
+          });
+          
+          window.addEventListener('click', function(event) {
+              if (event.target === modal) {
+                  modal.style.display = 'none';
+              }
+          });
+      });
+  </script>
 </body>
 </html>
