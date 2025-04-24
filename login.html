@@ -396,139 +396,139 @@
     </div>
   </footer>
 <!------------- JAVASCRIPT ------------>
-    <script>
-        // Configurações
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyFXc4ftO2DOagIdZKvxHjzAz8uCAsaFn6owP_VYxJl16-vlLywsmCEcllMFI-mQ16g/exec";
+<script>
+    // Configurações
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyFXc4ftO2DOagIdZKvxHjzAz8uCAsaFn6owP_VYxJl16-vlLywsmCEcllMFI-mQ16g/exec";
+    
+    // Função para exibir mensagens de status
+    function showStatusMessage(message, type) {
+        const oldMessage = document.querySelector('.status-message');
+        if (oldMessage) oldMessage.remove();
         
-        // Função para exibir mensagens de status
-        function showStatusMessage(message, type) {
-            const oldMessage = document.querySelector('.status-message');
-            if (oldMessage) oldMessage.remove();
-            
-            const statusDiv = document.createElement('div');
-            statusDiv.className = `status-message status-${type}`;
-            statusDiv.textContent = message;
-            document.getElementById('loginForm').prepend(statusDiv);
-            
-            if (type === 'error') {
-                setTimeout(() => statusDiv.remove(), 5000);
-            }
+        const statusDiv = document.createElement('div');
+        statusDiv.className = `status-message status-${type}`;
+        statusDiv.textContent = message;
+        document.getElementById('loginForm').prepend(statusDiv);
+        
+        if (type === 'error') {
+            setTimeout(() => statusDiv.remove(), 5000);
         }
-    
-        // Função para fazer login via Fetch API com fallback
-        async function fazerLogin(login, password) {
-            try {
-                // Tentativa com Fetch API
-                const response = await fetch(`${SCRIPT_URL}?action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'omit' // Não envia cookies
-                });
-    
-                if (!response.ok) throw new Error('Erro na rede');
-                
-                const result = await response.json();
-                return result;
-                
-            } catch (error) {
-                console.error('Erro com Fetch:', error);
-                // Fallback para método alternativo
-                return await fazerLoginAlternativo(login, password);
-            }
-        }
-    
-        // Método alternativo usando iframe oculto
-        function fazerLoginAlternativo(login, password) {
-            return new Promise((resolve) => {
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.sandbox = 'allow-scripts allow-same-origin';
-                iframe.src = `${SCRIPT_URL}?action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}&format=json`;
-                
-                iframe.onload = function() {
-                    try {
-                        const response = JSON.parse(iframe.contentDocument.body.textContent);
-                        resolve(response);
-                    } catch (e) {
-                        resolve({success: false, message: "Erro ao processar resposta"});
-                    }
-                    document.body.removeChild(iframe);
-                };
-                
-                document.body.appendChild(iframe);
-            });
-        }
-    
-        // Menu Mobile e inicialização
-        document.addEventListener('DOMContentLoaded', function() {
-            const menuToggle = document.getElementById('menuToggle');
-            const mainNav = document.querySelector('.sf-menu');
+    }
+
+    // Função para fazer login via método alternativo
+    function fazerLogin(login, password) {
+        return new Promise((resolve) => {
+            // Cria um iframe oculto para enviar os dados
+            const iframe = document.createElement('iframe');
+            iframe.name = 'login-iframe';
+            iframe.style.display = 'none';
             
-            if (window.innerWidth <= 768) {
-                mainNav.style.display = 'none';
-            }
+            // Cria um formulário oculto
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = SCRIPT_URL;
+            form.target = 'login-iframe';
             
-            menuToggle.addEventListener('click', function() {
-                mainNav.style.display = mainNav.style.display === 'none' ? 'flex' : 'none';
-            });
-    
-            // Event listener do formulário
-            document.getElementById('loginForm').addEventListener('submit', async function(event) {
-                event.preventDefault();
-                
-                const login = document.getElementById('login').value.trim();
-                const password = document.getElementById('password').value;
-                const btn = this.querySelector('.btn');
-                
-                if (!login || !password) {
-                    showStatusMessage('Por favor, preencha todos os campos', 'error');
-                    return;
-                }
-    
-                btn.disabled = true;
-                btn.textContent = 'Entrando...';
-    
+            // Adiciona campos ao formulário
+            const addField = (name, value) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = value;
+                form.appendChild(input);
+            };
+            
+            addField('action', 'login_user');
+            addField('login', login);
+            addField('password', password);
+            
+            // Configura o iframe para processar a resposta
+            iframe.onload = function() {
                 try {
-                    const result = await fazerLogin(login, password);
-                    
-                    if (result.success) {
-                        // Armazena os dados do usuário em sessionStorage
-                        sessionStorage.setItem('userData', JSON.stringify(result.user));
-                        window.location.href = "customer_area.html";
-                    } else {
-                        showStatusMessage(result.message || 'Credenciais inválidas', 'error');
-                    }
-                } catch (error) {
-                    console.error('Erro no login:', error);
-                    showStatusMessage('Erro ao conectar com o servidor', 'error');
-                } finally {
-                    btn.disabled = false;
-                    btn.textContent = 'Entrar';
+                    const responseText = iframe.contentDocument.body.textContent;
+                    const response = JSON.parse(responseText);
+                    resolve(response);
+                } catch (e) {
+                    resolve({success: false, message: "Erro ao processar resposta"});
                 }
-            });
-          
-            // Modal de recuperação de senha
-            const forgotPassword = document.getElementById('forgot-password');
-            const modal = document.getElementById('password-recovery-modal');
-            const closeModal = document.getElementById('close-modal');
+                document.body.removeChild(iframe);
+                document.body.removeChild(form);
+            };
             
-            forgotPassword.addEventListener('click', function(e) {
-                e.preventDefault();
-                modal.style.display = 'flex';
-            });
-            
-            closeModal.addEventListener('click', function() {
-                modal.style.display = 'none';
-            });
-            
-            window.addEventListener('click', function(event) {
-                if (event.target === modal) {
-                    modal.style.display = 'none';
-                }
-            });
+            document.body.appendChild(iframe);
+            document.body.appendChild(form);
+            form.submit();
         });
-    </script>
-  </body>
+    }
+
+    // Menu Mobile e inicialização
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuToggle = document.getElementById('menuToggle');
+        const mainNav = document.querySelector('.sf-menu');
+        
+        if (window.innerWidth <= 768) {
+            mainNav.style.display = 'none';
+        }
+        
+        menuToggle.addEventListener('click', function() {
+            mainNav.style.display = mainNav.style.display === 'none' ? 'flex' : 'none';
+        });
+
+        // Event listener do formulário
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const login = document.getElementById('login').value.trim();
+            const password = document.getElementById('password').value;
+            const btn = this.querySelector('.btn');
+            
+            if (!login || !password) {
+                showStatusMessage('Por favor, preencha todos os campos', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Entrando...';
+
+            try {
+                const result = await fazerLogin(login, password);
+                
+                if (result.success) {
+                    // Armazena os dados do usuário e redireciona
+                    sessionStorage.setItem('userData', JSON.stringify(result.user));
+                    window.location.href = "customer_area.html";
+                } else {
+                    showStatusMessage(result.message || 'Credenciais inválidas', 'error');
+                }
+            } catch (error) {
+                console.error('Erro no login:', error);
+                showStatusMessage('Erro ao conectar com o servidor', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Entrar';
+            }
+        });
+      
+        // Modal de recuperação de senha
+        const forgotPassword = document.getElementById('forgot-password');
+        const modal = document.getElementById('password-recovery-modal');
+        const closeModal = document.getElementById('close-modal');
+        
+        forgotPassword.addEventListener('click', function(e) {
+            e.preventDefault();
+            modal.style.display = 'flex';
+        });
+        
+        closeModal.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+        
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    });
+</script>
+</body>
 </html>
