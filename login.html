@@ -415,45 +415,26 @@
             }
         }
     
-        // Função para enviar dados via formulário oculto
-        function submitLoginForm(login, password) {
-            return new Promise((resolve) => {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = SCRIPT_URL;
-                form.style.display = 'none';
-                
-                const addField = (name, value) => {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = name;
-                    input.value = value;
-                    form.appendChild(input);
-                };
-                
-                addField('action', 'login_user');
-                addField('login', login);
-                addField('password', password);
-                
-                // Adiciona um iframe para receber a resposta
-                const iframe = document.createElement('iframe');
-                iframe.name = 'login-iframe';
-                iframe.style.display = 'none';
-                iframe.onload = function() {
-                    try {
-                        const response = JSON.parse(iframe.contentWindow.document.body.textContent);
-                        resolve(response);
-                    } catch (e) {
-                        resolve({success: false, message: "Erro ao processar resposta"});
-                    }
-                    document.body.removeChild(iframe);
-                };
-                
-                form.target = 'login-iframe';
-                document.body.appendChild(iframe);
-                document.body.appendChild(form);
-                form.submit();
-            });
+        // Função para fazer login via Fetch API
+        async function fazerLogin(login, password) {
+            try {
+                // Usamos um proxy CORS para contornar as restrições
+                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                const response = await fetch(proxyUrl + SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: `action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`
+                });
+    
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+                return {success: false, message: "Erro ao conectar com o servidor"};
+            }
         }
     
         // Menu Mobile e inicialização
@@ -486,7 +467,7 @@
                 btn.textContent = 'Entrando...';
     
                 try {
-                    const result = await submitLoginForm(login, password);
+                    const result = await fazerLogin(login, password);
                     
                     if (result.success) {
                         // Armazena os dados do usuário e redireciona
@@ -497,7 +478,7 @@
                     }
                 } catch (error) {
                     console.error('Erro no login:', error);
-                    showStatusMessage('Erro ao conectar com o servidor', 'error');
+                    showStatusMessage('Erro ao processar login', 'error');
                 } finally {
                     btn.disabled = false;
                     btn.textContent = 'Entrar';
