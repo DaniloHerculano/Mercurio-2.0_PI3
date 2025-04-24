@@ -450,69 +450,44 @@
           btn.textContent = 'Entrando...';
       
           try {
-              // Método 1: Envio como JSON
-              const response = await fetch(SCRIPT_URL, {
-                  method: 'POST',
-                  headers: {
-                      'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify({
-                      action: 'login_user',
-                      login: login,
-                      password: password
-                  })
-              });
-      
-              if (!response.ok) {
-                  throw new Error(`Erro HTTP: ${response.status}`);
-              }
-      
-              const result = await response.json();
-              console.log('Resposta completa:', result);
-              
-              if (!result.success) {
-                  throw new Error(result.message || 'Credenciais inválidas');
-              }
-      
-              sessionStorage.setItem('user', JSON.stringify(result.user));
-              showStatusMessage('Login bem-sucedido! Redirecionando...', 'success');
-              setTimeout(() => window.location.href = "customer_area.html", 1000);
+              // Método 1: JSONP como fallback
+              await jsonpLogin(login, password);
               
           } catch (error) {
               console.error('Erro completo:', error);
-              showStatusMessage('Falha no login. Verifique suas credenciais.', 'error');
+              showStatusMessage('Falha no login. Tente novamente.', 'error');
           } finally {
               btn.disabled = false;
               btn.textContent = 'Entrar';
           }
       });
-        
-        // Fallback JSONP para contornar problemas de CORS
-        function jsonpLogin(login, password) {
-            return new Promise((resolve, reject) => {
-                const callbackName = 'jsonpCallback_' + Math.round(100000 * Math.random());
-                const script = document.createElement('script');
-                
-                window[callbackName] = function(data) {
-                    delete window[callbackName];
-                    document.body.removeChild(script);
-                    
-                    if (data.success) {
-                        sessionStorage.setItem('user', JSON.stringify(data.user));
-                        showStatusMessage('Login bem-sucedido via JSONP!', 'success');
-                        setTimeout(() => window.location.href = "customer_area.html", 1000);
-                        resolve();
-                    } else {
-                        showStatusMessage(data.message || 'Login falhou', 'error');
-                        reject(new Error(data.message));
-                    }
-                };
-        
-                const url = `${SCRIPT_URL}?action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}&callback=${callbackName}`;
-                script.src = url;
-                document.body.appendChild(script);
-            });
-        }
+      
+      // Implementação do JSONP
+      function jsonpLogin(login, password) {
+          return new Promise((resolve, reject) => {
+              const callbackName = 'jsonpCallback_' + Math.round(100000 * Math.random());
+              const script = document.createElement('script');
+              
+              window[callbackName] = function(data) {
+                  delete window[callbackName];
+                  document.body.removeChild(script);
+                  
+                  if (data.success) {
+                      sessionStorage.setItem('user', JSON.stringify(data.user));
+                      showStatusMessage('Login bem-sucedido!', 'success');
+                      setTimeout(() => window.location.href = "customer_area.html", 1000);
+                      resolve();
+                  } else {
+                      showStatusMessage(data.message || 'Credenciais inválidas', 'error');
+                      reject(new Error(data.message));
+                  }
+              };
+      
+              const url = `${SCRIPT_URL}?action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}&callback=${callbackName}`;
+              script.src = url;
+              document.body.appendChild(script);
+          });
+      }
       
         // Modal de recuperação de senha
         const forgotPassword = document.getElementById('forgot-password');
