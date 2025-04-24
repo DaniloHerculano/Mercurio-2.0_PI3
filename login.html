@@ -415,17 +415,50 @@
             }
         }
     
-        // Função para fazer login via JSONP
-        function fazerLoginJSONP(login, password, callback) {
-            const callbackName = 'jsonpCallback_' + Date.now();
-            window[callbackName] = function(response) {
-                delete window[callbackName];
-                callback(response);
-            };
-            
-            const script = document.createElement('script');
-            script.src = `${SCRIPT_URL}?action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}&callback=${callbackName}`;
-            document.body.appendChild(script);
+        // Função para fazer login via Fetch API com fallback
+        async function fazerLogin(login, password) {
+            try {
+                // Tentativa com Fetch API
+                const response = await fetch(`${SCRIPT_URL}?action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'omit' // Não envia cookies
+                });
+    
+                if (!response.ok) throw new Error('Erro na rede');
+                
+                const result = await response.json();
+                return result;
+                
+            } catch (error) {
+                console.error('Erro com Fetch:', error);
+                // Fallback para método alternativo
+                return await fazerLoginAlternativo(login, password);
+            }
+        }
+    
+        // Método alternativo usando iframe oculto
+        function fazerLoginAlternativo(login, password) {
+            return new Promise((resolve) => {
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.sandbox = 'allow-scripts allow-same-origin';
+                iframe.src = `${SCRIPT_URL}?action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}&format=json`;
+                
+                iframe.onload = function() {
+                    try {
+                        const response = JSON.parse(iframe.contentDocument.body.textContent);
+                        resolve(response);
+                    } catch (e) {
+                        resolve({success: false, message: "Erro ao processar resposta"});
+                    }
+                    document.body.removeChild(iframe);
+                };
+                
+                document.body.appendChild(iframe);
+            });
         }
     
         // Menu Mobile e inicialização
@@ -442,7 +475,7 @@
             });
     
             // Event listener do formulário
-            document.getElementById('loginForm').addEventListener('submit', function(event) {
+            document.getElementById('loginForm').addEventListener('submit', async function(event) {
                 event.preventDefault();
                 
                 const login = document.getElementById('login').value.trim();
@@ -457,18 +490,23 @@
                 btn.disabled = true;
                 btn.textContent = 'Entrando...';
     
-                // Usando JSONP para contornar CORS
-                fazerLoginJSONP(login, password, function(result) {
+                try {
+                    const result = await fazerLogin(login, password);
+                    
                     if (result.success) {
-                        // Armazena os dados do usuário e redireciona
-                        sessionStorage.setItem('user', JSON.stringify(result.user));
+                        // Armazena os dados do usuário em sessionStorage
+                        sessionStorage.setItem('userData', JSON.stringify(result.user));
                         window.location.href = "customer_area.html";
                     } else {
                         showStatusMessage(result.message || 'Credenciais inválidas', 'error');
                     }
+                } catch (error) {
+                    console.error('Erro no login:', error);
+                    showStatusMessage('Erro ao conectar com o servidor', 'error');
+                } finally {
                     btn.disabled = false;
                     btn.textContent = 'Entrar';
-                });
+                }
             });
           
             // Modal de recuperação de senha
