@@ -400,16 +400,69 @@
     // Configurações
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyFXc4ftO2DOagIdZKvxHjzAz8uCAsaFn6owP_VYxJl16-vlLywsmCEcllMFI-mQ16g/exec";
     
-    // Variável para controlar o estado do login
-    let isProcessingLogin = false;
-    
-    // Função para exibir mensagens de status
+    document.addEventListener('DOMContentLoaded', function() {
+        // Menu Mobile (mantenha seu código existente)
+        
+        // Formulário de Login - Nova implementação
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const login = document.getElementById('login').value.trim();
+            const password = document.getElementById('password').value;
+            const btn = this.querySelector('.btn');
+            
+            if (!login || !password) {
+                showStatusMessage('Por favor, preencha todos os campos', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Entrando...';
+
+            try {
+                // Envia os dados como JSON
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'login_user',
+                        login: login,
+                        password: password
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log("Resposta completa do servidor:", result);
+                
+                if (result.success) {
+                    sessionStorage.setItem('userData', JSON.stringify(result.user));
+                    window.location.href = "customer_area.html";
+                } else {
+                    showStatusMessage(result.message || 'Credenciais inválidas', 'error');
+                }
+            } catch (error) {
+                console.error('Erro no login:', error);
+                showStatusMessage('Erro ao conectar com o servidor', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Entrar';
+            }
+        });
+
+        // Mantenha o restante do seu código (modal, etc)
+    });
+
     function showStatusMessage(message, type) {
         const statusDiv = document.createElement('div');
         statusDiv.className = `status-message status-${type}`;
         statusDiv.textContent = message;
         
-        // Remove mensagens anteriores
         const oldMessages = document.querySelectorAll('.status-message');
         oldMessages.forEach(msg => msg.remove());
         
@@ -419,113 +472,6 @@
             setTimeout(() => statusDiv.remove(), 5000);
         }
     }
-
-    // Função para fazer login
-    async function fazerLogin(login, password) {
-        try {
-            // Cria um objeto FormData para enviar os dados
-            const formData = new FormData();
-            formData.append('action', 'login_user');
-            formData.append('login', login);
-            formData.append('password', password);
-    
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: formData
-            });
-    
-            if (!response.ok) {
-                throw new Error(`Erro HTTP: ${response.status}`);
-            }
-            
-            const result = await response.json();
-            console.log("Resposta do servidor:", result);
-            return result;
-            
-        } catch (error) {
-            console.error('Erro no login:', error);
-            return {
-                success: false,
-                message: "Não foi possível conectar ao servidor. Verifique sua conexão."
-            };
-        }
-    }
-
-    // Menu Mobile e inicialização
-    document.addEventListener('DOMContentLoaded', function() {
-        // Configuração do menu mobile (mantido igual)
-        const menuToggle = document.getElementById('menuToggle');
-        const mainNav = document.querySelector('.sf-menu');
-        
-        if (window.innerWidth <= 768) {
-            mainNav.style.display = 'none';
-        }
-        
-        menuToggle.addEventListener('click', function() {
-            mainNav.style.display = mainNav.style.display === 'none' ? 'flex' : 'none';
-        });
-
-        // Event listener do formulário
-        document.getElementById('loginForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            
-            if (isProcessingLogin) return;
-            isProcessingLogin = true;
-            
-            const login = document.getElementById('login').value.trim();
-            const password = document.getElementById('password').value;
-            const btn = this.querySelector('.btn');
-            
-            if (!login || !password) {
-                showStatusMessage('Por favor, preencha todos os campos', 'error');
-                isProcessingLogin = false;
-                return;
-            }
-
-            btn.disabled = true;
-            btn.textContent = 'Entrando...';
-
-            try {
-                const result = await fazerLogin(login, password);
-                
-                if (result.success) {
-                    // Armazena os dados do usuário
-                    sessionStorage.setItem('userData', JSON.stringify(result.user));
-                    // Redireciona apenas se for um login válido
-                    window.location.href = "customer_area.html";
-                } else {
-                    showStatusMessage(result.message || 'Credenciais inválidas', 'error');
-                }
-            } catch (error) {
-                console.error('Erro no login:', error);
-                showStatusMessage('Erro ao processar login', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Entrar';
-                isProcessingLogin = false;
-            }
-        });
-      
-        // Modal de recuperação de senha (mantido igual)
-        const forgotPassword = document.getElementById('forgot-password');
-        const modal = document.getElementById('password-recovery-modal');
-        const closeModal = document.getElementById('close-modal');
-        
-        forgotPassword.addEventListener('click', function(e) {
-            e.preventDefault();
-            modal.style.display = 'flex';
-        });
-        
-        closeModal.addEventListener('click', function() {
-            modal.style.display = 'none';
-        });
-        
-        window.addEventListener('click', function(event) {
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-    });
 </script>
 </body>
 </html>
