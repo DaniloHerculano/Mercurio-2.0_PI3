@@ -421,35 +421,35 @@
     }
 
     // Função para fazer login
-async function fazerLogin(login, password) {
-    try {
-        const response = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`
-        });
-
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
+    async function fazerLogin(login, password) {
+        try {
+            // Cria um objeto FormData para enviar os dados
+            const formData = new FormData();
+            formData.append('action', 'login_user');
+            formData.append('login', login);
+            formData.append('password', password);
+    
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: formData
+            });
+    
+            if (!response.ok) {
+                throw new Error(`Erro HTTP: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            console.log("Resposta do servidor:", result);
+            return result;
+            
+        } catch (error) {
+            console.error('Erro no login:', error);
+            return {
+                success: false,
+                message: "Não foi possível conectar ao servidor. Verifique sua conexão."
+            };
         }
-        
-        const result = await response.json();
-        
-        // Debug: Mostra a resposta completa no console
-        console.log("Resposta do servidor:", result);
-        
-        return result;
-        
-    } catch (error) {
-        console.error('Erro no login:', error);
-        return {
-            success: false,
-            message: "Não foi possível conectar ao servidor. Verifique sua conexão."
-        };
     }
-}
 
     // Menu Mobile e inicialização
     document.addEventListener('DOMContentLoaded', function() {
