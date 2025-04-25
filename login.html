@@ -419,31 +419,44 @@
     // Função principal de login
     async function fazerLogin(login, password) {
         try {
+            // Usando URLSearchParams para formatar corretamente os dados
+            const formData = new URLSearchParams();
+            formData.append('action', 'login_user');
+            formData.append('login', login);
+            formData.append('password', password);
+
             const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: `action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`
+                body: formData,
+                redirect: 'follow' // Importante para Apps Script
             });
 
+            // Verifica se a resposta é um redirecionamento
+            if (response.redirected) {
+                return await fetch(response.url); // Segue o redirecionamento
+            }
+
             if (!response.ok) {
-                throw new Error('Erro na resposta do servidor');
+                throw new Error(`Erro HTTP: ${response.status}`);
             }
             
             const result = await response.json();
+            console.log("Resposta do servidor:", result);
             
             if (result.success) {
-                // Armazena os dados do usuário e redireciona
                 sessionStorage.setItem('userData', JSON.stringify(result.user));
                 window.location.href = "customer_area.html";
             } else {
                 showStatusMessage(result.message || 'Credenciais inválidas', 'error');
+                return {success: false};
             }
-            
         } catch (error) {
             console.error('Erro no login:', error);
             showStatusMessage('Erro ao conectar com o servidor. Tente novamente.', 'error');
+            return {success: false};
         }
     }
 
