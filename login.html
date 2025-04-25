@@ -417,27 +417,22 @@
     }
 
     // Função principal de login
+    <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec";
+    
     async function fazerLogin(login, password) {
         try {
-            // Usando URLSearchParams para formatar corretamente os dados
-            const formData = new URLSearchParams();
-            formData.append('action', 'login_user');
-            formData.append('login', login);
-            formData.append('password', password);
-
-            const response = await fetch(SCRIPT_URL, {
+            // Usando proxy CORS para contornar as restrições
+            const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+            const targetUrl = `${SCRIPT_URL}?action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`;
+            
+            const response = await fetch(proxyUrl + targetUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: formData,
-                redirect: 'follow' // Importante para Apps Script
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
             });
-
-            // Verifica se a resposta é um redirecionamento
-            if (response.redirected) {
-                return await fetch(response.url); // Segue o redirecionamento
-            }
 
             if (!response.ok) {
                 throw new Error(`Erro HTTP: ${response.status}`);
@@ -451,12 +446,10 @@
                 window.location.href = "customer_area.html";
             } else {
                 showStatusMessage(result.message || 'Credenciais inválidas', 'error');
-                return {success: false};
             }
         } catch (error) {
             console.error('Erro no login:', error);
             showStatusMessage('Erro ao conectar com o servidor. Tente novamente.', 'error');
-            return {success: false};
         }
     }
 
