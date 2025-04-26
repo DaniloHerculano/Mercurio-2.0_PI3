@@ -396,10 +396,40 @@
     </div>
   </footer>
 <script>
-    // Configurações
+/////////////JAVA SCRIPT/////////////
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec";
     
-    // Função para mostrar mensagens de status
+    async function fazerLogin(login, password) {
+        try {
+            // Solução usando iframe para contornar CORS
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = `${SCRIPT_URL}?action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}&format=json`;
+            
+            return new Promise((resolve, reject) => {
+                window.addEventListener('message', (event) => {
+                    if (event.origin !== 'https://script.google.com') return;
+                    
+                    const response = event.data;
+                    if (response.success) {
+                        sessionStorage.setItem('userData', JSON.stringify(response.user));
+                        window.location.href = "customer_area.html";
+                    } else {
+                        showStatusMessage(response.message || 'Credenciais inválidas', 'error');
+                    }
+                    document.body.removeChild(iframe);
+                    resolve(response);
+                });
+                
+                document.body.appendChild(iframe);
+            });
+        } catch (error) {
+            console.error('Erro no login:', error);
+            showStatusMessage('Erro ao conectar com o servidor. Tente novamente.', 'error');
+        }
+    }
+
+    // Mantenha o restante do seu código JavaScript existente
     function showStatusMessage(message, type) {
         const statusDiv = document.createElement('div');
         statusDiv.className = `status-message status-${type}`;
@@ -415,59 +445,8 @@
         }
     }
 
-    // Função principal de login
-    async function fazerLogin(login, password) {
-        try {
-            // Solução alternativa para CORS usando JSONP
-            const callbackName = `jsonp_${Date.now()}`;
-            const url = `${SCRIPT_URL}?action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}&callback=${callbackName}`;
-            
-            // Cria um script temporário para a requisição JSONP
-            return new Promise((resolve, reject) => {
-                window[callbackName] = (response) => {
-                    delete window[callbackName];
-                    document.body.removeChild(script);
-                    
-                    if (response.success) {
-                        sessionStorage.setItem('userData', JSON.stringify(response.user));
-                        window.location.href = "customer_area.html";
-                    } else {
-                        showStatusMessage(response.message || 'Credenciais inválidas', 'error');
-                    }
-                    resolve(response);
-                };
-                
-                const script = document.createElement('script');
-                script.src = url;
-                script.onerror = () => {
-                    delete window[callbackName];
-                    document.body.removeChild(script);
-                    showStatusMessage('Erro ao conectar com o servidor', 'error');
-                    reject(new Error('Erro na requisição'));
-                };
-                
-                document.body.appendChild(script);
-            });
-        } catch (error) {
-            console.error('Erro no login:', error);
-            showStatusMessage('Erro ao conectar com o servidor. Tente novamente.', 'error');
-        }
-    }
-
-    function processLoginResult(result) {
-        if (result.success) {
-            sessionStorage.setItem('userData', JSON.stringify(result.user));
-            window.location.href = "customer_area.html";
-        } else {
-            showStatusMessage(result.message || 'Credenciais inválidas', 'error');
-        }
-    }
-
-    // Event Listener quando o DOM estiver carregado
     document.addEventListener('DOMContentLoaded', function() {
-        // Configuração do menu mobile (mantenha seu código existente)
-        
-        // Evento de submit do formulário
+        // Seu código de event listeners existente
         document.getElementById('loginForm').addEventListener('submit', function(event) {
             event.preventDefault();
             
