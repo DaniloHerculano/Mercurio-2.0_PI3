@@ -395,7 +395,6 @@
       </div>
     </div>
   </footer>
-<!------------- JAVASCRIPT ------------>
 <script>
     // Configurações
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec";
@@ -417,35 +416,27 @@
     }
 
     // Função principal de login
-    <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec";
-    
     async function fazerLogin(login, password) {
         try {
-            // Usando proxy CORS para contornar as restrições
-            const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-            const targetUrl = `${SCRIPT_URL}?action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`;
-            
-            const response = await fetch(proxyUrl + targetUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+            // Usando URLSearchParams para formatar corretamente
+            const formData = new URLSearchParams();
+            formData.append('action', 'login_user');
+            formData.append('login', login);
+            formData.append('password', password);
+
+            const response = await fetch(`${SCRIPT_URL}?${formData.toString()}`, {
+                method: 'GET', // Mudamos para GET para evitar CORS
+                redirect: 'follow'
             });
 
-            if (!response.ok) {
-                throw new Error(`Erro HTTP: ${response.status}`);
-            }
-            
-            const result = await response.json();
-            console.log("Resposta do servidor:", result);
-            
-            if (result.success) {
-                sessionStorage.setItem('userData', JSON.stringify(result.user));
-                window.location.href = "customer_area.html";
+            // Verifica se houve redirecionamento (comum no Apps Script)
+            if (response.redirected) {
+                const redirectedResponse = await fetch(response.url);
+                const result = await redirectedResponse.json();
+                processLoginResult(result);
             } else {
-                showStatusMessage(result.message || 'Credenciais inválidas', 'error');
+                const result = await response.json();
+                processLoginResult(result);
             }
         } catch (error) {
             console.error('Erro no login:', error);
@@ -453,9 +444,18 @@
         }
     }
 
+    function processLoginResult(result) {
+        if (result.success) {
+            sessionStorage.setItem('userData', JSON.stringify(result.user));
+            window.location.href = "customer_area.html";
+        } else {
+            showStatusMessage(result.message || 'Credenciais inválidas', 'error');
+        }
+    }
+
     // Event Listener quando o DOM estiver carregado
     document.addEventListener('DOMContentLoaded', function() {
-        // Configuração do menu mobile (mantenha seu código existente se tiver)
+        // Configuração do menu mobile (mantenha seu código existente)
         
         // Evento de submit do formulário
         document.getElementById('loginForm').addEventListener('submit', function(event) {
@@ -473,32 +473,10 @@
             btn.disabled = true;
             btn.textContent = 'Entrando...';
 
-            // Chama a função de login
-            fazerLogin(login, password)
-                .finally(() => {
-                    btn.disabled = false;
-                    btn.textContent = 'Entrar';
-                });
-        });
-
-        // Modal de recuperação de senha
-        const forgotPassword = document.getElementById('forgot-password');
-        const modal = document.getElementById('password-recovery-modal');
-        const closeModal = document.getElementById('close-modal');
-        
-        forgotPassword.addEventListener('click', function(e) {
-            e.preventDefault();
-            modal.style.display = 'flex';
-        });
-        
-        closeModal.addEventListener('click', function() {
-            modal.style.display = 'none';
-        });
-        
-        window.addEventListener('click', function(event) {
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
+            fazerLogin(login, password).finally(() => {
+                btn.disabled = false;
+                btn.textContent = 'Entrar';
+            });
         });
     });
 </script>
