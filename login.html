@@ -396,7 +396,7 @@
     </div>
   </footer>
 /////////////JAVA SCRIPT/////////////
-    <script>
+<script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec";
 
 // Função para abrir o menu no mobile
@@ -409,7 +409,8 @@ const modal = document.getElementById("password-recovery-modal");
 const forgotPasswordLink = document.getElementById("forgot-password");
 const closeModalButton = document.getElementById("close-modal");
 
-forgotPasswordLink.addEventListener("click", () => {
+forgotPasswordLink.addEventListener("click", (e) => {
+  e.preventDefault();
   modal.style.display = "flex";
 });
 
@@ -424,44 +425,84 @@ window.addEventListener("click", (e) => {
   }
 });
 
-// Função de login
+// Função para mostrar mensagens de status
+function showStatusMessage(message, type = 'error') {
+  const statusDiv = document.createElement('div');
+  statusDiv.className = `status-message status-${type}`;
+  statusDiv.textContent = message;
+  
+  // Remove mensagens anteriores
+  const oldStatus = document.querySelector('.status-message');
+  if (oldStatus) oldStatus.remove();
+  
+  // Insere antes do formulário
+  const form = document.getElementById('loginForm');
+  form.parentNode.insertBefore(statusDiv, form);
+  
+  // Remove após 5 segundos
+  if (type !== 'success') {
+    setTimeout(() => statusDiv.remove(), 5000);
+  }
+}
+
+// Função de login corrigida
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const loginInput = document.getElementById("login").value.trim();
   const passwordInput = document.getElementById("password").value.trim();
-
+  const button = e.target.querySelector('button[type="submit"]');
+  
+  // Validação básica
   if (!loginInput || !passwordInput) {
-    alert("Por favor, preencha todos os campos!");
+    showStatusMessage("Por favor, preencha todos os campos!");
     return;
   }
 
+  // Mostra loading no botão
+  button.disabled = true;
+  const originalText = button.textContent;
+  button.textContent = "Entrando...";
+
   try {
-    const response = await fetch(SCRIPT_URL);
-    const data = await response.json();
-
-    // Procura usuário
-    const user = data.find(item => 
-      (item.email === loginInput || item.username === loginInput) && item.password === passwordInput
-    );
-
-    if (user) {
-      alert("Login bem-sucedido!");
-      // Aqui você pode redirecionar para outra página
-      window.location.href = "dashboard.html"; // <-- Mude para sua página inicial do cliente
+    // Envia os dados para o Google Apps Script
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `action=login_user&email=${encodeURIComponent(loginInput)}&password=${encodeURIComponent(passwordInput)}`
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      showStatusMessage("Login bem-sucedido! Redirecionando...", 'success');
+      // Armazena dados do usuário no localStorage
+      localStorage.setItem('user', JSON.stringify(result.user));
+      // Redireciona após 2 segundos
+      setTimeout(() => {
+        window.location.href = "dashboard.html"; // Página após login
+      }, 2000);
     } else {
-      alert("Usuário ou senha inválidos!");
+      showStatusMessage(result.message || "Usuário ou senha inválidos!");
     }
   } catch (error) {
     console.error("Erro ao fazer login:", error);
-    alert("Erro ao conectar com o servidor. Tente novamente.");
+    showStatusMessage("Erro ao conectar com o servidor. Tente novamente.");
+  } finally {
+    // Restaura o botão
+    button.disabled = false;
+    button.textContent = originalText;
   }
 });
 
 // Função de recuperação de senha
-document.getElementById("recover-password").addEventListener("click", async () => {
+document.getElementById("recover-password").addEventListener("click", async (e) => {
+  e.preventDefault();
   const recoveryEmail = document.getElementById("recovery-email").value.trim();
   const recoveryMessage = document.getElementById("recovery-message");
+  const button = e.target;
 
   if (!recoveryEmail) {
     recoveryMessage.style.color = "red";
@@ -469,24 +510,38 @@ document.getElementById("recover-password").addEventListener("click", async () =
     return;
   }
 
+  // Mostra loading no botão
+  button.disabled = true;
+  const originalText = button.textContent;
+  button.textContent = "Enviando...";
+
   try {
-    const response = await fetch(SCRIPT_URL);
-    const data = await response.json();
-
-    const user = data.find(item => item.email === recoveryEmail);
-
-    if (user) {
+    // Envia para o Google Apps Script
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `action=recover_password&email=${encodeURIComponent(recoveryEmail)}`
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
       recoveryMessage.style.color = "green";
-      recoveryMessage.innerText = "E-mail de recuperação enviado! (Simulado)";
-      // Aqui você poderia integrar com serviço real de e-mail
+      recoveryMessage.innerText = result.message || "Instruções de recuperação enviadas para seu e-mail!";
     } else {
       recoveryMessage.style.color = "red";
-      recoveryMessage.innerText = "E-mail não encontrado!";
+      recoveryMessage.innerText = result.message || "E-mail não encontrado!";
     }
   } catch (error) {
     console.error("Erro na recuperação:", error);
     recoveryMessage.style.color = "red";
     recoveryMessage.innerText = "Erro ao conectar com o servidor.";
+  } finally {
+    // Restaura o botão
+    button.disabled = false;
+    button.textContent = originalText;
   }
 });
 </script>
