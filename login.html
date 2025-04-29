@@ -435,18 +435,13 @@ document.getElementById("loginForm").addEventListener("submit", function(e) {
     return;
   }
 
-  // Feedback visual
   button.disabled = true;
   button.textContent = "Entrando...";
 
-  // Cria e envia formulário oculto
   const form = document.createElement('form');
   form.method = 'POST';
   form.action = 'https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec';
-  form.style.display = 'none';
-  
-  // Adiciona campo para redirecionamento personalizado
-  const returnUrl = encodeURIComponent(window.location.href);
+  form.target = '_self'; // Redireciona na mesma aba
   
   const addField = (name, value) => {
     const input = document.createElement('input');
@@ -459,16 +454,9 @@ document.getElementById("loginForm").addEventListener("submit", function(e) {
   addField('action', 'login_user');
   addField('email', email);
   addField('password', password);
-  addField('return_url', returnUrl);
   
   document.body.appendChild(form);
   form.submit();
-  
-  // Opcional: Timeout para caso o redirecionamento falhe
-  setTimeout(() => {
-    button.disabled = false;
-    button.textContent = "Entrar";
-  }, 5000);
 });
 
 // Função de recuperação de senha (opcional)
