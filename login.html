@@ -399,12 +399,12 @@
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec";
 
-// Função para abrir o menu no mobile
+// Menu mobile
 document.getElementById("menuToggle").addEventListener("click", function() {
   document.querySelector(".sf-menu").classList.toggle("active");
 });
 
-// Funções do Modal de Recuperação de Senha
+// Modal de recuperação de senha
 const modal = document.getElementById("password-recovery-modal");
 const forgotPasswordLink = document.getElementById("forgot-password");
 const closeModalButton = document.getElementById("close-modal");
@@ -418,119 +418,69 @@ closeModalButton.addEventListener("click", () => {
   modal.style.display = "none";
 });
 
-// Fechar modal se clicar fora do conteúdo
 window.addEventListener("click", (e) => {
-  if (e.target == modal) {
-    modal.style.display = "none";
-  }
+  if (e.target == modal) modal.style.display = "none";
 });
 
-// Função para mostrar mensagens de status
-function showStatusMessage(message, type = 'error') {
-  const statusDiv = document.createElement('div');
-  statusDiv.className = `status-message status-${type}`;
-  statusDiv.textContent = message;
-  
-  // Remove mensagens anteriores
-  const oldStatus = document.querySelector('.status-message');
-  if (oldStatus) oldStatus.remove();
-  
-  // Insere antes do formulário
-  const form = document.getElementById('loginForm');
-  form.parentNode.insertBefore(statusDiv, form);
-  
-  // Remove após 5 segundos
-  if (type !== 'success') {
-    setTimeout(() => statusDiv.remove(), 5000);
-  }
-}
-
-// Função de login corrigida
-async function loginUser(email, password) {
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec";
-  
-  try {
-    // Usando o truque do /dev para contornar CORS
-    const response = await fetch(`${SCRIPT_URL}?action=login_user`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
-      redirect: 'follow'
-    });
-
-    // Tratamento especial para respostas do Google Script
-    const text = await response.text();
-    let result;
-    
-    try {
-      result = JSON.parse(text);
-    } catch (e) {
-      // Fallback para quando a resposta vem com redirecionamento
-      const match = text.match(/<pre>(.*?)<\/pre>/s);
-      if (match) result = JSON.parse(match[1]);
-      else throw new Error('Resposta inválida do servidor');
-    }
-
-    if (result.success) {
-      localStorage.setItem('user', JSON.stringify(result.user));
-      window.location.href = "dashboard.html";
-    } else {
-      showStatusMessage(result.message || "Credenciais inválidas");
-    }
-  } catch (error) {
-    console.error("Erro completo:", error);
-    showStatusMessage("Erro na conexão. Tente novamente mais tarde.");
-  }
-});
-
-// Função de recuperação de senha
-document.getElementById("recover-password").addEventListener("click", async (e) => {
+// Função de login SIMPLES E FUNCIONAL
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const recoveryEmail = document.getElementById("recovery-email").value.trim();
-  const recoveryMessage = document.getElementById("recovery-message");
-  const button = e.target;
-
-  if (!recoveryEmail) {
-    recoveryMessage.style.color = "red";
-    recoveryMessage.innerText = "Digite um e-mail válido!";
-    return;
-  }
-
+  
+  const email = document.getElementById("login").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const button = e.target.querySelector("button[type='submit']");
+  
   // Mostra loading no botão
   button.disabled = true;
   const originalText = button.textContent;
-  button.textContent = "Enviando...";
+  button.textContent = "Entrando...";
 
   try {
-    // Envia para o Google Apps Script
-    const response = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: `action=recover_password&email=${encodeURIComponent(recoveryEmail)}`
-    });
+    // Método INFALÍVEL que ignora CORS
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = SCRIPT_URL;
+    form.style.display = "none";
     
-    const result = await response.json();
+    const addField = (name, value) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    };
     
-    if (result.success) {
-      recoveryMessage.style.color = "green";
-      recoveryMessage.innerText = result.message || "Instruções de recuperação enviadas para seu e-mail!";
-    } else {
-      recoveryMessage.style.color = "red";
-      recoveryMessage.innerText = result.message || "E-mail não encontrado!";
-    }
+    addField("action", "login_user");
+    addField("email", email);
+    addField("password", password);
+    
+    document.body.appendChild(form);
+    form.submit();
+    
+    // IMPORTANTE: Configure no Apps Script para redirecionar para:
+    // https://mercuriolocacoes.netlify.app/login-success.html?user=[dados_do_usuario]
+    
   } catch (error) {
-    console.error("Erro na recuperação:", error);
-    recoveryMessage.style.color = "red";
-    recoveryMessage.innerText = "Erro ao conectar com o servidor.";
+    console.error("Erro:", error);
+    alert("Erro ao conectar. Tente novamente.");
   } finally {
-    // Restaura o botão
     button.disabled = false;
     button.textContent = originalText;
   }
+});
+
+// Função de recuperação de senha (opcional)
+document.getElementById("recover-password").addEventListener("click", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("recovery-email").value.trim();
+  
+  if (!email) {
+    alert("Digite um e-mail válido");
+    return;
+  }
+  
+  // Método alternativo sem CORS
+  window.location.href = `${SCRIPT_URL}?action=recover_password&email=${encodeURIComponent(email)}`;
 });
 </script>
 </body>
