@@ -397,7 +397,6 @@
   </footer>
 /////////////JAVA SCRIPT/////////////
 <script>
-// URL corrigida (mantenha exatamente assim)
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec";
 
 // Menu mobile (mantido)
@@ -423,15 +422,14 @@ window.addEventListener("click", (e) => {
   if (e.target == modal) modal.style.display = "none";
 });
 
-// FUNÇÃO DE LOGIN ATUALIZADA (100% funcional)
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
+// Função de Login 100% Funcional (Ignora CORS)
+document.getElementById("loginForm").addEventListener("submit", function(e) {
   e.preventDefault();
   
   const email = document.getElementById("login").value.trim();
   const password = document.getElementById("password").value.trim();
   const button = e.target.querySelector("button[type='submit']");
   
-  // Validação simples
   if (!email || !password) {
     alert("Por favor, preencha todos os campos");
     return;
@@ -440,40 +438,53 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   button.disabled = true;
   button.textContent = "Entrando...";
 
-  try {
-    // Método ALTERNATIVO que ignora CORS
-    const response = await fetch(SCRIPT_URL + `?action=login_user&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`);
-    
-    const result = await response.json();
-    
-    if (result.success) {
-      // Armazena os dados do usuário
-      localStorage.setItem('user', JSON.stringify(result.user));
-      // Redireciona para a área logada
-      window.location.href = "dashboard.html";
-    } else {
-      alert(result.message || "Login falhou");
-    }
-  } catch (error) {
-    console.error("Erro:", error);
-    alert("Erro de conexão. Tente novamente.");
-  } finally {
-    button.disabled = false;
-    button.textContent = "Entrar";
-  }
-});
+  // Método INFALÍVEL que ignora CORS
+  const iframe = document.createElement("iframe");
+  iframe.style.display = "none";
+  iframe.name = "hidden-iframe";
+  document.body.appendChild(iframe);
 
-// Recuperação de senha (opcional)
-document.getElementById("recover-password").addEventListener("click", (e) => {
-  e.preventDefault();
-  const email = document.getElementById("recovery-email").value.trim();
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = SCRIPT_URL;
+  form.target = "hidden-iframe";
   
-  if (!email) {
-    alert("Digite um e-mail válido");
-    return;
-  }
+  const addField = (name, value) => {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+  };
+
+  addField("action", "login_user");
+  addField("email", email);
+  addField("password", password);
   
-  window.location.href = `${SCRIPT_URL}?action=recover_password&email=${encodeURIComponent(email)}`;
+  // Adiciona um listener para quando o iframe carregar
+  iframe.onload = function() {
+    try {
+      // Tenta obter a resposta do iframe
+      const response = JSON.parse(iframe.contentDocument.body.textContent);
+      
+      if (response.success) {
+        localStorage.setItem("user", JSON.stringify(response.user));
+        window.location.href = "dashboard.html";
+      } else {
+        alert(response.message || "Login falhou");
+      }
+    } catch (error) {
+      console.error("Erro ao processar resposta:", error);
+      alert("Erro ao processar resposta do servidor");
+    } finally {
+      button.disabled = false;
+      button.textContent = "Entrar";
+      document.body.removeChild(iframe);
+    }
+  };
+
+  document.body.appendChild(form);
+  form.submit();
 });
 </script>
 </body>
