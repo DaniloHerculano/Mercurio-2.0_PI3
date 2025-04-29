@@ -439,10 +439,13 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   button.textContent = "Entrando...";
 
   try {
-    const response = await fetch(SCRIPT_URL, {
+    // Método que ignora CORS usando proxy
+    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+    const response = await fetch(proxyUrl + SCRIPT_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Requested-With': 'XMLHttpRequest'
       },
       body: `action=login_user&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
     });
