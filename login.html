@@ -395,79 +395,100 @@
       </div>
     </div>
   </footer>
-<script>
 /////////////JAVA SCRIPT/////////////
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec";
-    
-    async function fazerLogin(login, password) {
-        try {
-            // Solução usando iframe para contornar CORS
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = `${SCRIPT_URL}?action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}&format=json`;
-            
-            return new Promise((resolve, reject) => {
-                window.addEventListener('message', (event) => {
-                    if (event.origin !== 'https://script.google.com') return;
-                    
-                    const response = event.data;
-                    if (response.success) {
-                        sessionStorage.setItem('userData', JSON.stringify(response.user));
-                        window.location.href = "customer_area.html";
-                    } else {
-                        showStatusMessage(response.message || 'Credenciais inválidas', 'error');
-                    }
-                    document.body.removeChild(iframe);
-                    resolve(response);
-                });
-                
-                document.body.appendChild(iframe);
-            });
-        } catch (error) {
-            console.error('Erro no login:', error);
-            showStatusMessage('Erro ao conectar com o servidor. Tente novamente.', 'error');
-        }
+    <script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec";
+
+// Função para abrir o menu no mobile
+document.getElementById("menuToggle").addEventListener("click", function() {
+  document.querySelector(".sf-menu").classList.toggle("active");
+});
+
+// Funções do Modal de Recuperação de Senha
+const modal = document.getElementById("password-recovery-modal");
+const forgotPasswordLink = document.getElementById("forgot-password");
+const closeModalButton = document.getElementById("close-modal");
+
+forgotPasswordLink.addEventListener("click", () => {
+  modal.style.display = "flex";
+});
+
+closeModalButton.addEventListener("click", () => {
+  modal.style.display = "none";
+});
+
+// Fechar modal se clicar fora do conteúdo
+window.addEventListener("click", (e) => {
+  if (e.target == modal) {
+    modal.style.display = "none";
+  }
+});
+
+// Função de login
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const loginInput = document.getElementById("login").value.trim();
+  const passwordInput = document.getElementById("password").value.trim();
+
+  if (!loginInput || !passwordInput) {
+    alert("Por favor, preencha todos os campos!");
+    return;
+  }
+
+  try {
+    const response = await fetch(SCRIPT_URL);
+    const data = await response.json();
+
+    // Procura usuário
+    const user = data.find(item => 
+      (item.email === loginInput || item.username === loginInput) && item.password === passwordInput
+    );
+
+    if (user) {
+      alert("Login bem-sucedido!");
+      // Aqui você pode redirecionar para outra página
+      window.location.href = "dashboard.html"; // <-- Mude para sua página inicial do cliente
+    } else {
+      alert("Usuário ou senha inválidos!");
     }
+  } catch (error) {
+    console.error("Erro ao fazer login:", error);
+    alert("Erro ao conectar com o servidor. Tente novamente.");
+  }
+});
 
-    // Mantenha o restante do seu código JavaScript existente
-    function showStatusMessage(message, type) {
-        const statusDiv = document.createElement('div');
-        statusDiv.className = `status-message status-${type}`;
-        statusDiv.textContent = message;
-        
-        const oldMessages = document.querySelectorAll('.status-message');
-        oldMessages.forEach(msg => msg.remove());
-        
-        document.getElementById('loginForm').prepend(statusDiv);
-        
-        if (type === 'error') {
-            setTimeout(() => statusDiv.remove(), 5000);
-        }
+// Função de recuperação de senha
+document.getElementById("recover-password").addEventListener("click", async () => {
+  const recoveryEmail = document.getElementById("recovery-email").value.trim();
+  const recoveryMessage = document.getElementById("recovery-message");
+
+  if (!recoveryEmail) {
+    recoveryMessage.style.color = "red";
+    recoveryMessage.innerText = "Digite um e-mail válido!";
+    return;
+  }
+
+  try {
+    const response = await fetch(SCRIPT_URL);
+    const data = await response.json();
+
+    const user = data.find(item => item.email === recoveryEmail);
+
+    if (user) {
+      recoveryMessage.style.color = "green";
+      recoveryMessage.innerText = "E-mail de recuperação enviado! (Simulado)";
+      // Aqui você poderia integrar com serviço real de e-mail
+    } else {
+      recoveryMessage.style.color = "red";
+      recoveryMessage.innerText = "E-mail não encontrado!";
     }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        // Seu código de event listeners existente
-        document.getElementById('loginForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            
-            const login = document.getElementById('login').value.trim();
-            const password = document.getElementById('password').value;
-            const btn = this.querySelector('.btn');
-            
-            if (!login || !password) {
-                showStatusMessage('Por favor, preencha todos os campos', 'error');
-                return;
-            }
-
-            btn.disabled = true;
-            btn.textContent = 'Entrando...';
-
-            fazerLogin(login, password).finally(() => {
-                btn.disabled = false;
-                btn.textContent = 'Entrar';
-            });
-        });
-    });
+  } catch (error) {
+    console.error("Erro na recuperação:", error);
+    recoveryMessage.style.color = "red";
+    recoveryMessage.innerText = "Erro ao conectar com o servidor.";
+  }
+});
 </script>
 </body>
 </html>
