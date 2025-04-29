@@ -430,42 +430,37 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   const password = document.getElementById("password").value.trim();
   const button = e.target.querySelector("button[type='submit']");
   
-  // Mostra loading no botão
+  if (!email || !password) {
+    alert("Por favor, preencha todos os campos");
+    return;
+  }
+
   button.disabled = true;
-  const originalText = button.textContent;
   button.textContent = "Entrando...";
 
   try {
-    // Método INFALÍVEL que ignora CORS
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = SCRIPT_URL;
-    form.style.display = "none";
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `action=login_user&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
+    });
+
+    const result = await response.json();
     
-    const addField = (name, value) => {
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = name;
-      input.value = value;
-      form.appendChild(input);
-    };
-    
-    addField("action", "login_user");
-    addField("email", email);
-    addField("password", password);
-    
-    document.body.appendChild(form);
-    form.submit();
-    
-    // IMPORTANTE: Configure no Apps Script para redirecionar para:
-    // https://mercuriolocacoes.netlify.app/login-success.html?user=[dados_do_usuario]
-    
+    if (result.success) {
+      localStorage.setItem('user', JSON.stringify(result.user));
+      window.location.href = "dashboard.html";
+    } else {
+      alert(result.message || "Login falhou");
+    }
   } catch (error) {
     console.error("Erro:", error);
-    alert("Erro ao conectar. Tente novamente.");
+    alert("Erro de conexão. Tente novamente.");
   } finally {
     button.disabled = false;
-    button.textContent = originalText;
+    button.textContent = "Entrar";
   }
 });
 
