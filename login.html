@@ -423,7 +423,7 @@ window.addEventListener("click", (e) => {
 });
 
 // Função de login SIMPLES E FUNCIONAL
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
+document.getElementById("loginForm").addEventListener("submit", function(e) {
   e.preventDefault();
   
   const email = document.getElementById("login").value.trim();
@@ -435,36 +435,40 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     return;
   }
 
+  // Feedback visual
   button.disabled = true;
   button.textContent = "Entrando...";
 
-  try {
-    // Método que ignora CORS usando proxy
-    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-    const response = await fetch(proxyUrl + SCRIPT_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: `action=login_user&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
-    });
+  // Cria e envia formulário oculto
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = 'SUA_URL_DO_APPS_SCRIPT_AQUI';
+  form.style.display = 'none';
+  
+  // Adiciona campo para redirecionamento personalizado
+  const returnUrl = encodeURIComponent(window.location.href);
+  
+  const addField = (name, value) => {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+  };
 
-    const result = await response.json();
-    
-    if (result.success) {
-      localStorage.setItem('user', JSON.stringify(result.user));
-      window.location.href = "dashboard.html";
-    } else {
-      alert(result.message || "Login falhou");
-    }
-  } catch (error) {
-    console.error("Erro:", error);
-    alert("Erro de conexão. Tente novamente.");
-  } finally {
+  addField('action', 'login_user');
+  addField('email', email);
+  addField('password', password);
+  addField('return_url', returnUrl);
+  
+  document.body.appendChild(form);
+  form.submit();
+  
+  // Opcional: Timeout para caso o redirecionamento falhe
+  setTimeout(() => {
     button.disabled = false;
     button.textContent = "Entrar";
-  }
+  }, 5000);
 });
 
 // Função de recuperação de senha (opcional)
