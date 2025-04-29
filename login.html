@@ -422,15 +422,15 @@ window.addEventListener("click", (e) => {
   if (e.target == modal) modal.style.display = "none";
 });
 
-// Função de Login 100% Funcional (Ignora CORS)
+// Função de Login (Ignora CORS)
 document.getElementById("loginForm").addEventListener("submit", function(e) {
   e.preventDefault();
   
-  const email = document.getElementById("login").value.trim();
+  const login = document.getElementById("login").value.trim(); // Pode ser email OU nome de usuário
   const password = document.getElementById("password").value.trim();
   const button = e.target.querySelector("button[type='submit']");
   
-  if (!email || !password) {
+  if (!login || !password) {
     alert("Por favor, preencha todos os campos");
     return;
   }
@@ -438,16 +438,11 @@ document.getElementById("loginForm").addEventListener("submit", function(e) {
   button.disabled = true;
   button.textContent = "Entrando...";
 
-  // Método INFALÍVEL que ignora CORS
-  const iframe = document.createElement("iframe");
-  iframe.style.display = "none";
-  iframe.name = "hidden-iframe";
-  document.body.appendChild(iframe);
-
+  // Método à prova de CORS
   const form = document.createElement("form");
   form.method = "POST";
   form.action = SCRIPT_URL;
-  form.target = "hidden-iframe";
+  form.target = "_blank"; // Abre em nova aba
   
   const addField = (name, value) => {
     const input = document.createElement("input");
@@ -458,31 +453,37 @@ document.getElementById("loginForm").addEventListener("submit", function(e) {
   };
 
   addField("action", "login_user");
-  addField("email", email);
+  addField("login", login); // Envia o campo como 'login' (pode ser email ou username)
   addField("password", password);
   
-  // Adiciona um listener para quando o iframe carregar
+  // Cria iframe oculto para receber resposta
+  const iframe = document.createElement("iframe");
+  iframe.name = "login-iframe";
+  iframe.style.display = "none";
   iframe.onload = function() {
     try {
-      // Tenta obter a resposta do iframe
-      const response = JSON.parse(iframe.contentDocument.body.textContent);
-      
-      if (response.success) {
-        localStorage.setItem("user", JSON.stringify(response.user));
-        window.location.href = "dashboard.html";
-      } else {
-        alert(response.message || "Login falhou");
+      if (iframe.contentDocument && iframe.contentDocument.body) {
+        const response = JSON.parse(iframe.contentDocument.body.textContent || "{}");
+        
+        if (response.success) {
+          localStorage.setItem("user", JSON.stringify(response.user));
+          window.location.href = "dashboard.html";
+        } else {
+          alert(response.message || "Credenciais inválidas");
+        }
       }
     } catch (error) {
-      console.error("Erro ao processar resposta:", error);
-      alert("Erro ao processar resposta do servidor");
+      console.error("Erro:", error);
+      alert("Erro ao processar login");
     } finally {
       button.disabled = false;
       button.textContent = "Entrar";
       document.body.removeChild(iframe);
+      document.body.removeChild(form);
     }
   };
-
+  
+  document.body.appendChild(iframe);
   document.body.appendChild(form);
   form.submit();
 });
