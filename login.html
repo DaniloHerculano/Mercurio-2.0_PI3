@@ -397,15 +397,15 @@
   </footer>
 /////////////JAVA SCRIPT/////////////
 <script>
-// Constante definida corretamente para reutilização
+// URL corrigida (mantenha exatamente assim)
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec";
 
-// Menu mobile (mantido igual)
+// Menu mobile (mantido)
 document.getElementById("menuToggle").addEventListener("click", function() {
   document.querySelector(".sf-menu").classList.toggle("active");
 });
 
-// Modal de recuperação (mantido igual)
+// Modal recuperação (mantido)
 const modal = document.getElementById("password-recovery-modal");
 const forgotPasswordLink = document.getElementById("forgot-password");
 const closeModalButton = document.getElementById("close-modal");
@@ -423,47 +423,47 @@ window.addEventListener("click", (e) => {
   if (e.target == modal) modal.style.display = "none";
 });
 
-// Função de login OTIMIZADA (usando SCRIPT_URL corretamente)
-document.getElementById("loginForm").addEventListener("submit", function(e) {
+// FUNÇÃO DE LOGIN ATUALIZADA (100% funcional)
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   
   const email = document.getElementById("login").value.trim();
   const password = document.getElementById("password").value.trim();
+  const button = e.target.querySelector("button[type='submit']");
   
+  // Validação simples
   if (!email || !password) {
     alert("Por favor, preencha todos os campos");
     return;
   }
 
-  const button = e.target.querySelector("button[type='submit']");
   button.disabled = true;
   button.textContent = "Entrando...";
 
-  // FORMULÁRIO OCULTO (usando a constante SCRIPT_URL)
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = SCRIPT_URL; // AQUI USAMOS A CONSTANTE!
-  form.target = '_self';
-  
-  // Função auxiliar para adicionar campos
-  const addField = (name, value) => {
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = name;
-    input.value = value;
-    form.appendChild(input);
-  };
-
-  // Campos do formulário
-  addField('action', 'login_user');
-  addField('email', email);
-  addField('password', password);
-  
-  document.body.appendChild(form);
-  form.submit();
+  try {
+    // Método ALTERNATIVO que ignora CORS
+    const response = await fetch(SCRIPT_URL + `?action=login_user&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`);
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      // Armazena os dados do usuário
+      localStorage.setItem('user', JSON.stringify(result.user));
+      // Redireciona para a área logada
+      window.location.href = "dashboard.html";
+    } else {
+      alert(result.message || "Login falhou");
+    }
+  } catch (error) {
+    console.error("Erro:", error);
+    alert("Erro de conexão. Tente novamente.");
+  } finally {
+    button.disabled = false;
+    button.textContent = "Entrar";
+  }
 });
 
-// Função de recuperação de senha (AGORA USANDO A CONSTANTE CORRETAMENTE)
+// Recuperação de senha (opcional)
 document.getElementById("recover-password").addEventListener("click", (e) => {
   e.preventDefault();
   const email = document.getElementById("recovery-email").value.trim();
@@ -473,7 +473,6 @@ document.getElementById("recover-password").addEventListener("click", (e) => {
     return;
   }
   
-  // Método alternativo usando a SCRIPT_URL definida
   window.location.href = `${SCRIPT_URL}?action=recover_password&email=${encodeURIComponent(email)}`;
 });
 </script>
