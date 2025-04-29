@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login Concluído</title>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const userData = urlParams.get('user');
+    
+    if (userData) {
+      localStorage.setItem('user', userData);
+      window.location.href = "dashboard.html";
+    } else {
+      window.location.href = "login.html";
+    }
+  </script>
+</head>
+<body>
+  <p>Processando login...</p>
+</body>
+</html>
