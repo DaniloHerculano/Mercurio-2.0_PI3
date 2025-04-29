@@ -453,45 +453,44 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   const passwordInput = document.getElementById("password").value.trim();
   const button = e.target.querySelector('button[type="submit"]');
   
-  // Validação básica
   if (!loginInput || !passwordInput) {
     showStatusMessage("Por favor, preencha todos os campos!");
     return;
   }
 
-  // Mostra loading no botão
   button.disabled = true;
   const originalText = button.textContent;
   button.textContent = "Entrando...";
 
   try {
-    // Envia os dados para o Google Apps Script
-    const response = await fetch(SCRIPT_URL, {
+    // URL com redirecionamento forçado para evitar CORS
+    const SCRIPT_URL_WITH_REDIRECT = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec?redirect=1";
+    
+    const response = await fetch(SCRIPT_URL_WITH_REDIRECT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: `action=login_user&email=${encodeURIComponent(loginInput)}&password=${encodeURIComponent(passwordInput)}`
+      body: `action=login_user&email=${encodeURIComponent(loginInput)}&password=${encodeURIComponent(passwordInput)}`,
+      redirect: 'follow', // Importante para o redirecionamento funcionar
+      credentials: 'omit'
     });
     
-    const result = await response.json();
+    // Tratamento especial para respostas do Google Script
+    const result = await response.text();
+    const jsonData = JSON.parse(result);
     
-    if (result.success) {
-      showStatusMessage("Login bem-sucedido! Redirecionando...", 'success');
-      // Armazena dados do usuário no localStorage
-      localStorage.setItem('user', JSON.stringify(result.user));
-      // Redireciona após 2 segundos
-      setTimeout(() => {
-        window.location.href = "dashboard.html"; // Página após login
-      }, 2000);
+    if (jsonData.success) {
+      showStatusMessage("Login bem-sucedido!", 'success');
+      localStorage.setItem('user', JSON.stringify(jsonData.user));
+      setTimeout(() => window.location.href = "dashboard.html", 2000);
     } else {
-      showStatusMessage(result.message || "Usuário ou senha inválidos!");
+      showStatusMessage(jsonData.message || "Credenciais inválidas");
     }
   } catch (error) {
-    console.error("Erro ao fazer login:", error);
-    showStatusMessage("Erro ao conectar com o servidor. Tente novamente.");
+    console.error("Erro completo:", error);
+    showStatusMessage("Erro ao conectar. Tente novamente.");
   } finally {
-    // Restaura o botão
     button.disabled = false;
     button.textContent = originalText;
   }
