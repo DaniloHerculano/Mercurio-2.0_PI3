@@ -446,53 +446,42 @@ function showStatusMessage(message, type = 'error') {
 }
 
 // Função de login corrigida
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const loginInput = document.getElementById("login").value.trim();
-  const passwordInput = document.getElementById("password").value.trim();
-  const button = e.target.querySelector('button[type="submit"]');
+async function loginUser(email, password) {
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec";
   
-  if (!loginInput || !passwordInput) {
-    showStatusMessage("Por favor, preencha todos os campos!");
-    return;
-  }
-
-  button.disabled = true;
-  const originalText = button.textContent;
-  button.textContent = "Entrando...";
-
   try {
-    // URL com redirecionamento forçado para evitar CORS
-    const SCRIPT_URL_WITH_REDIRECT = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec?redirect=1";
-    
-    const response = await fetch(SCRIPT_URL_WITH_REDIRECT, {
+    // Usando o truque do /dev para contornar CORS
+    const response = await fetch(`${SCRIPT_URL}?action=login_user`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: `action=login_user&email=${encodeURIComponent(loginInput)}&password=${encodeURIComponent(passwordInput)}`,
-      redirect: 'follow', // Importante para o redirecionamento funcionar
-      credentials: 'omit'
+      body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
+      redirect: 'follow'
     });
-    
+
     // Tratamento especial para respostas do Google Script
-    const result = await response.text();
-    const jsonData = JSON.parse(result);
+    const text = await response.text();
+    let result;
     
-    if (jsonData.success) {
-      showStatusMessage("Login bem-sucedido!", 'success');
-      localStorage.setItem('user', JSON.stringify(jsonData.user));
-      setTimeout(() => window.location.href = "dashboard.html", 2000);
+    try {
+      result = JSON.parse(text);
+    } catch (e) {
+      // Fallback para quando a resposta vem com redirecionamento
+      const match = text.match(/<pre>(.*?)<\/pre>/s);
+      if (match) result = JSON.parse(match[1]);
+      else throw new Error('Resposta inválida do servidor');
+    }
+
+    if (result.success) {
+      localStorage.setItem('user', JSON.stringify(result.user));
+      window.location.href = "dashboard.html";
     } else {
-      showStatusMessage(jsonData.message || "Credenciais inválidas");
+      showStatusMessage(result.message || "Credenciais inválidas");
     }
   } catch (error) {
     console.error("Erro completo:", error);
-    showStatusMessage("Erro ao conectar. Tente novamente.");
-  } finally {
-    button.disabled = false;
-    button.textContent = originalText;
+    showStatusMessage("Erro na conexão. Tente novamente mais tarde.");
   }
 });
 
