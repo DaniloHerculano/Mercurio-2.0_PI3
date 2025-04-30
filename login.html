@@ -421,11 +421,13 @@ document.getElementById("loginForm").addEventListener("submit", function(e) {
   button.disabled = true;
   button.textContent = "Entrando...";
 
-  // Cria formulário oculto
+  // Cria formulário oculto que redirecionará para o Apps Script
   const form = document.createElement('form');
   form.method = 'POST';
   form.action = SCRIPT_URL;
-  form.target = '_self'; // Redireciona na mesma aba
+  
+  // Abre em uma nova aba para não perder a página de login
+  form.target = '_blank';
   
   const addField = (name, value) => {
     const input = document.createElement('input');
@@ -441,6 +443,12 @@ document.getElementById("loginForm").addEventListener("submit", function(e) {
   
   document.body.appendChild(form);
   form.submit();
+  
+  // Timeout para reativar o botão caso algo dê errado
+  setTimeout(() => {
+    button.disabled = false;
+    button.textContent = "Entrar";
+  }, 5000);
 });
 </script>
 </body>
