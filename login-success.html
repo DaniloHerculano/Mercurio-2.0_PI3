@@ -3,14 +3,20 @@
 <head>
   <title>Login Concluído</title>
   <script>
+    // Processa os parâmetros da URL
     const urlParams = new URLSearchParams(window.location.search);
-    const userData = urlParams.get('user');
+    const user = urlParams.get('user');
     
-    if (userData) {
-      localStorage.setItem('user', userData);
-      window.location.href = "dashboard.html";
+    if (user) {
+      try {
+        localStorage.setItem('user', user);
+        window.location.href = 'dashboard.html';
+      } catch (e) {
+        console.error('Erro:', e);
+        window.location.href = 'login.html?error=storage';
+      }
     } else {
-      window.location.href = "login.html";
+      window.location.href = 'login.html?error=invalid';
     }
   </script>
 </head>
