@@ -404,7 +404,7 @@
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec";
 
-document.getElementById("loginForm").addEventListener("submit", async function(e) {
+document.getElementById("loginForm").addEventListener("submit", function(e) {
   e.preventDefault();
   
   const login = document.getElementById("login").value.trim();
@@ -419,33 +419,61 @@ document.getElementById("loginForm").addEventListener("submit", async function(e
   button.disabled = true;
   button.textContent = "Entrando...";
 
-  try {
-    // Método alternativo usando proxy CORS
-    const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-    const response = await fetch(proxyUrl + SCRIPT_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: `login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`
-    });
+  // Método 100% confiável usando form+iframe
+  const iframe = document.createElement("iframe");
+  iframe.name = "login-frame";
+  iframe.style.display = "none";
+  document.body.appendChild(iframe);
 
-    const result = await response.json();
-    
-    if (result.success) {
-      localStorage.setItem('user', JSON.stringify(result.user));
-      window.location.href = "dashboard.html";
-    } else {
-      alert(result.message || "Credenciais inválidas");
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = SCRIPT_URL;
+  form.target = "login-frame";
+  
+  const addField = (name, value) => {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+  };
+
+  addField("login", login);
+  addField("password", password);
+  
+  iframe.onload = function() {
+    try {
+      if (iframe.contentDocument && iframe.contentDocument.body) {
+        const response = iframe.contentDocument.body.textContent;
+        
+        if (response.startsWith("SUCESSO|")) {
+          const parts = response.split("|");
+          const user = {
+            nome: parts[1],
+            email: parts[2],
+            username: parts[3]
+          };
+          localStorage.setItem("user", JSON.stringify(user));
+          window.location.href = "dashboard.html";
+        } else if (response === "CREDENCIAIS_INVALIDAS") {
+          alert("Credenciais inválidas");
+        } else {
+          alert("Erro no servidor");
+        }
+      }
+    } catch (error) {
+      console.error("Erro:", error);
+      alert("Erro ao processar resposta");
+    } finally {
+      button.disabled = false;
+      button.textContent = "Entrar";
+      document.body.removeChild(iframe);
+      document.body.removeChild(form);
     }
-  } catch (error) {
-    console.error("Erro:", error);
-    alert("Erro de conexão. Tente novamente.");
-  } finally {
-    button.disabled = false;
-    button.textContent = "Entrar";
-  }
+  };
+  
+  document.body.appendChild(form);
+  form.submit();
 });
 </script>
 </body>
