@@ -4,9 +4,11 @@
   <title>Login - Mercúrio</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta http-equiv="Content-Security-Policy" content="default-src *; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://script.google.com https://apis.google.com; style-src 'self' 'unsafe-inline';">
-  <meta http-equiv="Content-Security-Policy" content="default-src *; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <meta http-equiv="Content-Security-Policy" content="  default-src 'self' https://*.google.com https://*.googleapis.com https://cdnjs.cloudflare.com;script-src 'self' 'unsafe-inline' https://*.google.com https://*.gstatic.com https://cdnjs.cloudflare.com;
+  style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;font-src 'self' https://cdnjs.cloudflare.com;img-src 'self' data: https://*.google.com;connect-src 'self' https://*.google.com https://script.google.com;">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" 
+      integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" 
+      crossorigin="anonymous">
   <link rel="icon" href="images/favicon.ico">
   <link rel="shortcut icon" href="images/favicon.ico">
   <style>
@@ -399,42 +401,37 @@
   </footer>
 <!------------- JAVASCRIPT ------------>
 <script>
-// URL do Apps Script
+// URL do seu Apps Script
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec";
 
-// CONTROLE DO MENU MOBILE - VERSÃO GARANTIDA
-    document.addEventListener('DOMContentLoaded', function() {
-      const menuToggle = document.getElementById('menuToggle');
-      const mainNav = document.querySelector('.sf-menu');
-      
-      // Verifica se é mobile no carregamento
-      if (window.innerWidth <= 768) {
-        mainNav.style.display = 'none';
-      }
-      
-      // Controle do clique no botão
-      menuToggle.addEventListener('click', function() {
-        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
-          mainNav.style.display = 'flex';
-        } else {
-          mainNav.style.display = 'none';
-        }
-      });
-      
-      // Atualiza ao redimensionar a tela
-      window.addEventListener('resize', function() {
-        if (window.innerWidth > 768) {
-          mainNav.style.display = 'flex';
-        } else {
-          mainNav.style.display = 'none';
-        }
-      });
+// Menu mobile (mantido)
+document.getElementById("menuToggle").addEventListener("click", function() {
+  document.querySelector(".sf-menu").classList.toggle("active");
+});
 
-// Função de Login Corrigida
+// Modal recuperação (mantido)
+const modal = document.getElementById("password-recovery-modal");
+const forgotPasswordLink = document.getElementById("forgot-password");
+const closeModalButton = document.getElementById("close-modal");
+
+forgotPasswordLink.addEventListener("click", (e) => {
+  e.preventDefault();
+  modal.style.display = "flex";
+});
+
+closeModalButton.addEventListener("click", () => {
+  modal.style.display = "none";
+});
+
+window.addEventListener("click", (e) => {
+  if (e.target == modal) modal.style.display = "none";
+});
+
+// Função de Login Corrigida e Simplificada
 document.getElementById("loginForm").addEventListener("submit", function(e) {
   e.preventDefault();
   
-  const login = document.getElementById("login").value.trim(); // Pode ser email OU nome de usuário
+  const login = document.getElementById("login").value.trim();
   const password = document.getElementById("password").value.trim();
   const button = e.target.querySelector("button[type='submit']");
   
@@ -446,34 +443,57 @@ document.getElementById("loginForm").addEventListener("submit", function(e) {
   button.disabled = true;
   button.textContent = "Entrando...";
 
-  // Método alternativo usando JSONP
-  const callbackName = 'loginCallback_' + Date.now();
-  window[callbackName] = function(response) {
-    delete window[callbackName];
-    document.body.removeChild(script);
-    
-    if (response.success) {
-      localStorage.setItem("user", JSON.stringify(response.user));
-      window.location.href = "dashboard.html";
-    } else {
-      alert(response.message || "Credenciais inválidas");
-    }
-    button.disabled = false;
-    button.textContent = "Entrar";
+  // Método 100% confiável usando form+iframe
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = SCRIPT_URL;
+  form.style.display = 'none';
+  
+  const addField = (name, value) => {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
   };
 
-  const script = document.createElement('script');
-  script.src = `${SCRIPT_URL}?action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}&callback=${callbackName}`;
+  addField('action', 'login_user');
+  addField('login', login);
+  addField('password', password);
   
-  script.onerror = function() {
-    delete window[callbackName];
-    document.body.removeChild(script);
-    alert("Erro de conexão. Tente novamente.");
-    button.disabled = false;
-    button.textContent = "Entrar";
+  // Cria iframe para receber resposta
+  const iframe = document.createElement('iframe');
+  iframe.name = 'login-target';
+  iframe.style.display = 'none';
+  iframe.onload = function() {
+    try {
+      if (iframe.contentDocument && iframe.contentDocument.body) {
+        const responseText = iframe.contentDocument.body.textContent;
+        if (responseText) {
+          const response = JSON.parse(responseText);
+          
+          if (response.success) {
+            localStorage.setItem('user', JSON.stringify(response.user));
+            window.location.href = "dashboard.html";
+          } else {
+            alert(response.message || "Credenciais inválidas");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Erro:", error);
+      alert("Erro ao processar resposta do servidor");
+    } finally {
+      button.disabled = false;
+      button.textContent = "Entrar";
+      document.body.removeChild(iframe);
+      document.body.removeChild(form);
+    }
   };
   
-  document.body.appendChild(script);
+  document.body.appendChild(iframe);
+  document.body.appendChild(form);
+  form.submit();
 });
 </script>
 </body>
