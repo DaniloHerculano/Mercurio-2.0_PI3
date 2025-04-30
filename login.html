@@ -9,6 +9,12 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" 
       integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" 
       crossorigin="anonymous">
+  <meta http-equiv="Content-Security-Policy" content="
+  default-src 'self' https://*.google.com https://*.gstatic.com https://cdnjs.cloudflare.com;
+  script-src 'self' 'unsafe-inline' https://*.google.com https://*.gstatic.com;
+  style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;
+  font-src 'self' https://cdnjs.cloudflare.com;
+  connect-src 'self' https://*.google.com https://cors-anywhere.herokuapp.com;">
   <meta http-equiv="Content-Security-Policy" content="default-src *; script-src 'self' 'unsafe-inline' https://*.google.com https://*.gstatic.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com">
   <link rel="icon" href="images/favicon.ico">
   <link rel="shortcut icon" href="images/favicon.ico">
@@ -401,45 +407,52 @@
     </div>
   </footer>
 <!------------- JAVASCRIPT ------------>
-function doPost(e) {
-  try {
-    // Verificação direta dos parâmetros
-    if (!e || !e.parameter || !e.parameter.login || !e.parameter.password) {
-      return responseError("Dados de login incompletos");
-    }
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec";
 
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Usuarios");
-    const data = sheet.getDataRange().getValues();
-    
-    // Busca pelo usuário (username na coluna C ou email na coluna D)
-    for (let i = 1; i < data.length; i++) {
-      if ((data[i][2] === e.parameter.login || data[i][3] === e.parameter.login) && 
-          data[i][4] === e.parameter.password) {
-        
-        // Retorna os dados do usuário como JSON puro
-        return ContentService.createTextOutput(JSON.stringify({
-          success: true,
-          user: {
-            nome: data[i][0] + " " + data[i][1],
-            email: data[i][3],
-            username: data[i][2]
-          }
-        })).setMimeType(ContentService.MimeType.JSON);
-      }
-    }
-    
-    return responseError("Credenciais inválidas");
-    
-  } catch (error) {
-    return responseError("Erro interno no servidor");
+document.getElementById("loginForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+  
+  const login = document.getElementById("login").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const button = e.target.querySelector("button[type='submit']");
+  
+  if (!login || !password) {
+    alert("Por favor, preencha todos os campos");
+    return;
   }
-}
 
-function responseError(message) {
-  return ContentService.createTextOutput(JSON.stringify({
-    success: false,
-    message: message
-  })).setMimeType(ContentService.MimeType.JSON);
-}
+  button.disabled = true;
+  button.textContent = "Entrando...";
+
+  try {
+    // Método alternativo usando proxy CORS
+    const proxyUrl = "https://cors-anywhere.herokuapp.com/";
+    const response = await fetch(proxyUrl + SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: `login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      localStorage.setItem('user', JSON.stringify(result.user));
+      window.location.href = "dashboard.html";
+    } else {
+      alert(result.message || "Credenciais inválidas");
+    }
+  } catch (error) {
+    console.error("Erro:", error);
+    alert("Erro de conexão. Tente novamente.");
+  } finally {
+    button.disabled = false;
+    button.textContent = "Entrar";
+  }
+});
+</script>
 </body>
 </html>
