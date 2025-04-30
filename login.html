@@ -401,56 +401,45 @@
     </div>
   </footer>
 <!------------- JAVASCRIPT ------------>
-<script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec";
-
-document.getElementById("loginForm").addEventListener("submit", function(e) {
-  e.preventDefault();
-  
-  const login = document.getElementById("login").value.trim();
-  const password = document.getElementById("password").value.trim();
-  
-  if (!login || !password) {
-    alert("Preencha todos os campos");
-    return;
-  }
-
-  // Método 100% confiável usando form+iframe
-  const iframe = document.createElement("iframe");
-  iframe.name = "login-iframe";
-  iframe.style.display = "none";
-  document.body.appendChild(iframe);
-
-  const form = document.createElement("form");
-  form.method = "POST";
-  form.action = SCRIPT_URL;
-  form.target = "login-iframe";
-  
-  const addField = (name, value) => {
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = name;
-    input.value = value;
-    form.appendChild(input);
-  };
-
-  addField("login", login);
-  addField("password", password);
-  
-  document.body.appendChild(form);
-  form.submit();
-  
-  // Verificação periódica do redirecionamento
-  const checkRedirect = setInterval(() => {
-    try {
-      if (window.location.href.includes("dashboard.html")) {
-        clearInterval(checkRedirect);
-      }
-    } catch(e) {
-      clearInterval(checkRedirect);
+function doPost(e) {
+  try {
+    // Verificação direta dos parâmetros
+    if (!e || !e.parameter || !e.parameter.login || !e.parameter.password) {
+      return responseError("Dados de login incompletos");
     }
-  }, 100);
-});
-</script>
+
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Usuarios");
+    const data = sheet.getDataRange().getValues();
+    
+    // Busca pelo usuário (username na coluna C ou email na coluna D)
+    for (let i = 1; i < data.length; i++) {
+      if ((data[i][2] === e.parameter.login || data[i][3] === e.parameter.login) && 
+          data[i][4] === e.parameter.password) {
+        
+        // Retorna os dados do usuário como JSON puro
+        return ContentService.createTextOutput(JSON.stringify({
+          success: true,
+          user: {
+            nome: data[i][0] + " " + data[i][1],
+            email: data[i][3],
+            username: data[i][2]
+          }
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+    
+    return responseError("Credenciais inválidas");
+    
+  } catch (error) {
+    return responseError("Erro interno no servidor");
+  }
+}
+
+function responseError(message) {
+  return ContentService.createTextOutput(JSON.stringify({
+    success: false,
+    message: message
+  })).setMimeType(ContentService.MimeType.JSON);
+}
 </body>
 </html>
