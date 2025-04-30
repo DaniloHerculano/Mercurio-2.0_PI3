@@ -401,54 +401,54 @@
   </footer>
 <!------------- JAVASCRIPT ------------>
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwy38poYYBCBH4_xtO-vK0ce7i-lYmPaP8Z-cy-1vkoPmvxW_8EedTy_gpuV7E66AE5/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec";
 
-// [Mantenha o código de menu/modal...]
-
-// Função de Login Simplificada
 document.getElementById("loginForm").addEventListener("submit", function(e) {
   e.preventDefault();
   
   const login = document.getElementById("login").value.trim();
   const password = document.getElementById("password").value.trim();
-  const button = e.target.querySelector("button[type='submit']");
   
   if (!login || !password) {
-    alert("Por favor, preencha todos os campos");
+    alert("Preencha todos os campos");
     return;
   }
 
-  button.disabled = true;
-  button.textContent = "Entrando...";
+  // Método 100% confiável usando form+iframe
+  const iframe = document.createElement("iframe");
+  iframe.name = "login-iframe";
+  iframe.style.display = "none";
+  document.body.appendChild(iframe);
 
-  // Cria formulário oculto que redirecionará para o Apps Script
-  const form = document.createElement('form');
-  form.method = 'POST';
+  const form = document.createElement("form");
+  form.method = "POST";
   form.action = SCRIPT_URL;
-  
-  // Abre em uma nova aba para não perder a página de login
-  form.target = '_blank';
+  form.target = "login-iframe";
   
   const addField = (name, value) => {
-    const input = document.createElement('input');
-    input.type = 'hidden';
+    const input = document.createElement("input");
+    input.type = "hidden";
     input.name = name;
     input.value = value;
     form.appendChild(input);
   };
 
-  addField('action', 'login_user');
-  addField('login', login);
-  addField('password', password);
+  addField("login", login);
+  addField("password", password);
   
   document.body.appendChild(form);
   form.submit();
   
-  // Timeout para reativar o botão caso algo dê errado
-  setTimeout(() => {
-    button.disabled = false;
-    button.textContent = "Entrar";
-  }, 5000);
+  // Verificação periódica do redirecionamento
+  const checkRedirect = setInterval(() => {
+    try {
+      if (window.location.href.includes("dashboard.html")) {
+        clearInterval(checkRedirect);
+      }
+    } catch(e) {
+      clearInterval(checkRedirect);
+    }
+  }, 100);
 });
 </script>
 </body>
