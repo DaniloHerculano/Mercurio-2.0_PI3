@@ -5,22 +5,24 @@
   <script>
     // Processa os parâmetros da URL
     const urlParams = new URLSearchParams(window.location.search);
-    const user = urlParams.get('user');
+    const userData = urlParams.get('user');
     
-    if (user) {
+    if (userData) {
       try {
-        localStorage.setItem('user', user);
+        // Armazena os dados do usuário
+        localStorage.setItem('user', userData);
+        // Redireciona para a área logada
         window.location.href = 'dashboard.html';
-      } catch (e) {
-        console.error('Erro:', e);
-        window.location.href = 'login.html?error=storage';
+      } catch (error) {
+        console.error('Erro ao salvar dados:', error);
+        window.location.href = 'login.html?error=Erro+ao+salvar+dados';
       }
     } else {
-      window.location.href = 'login.html?error=invalid';
+      window.location.href = 'login.html?error=Dados+inválidos';
     }
   </script>
 </head>
 <body>
-  <p>Processando login...</p>
+  <p>Processando login, aguarde...</p>
 </body>
 </html>
