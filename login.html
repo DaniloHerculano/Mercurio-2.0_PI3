@@ -5,6 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta http-equiv="Content-Security-Policy" content="default-src *; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://script.google.com https://apis.google.com; style-src 'self' 'unsafe-inline';">
+  <meta http-equiv="Content-Security-Policy" content="default-src *; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="icon" href="images/favicon.ico">
   <link rel="shortcut icon" href="images/favicon.ico">
@@ -396,12 +397,38 @@
       </div>
     </div>
   </footer>
-/////////////JAVA SCRIPT/////////////
+<!------------- JAVASCRIPT ------------>
 <script>
 // URL do Apps Script
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec";
 
-// [Mantenha todo o código de menu/modal anterior...]
+// CONTROLE DO MENU MOBILE - VERSÃO GARANTIDA
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuToggle = document.getElementById('menuToggle');
+      const mainNav = document.querySelector('.sf-menu');
+      
+      // Verifica se é mobile no carregamento
+      if (window.innerWidth <= 768) {
+        mainNav.style.display = 'none';
+      }
+      
+      // Controle do clique no botão
+      menuToggle.addEventListener('click', function() {
+        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+      
+      // Atualiza ao redimensionar a tela
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
 
 // Função de Login Corrigida
 document.getElementById("loginForm").addEventListener("submit", function(e) {
