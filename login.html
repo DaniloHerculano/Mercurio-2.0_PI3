@@ -401,33 +401,11 @@
   </footer>
 <!------------- JAVASCRIPT ------------>
 <script>
-// URL do seu Apps Script
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3AO_gIoVhMM00SFuVikYYYVWQzmS_EuYmD5C8y3FurEMzgBatoy0u45cvj32phPE/exec";
 
-// Menu mobile (mantido)
-document.getElementById("menuToggle").addEventListener("click", function() {
-  document.querySelector(".sf-menu").classList.toggle("active");
-});
+// [Mantenha o código de menu/modal...]
 
-// Modal recuperação (mantido)
-const modal = document.getElementById("password-recovery-modal");
-const forgotPasswordLink = document.getElementById("forgot-password");
-const closeModalButton = document.getElementById("close-modal");
-
-forgotPasswordLink.addEventListener("click", (e) => {
-  e.preventDefault();
-  modal.style.display = "flex";
-});
-
-closeModalButton.addEventListener("click", () => {
-  modal.style.display = "none";
-});
-
-window.addEventListener("click", (e) => {
-  if (e.target == modal) modal.style.display = "none";
-});
-
-// Função de Login Corrigida e Simplificada
+// Função de Login Simplificada
 document.getElementById("loginForm").addEventListener("submit", function(e) {
   e.preventDefault();
   
@@ -443,11 +421,11 @@ document.getElementById("loginForm").addEventListener("submit", function(e) {
   button.disabled = true;
   button.textContent = "Entrando...";
 
-  // Método 100% confiável usando form+iframe
+  // Cria formulário oculto
   const form = document.createElement('form');
   form.method = 'POST';
   form.action = SCRIPT_URL;
-  form.style.display = 'none';
+  form.target = '_self'; // Redireciona na mesma aba
   
   const addField = (name, value) => {
     const input = document.createElement('input');
@@ -461,37 +439,6 @@ document.getElementById("loginForm").addEventListener("submit", function(e) {
   addField('login', login);
   addField('password', password);
   
-  // Cria iframe para receber resposta
-  const iframe = document.createElement('iframe');
-  iframe.name = 'login-target';
-  iframe.style.display = 'none';
-  iframe.onload = function() {
-    try {
-      if (iframe.contentDocument && iframe.contentDocument.body) {
-        const responseText = iframe.contentDocument.body.textContent;
-        if (responseText) {
-          const response = JSON.parse(responseText);
-          
-          if (response.success) {
-            localStorage.setItem('user', JSON.stringify(response.user));
-            window.location.href = "dashboard.html";
-          } else {
-            alert(response.message || "Credenciais inválidas");
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Erro:", error);
-      alert("Erro ao processar resposta do servidor");
-    } finally {
-      button.disabled = false;
-      button.textContent = "Entrar";
-      document.body.removeChild(iframe);
-      document.body.removeChild(form);
-    }
-  };
-  
-  document.body.appendChild(iframe);
   document.body.appendChild(form);
   form.submit();
 });
