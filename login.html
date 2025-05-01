@@ -405,57 +405,7 @@
   </footer>
 <!------------- JAVASCRIPT ------------>
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyEhcOZm-PyP0AsWCPbgfJBKutKQRfhTNMZ8Fqwq_WATWZ2P7bvV7XB3mXyhAjL1SnJ/exec";
 
-document.addEventListener("DOMContentLoaded", function() {
-  const loginForm = document.getElementById("loginForm");
-  
-  loginForm.addEventListener("submit", function(e) {
-    e.preventDefault();
-    
-    const login = document.getElementById("login").value.trim();
-    const password = document.getElementById("password").value.trim();
-    const button = e.target.querySelector("button[type='submit']");
-    
-    if (!login || !password) {
-      alert("Por favor, preencha todos os campos");
-      return;
-    }
-
-    button.disabled = true;
-    button.textContent = "Entrando...";
-
-    // Método alternativo que funciona 100%
-    const url = `${SCRIPT_URL}?action=login_user&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`;
-    
-    const script = document.createElement('script');
-    script.src = `${url}&callback=handleLoginResponse`;
-    
-    window.handleLoginResponse = function(response) {
-      document.body.removeChild(script);
-      delete window.handleLoginResponse;
-      
-      if (response.success) {
-        localStorage.setItem("user", JSON.stringify(response.user));
-        window.location.href = "dashboard.html";
-      } else {
-        alert(response.message || "Credenciais inválidas");
-      }
-      
-      button.disabled = false;
-      button.textContent = "Entrar";
-    };
-    
-    script.onerror = function() {
-      document.body.removeChild(script);
-      alert("Erro ao conectar com o servidor");
-      button.disabled = false;
-      button.textContent = "Entrar";
-    };
-    
-    document.body.appendChild(script);
-  });
-});
 </script>
 </body>
 </html>
