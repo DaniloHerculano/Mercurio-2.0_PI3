@@ -340,21 +340,20 @@
   <div class="content">
     <div class="form-bubble">
       <h2>Login</h2>
-      <form 
-        method="POST" 
-        action="https://script.google.com/macros/s/AKfycbyO_F5yq2vlIzkYM-WM-PkyYN8AAertIz6SK6yM6lBXQQ6qerbzKOXt6CsQ9kJmx03T/exec">
-        <input type="hidden" name="action" value="login_user">
-        
-        <div class="form-group">
-          <label for="login">E-mail ou Nome de Usuário</label>
-          <input type="text" id="login" name="login" placeholder="Digite seu e-mail ou nome de usuário" required>
-        </div>
-        <div class="form-group">
-          <label for="password">Senha</label>
-          <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
-        </div>
-        <button type="submit" class="btn">Entrar</button>
-      </form>
+      <!-- No formulário de login -->
+        <form id="login-form">
+          <input type="hidden" name="action" value="login_user">
+          
+          <div class="form-group">
+            <label for="login">E-mail ou Nome de Usuário</label>
+            <input type="text" id="login" name="login" placeholder="Digite seu e-mail ou nome de usuário" required>
+          </div>
+          <div class="form-group">
+            <label for="password">Senha</label>
+            <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
+          </div>
+          <button type="button" class="btn" onclick="fazerLogin(event)">Entrar</button>
+        </form>
       <div class="extra-options">
         <a href="#" id="forgot-password">Esqueci minha senha</a>
         <a href="register.html">Registrar-se</a>
@@ -401,6 +400,37 @@
   </footer>
 <!------------- JAVASCRIPT ------------>
 <script>
+  // Função para enviar o login via JavaScript
+  function fazerLogin(event) {
+    event.preventDefault(); // Evita o envio padrão do formulário
+
+    // Coleta os dados do formulário
+    var email = document.getElementById('login').value;
+    var senha = document.getElementById('password').value;
+
+    // Envia os dados para o Apps Script via GET
+    $.get('https://script.google.com/macros/s/AKfycbwb9oTgRZkyUlKOuWczWbmrlV7fnEz4xzfC9oXnh6YlBOzNpSvffoBKaK8Inc32purG/exec', {
+      email: email,
+      senha: senha
+    }, function(resposta) {
+      if (typeof resposta === 'string') {
+        try {
+          resposta = JSON.parse(resposta);
+        } catch (e) {
+          alert("Erro: " + resposta);
+          return;
+        }
+      }
+
+      if (resposta.status === "sucesso") {
+        alert("Login bem-sucedido. Bem-vindo(a), " + resposta.nome);
+        // Aqui você pode salvar no localStorage ou redirecionar
+        window.location.href = 'dashboard.html';  // Redireciona após o login
+      } else {
+        alert("Erro: " + resposta.mensagem);
+      }
+    });
+  }
 </script>
 </body>
 </html>
