@@ -397,32 +397,35 @@
   </footer>
 <!------------- JAVASCRIPT ------------>
 <script>
-  const loginForm = document.getElementById("loginForm");
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyEhcOZm-PyP0AsWCPbgfJBKutKQRfhTNMZ8Fqwq_WATWZ2P7bvV7XB3mXyhAjL1SnJ/exec";
 
-  loginForm.addEventListener("submit", function(event) {
-    event.preventDefault();
+document.getElementById("loginForm").addEventListener("submit", async function(event) {
+  event.preventDefault();
 
-    const login = document.getElementById("login").value;
-    const password = document.getElementById("password").value;
+  const email = document.getElementById("login").value.trim();
+  const password = document.getElementById("password").value.trim();
 
-    const url = `https://script.google.com/macros/s/AKfycbyEhcOZm-PyP0AsWCPbgfJBKutKQRfhTNMZ8Fqwq_WATWZ2P7bvV7XB3mXyhAjL1SnJ/exec?email=${encodeURIComponent(login)}&senha=${encodeURIComponent(password)}`;
+  try {
+    const response = await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `action=login_user&data=${encodeURIComponent(JSON.stringify({ email, password }))}`
+    });
 
-    fetch(url)
-      .then(response => response.json())
-      .then(data => {
-        console.log(data);
-        if (data.status === "success") {
-          alert("Login realizado com sucesso!");
-          // redirecionar ou salvar em localStorage etc.
-        } else {
-          alert("Usuário ou senha inválidos.");
-        }
-      })
-      .catch(error => {
-        console.error("Erro ao fazer login:", error);
-        alert("Erro ao conectar com o servidor.");
-      });
-  });
+    const result = await response.json();
+    console.log("Resultado:", result);
+
+    if (result.success) {
+      alert("Login realizado com sucesso!");
+      // Redirecionar ou salvar dados do usuário
+    } else {
+      alert(result.message);
+    }
+  } catch (error) {
+    console.error("Erro no login:", error);
+    alert("Erro de rede ou servidor.");
+  }
+});
 </script>
 </body>
 </html>
