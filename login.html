@@ -340,17 +340,25 @@
   <div class="content">
     <div class="form-bubble">
       <h2>Login</h2>
-      <form id="loginForm">
+      <form 
+        method="POST" 
+        action="https://script.google.com/macros/s/AKfycbyEhcOZm-PyP0AsWCPbgfJBKutKQRfhTNMZ8Fqwq_WATWZ2P7bvV7XB3mXyhAjL1SnJ/exec"
+      >
+        <input type="hidden" name="action" value="login_user">
+        
         <div class="form-group">
           <label for="login">E-mail ou Nome de Usuário</label>
-          <input type="text" id="login" placeholder="Digite seu e-mail ou nome de usuário" required>
+          <input type="text" id="login" name="login" placeholder="Digite seu e-mail ou nome de usuário" required>
         </div>
+        
         <div class="form-group">
           <label for="password">Senha</label>
-          <input type="password" id="password" placeholder="Digite sua senha" required>
+          <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
         </div>
+        
         <button type="submit" class="btn">Entrar</button>
       </form>
+      
       <div class="extra-options">
         <a href="#" id="forgot-password">Esqueci minha senha</a>
         <a href="register.html">Registrar-se</a>
