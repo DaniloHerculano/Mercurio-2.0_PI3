@@ -409,23 +409,20 @@
     const password = document.getElementById("password").value;
 
     // Envia os dados para o Apps Script via fetch
-    fetch("https://script.google.com/macros/s/AKfycbyEhcOZm-PyP0AsWCPbgfJBKutKQRfhTNMZ8Fqwq_WATWZ2P7bvV7XB3mXyhAjL1SnJ/exec", {
-      method: "POST",
-      body: new URLSearchParams({
-        login: login,    // E-mail ou nome de usuário digitado
-        password: password // Senha digitada
-      })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.sucesso) {
-        alert("Bem-vindo, " + data.usuario.nome); // Caso o login seja bem-sucedido
-      } else {
-        alert(data.mensagem); // Caso ocorra algum erro no login
-      }
-    })
-    .catch(err => console.error("Erro ao fazer login:", err));
-  });
+    fetch('https://script.google.com/macros/s/AKfycbyEhcOZm-PyP0AsWCPbgfJBKutKQRfhTNMZ8Fqwq_WATWZ2P7bvV7XB3mXyhAjL1SnJ/exec', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    email: 'user@example.com',
+    senha: 'password'
+  }),
+  mode: 'cors' // Garante que o CORS seja tratado corretamente
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error('Erro ao fazer login:', error));
 </script>
 </body>
 </html>
