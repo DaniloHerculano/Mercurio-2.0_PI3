@@ -399,7 +399,7 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwy38poYYBCBH4_xtO-vK0ce7i-lYmPaP8Z-cy-1vkoPmvxW_8EedTy_gpuV7E66AE5/exec";
 
 document.addEventListener("DOMContentLoaded", function() {
-  document.getElementById("loginForm").addEventListener("submit", async function(e) {
+  document.getElementById("loginForm").addEventListener("submit", function(e) {
     e.preventDefault();
     
     const login = document.getElementById("login").value.trim();
@@ -414,31 +414,31 @@ document.addEventListener("DOMContentLoaded", function() {
     button.disabled = true;
     button.textContent = "Entrando...";
 
-    try {
-      const response = await fetch(SCRIPT_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`
-      });
-
-      const result = await response.json();
+    // Cria um callback único
+    const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+    
+    // Cria o script
+    const script = document.createElement('script');
+    script.src = `${SCRIPT_URL}?login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}&callback=${callbackName}`;
+    
+    // Define a função de callback
+    window[callbackName] = function(response) {
+      delete window[callbackName];
+      document.body.removeChild(script);
       
-      if (result.success) {
-        // Armazena os dados do usuário no localStorage
-        localStorage.setItem("user", JSON.stringify(result.user));
+      if (response.success) {
+        localStorage.setItem("user", JSON.stringify(response.user));
         window.location.href = "dashboard.html";
       } else {
-        alert(result.message || "Credenciais inválidas");
+        alert(response.message || "Credenciais inválidas");
       }
-    } catch (error) {
-      console.error("Erro:", error);
-      alert("Erro ao conectar com o servidor");
-    } finally {
+      
       button.disabled = false;
       button.textContent = "Entrar";
-    }
+    };
+    
+    // Adiciona o script à página
+    document.body.appendChild(script);
   });
 });
 </script>
