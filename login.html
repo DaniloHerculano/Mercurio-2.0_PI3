@@ -396,81 +396,33 @@
     </div>
   </footer>
 <!------------- JAVASCRIPT ------------>
-  <script>
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyEhcOZm-PyP0AsWCPbgfJBKutKQRfhTNMZ8Fqwq_WATWZ2P7bvV7XB3mXyhAjL1SnJ/exec";
+<script>
+  const loginForm = document.getElementById("loginForm");
 
-  document.addEventListener("DOMContentLoaded", function() {
-    const loginForm = document.getElementById("loginForm");
-    
-    loginForm.addEventListener("submit", function(e) {
-      e.preventDefault();
-      
-      const login = document.getElementById("login").value.trim();
-      const password = document.getElementById("password").value.trim();
-      const button = e.target.querySelector("button[type='submit']");
-      
-      if (!login || !password) {
-        alert("Por favor, preencha todos os campos");
-        return;
-      }
+  loginForm.addEventListener("submit", function(event) {
+    event.preventDefault();
 
-      button.disabled = true;
-      button.textContent = "Entrando...";
+    const login = document.getElementById("login").value;
+    const password = document.getElementById("password").value;
 
-      // Cria um formulário oculto
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = SCRIPT_URL;
-      form.style.display = 'none';
-      
-      // Adiciona campos necessários
-      const addField = (name, value) => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = name;
-        input.value = value;
-        form.appendChild(input);
-      };
-      
-      addField('action', 'login_user');
-      addField('login', login);
-      addField('password', password);
-      
-      // Cria iframe para resposta
-      const iframe = document.createElement('iframe');
-      iframe.name = 'login-response';
-      iframe.style.display = 'none';
-      
-      iframe.onload = function() {
-        try {
-          const response = iframe.contentDocument.body.textContent;
-          const result = JSON.parse(response);
-          
-          if (result.success) {
-            localStorage.setItem("user", JSON.stringify(result.user));
-            window.location.href = "dashboard.html";
-          } else {
-            alert(result.message || "Credenciais inválidas");
-          }
-        } catch (error) {
-          alert("Erro ao processar resposta do servidor");
-        } finally {
-          // Limpeza segura
-          if (iframe.parentNode) document.body.removeChild(iframe);
-          if (form.parentNode) document.body.removeChild(form);
-          button.disabled = false;
-          button.textContent = "Entrar";
+    const url = `https://script.google.com/macros/s/AKfycbyEhcOZm-PyP0AsWCPbgfJBKutKQRfhTNMZ8Fqwq_WATWZ2P7bvV7XB3mXyhAjL1SnJ/exec?email=${encodeURIComponent(login)}&senha=${encodeURIComponent(password)}`;
+
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        if (data.status === "success") {
+          alert("Login realizado com sucesso!");
+          // redirecionar ou salvar em localStorage etc.
+        } else {
+          alert("Usuário ou senha inválidos.");
         }
-      };
-      
-      document.body.appendChild(iframe);
-      document.body.appendChild(form);
-      
-      // Define o target e envia
-      form.target = 'login-response';
-      form.submit();
-    });
+      })
+      .catch(error => {
+        console.error("Erro ao fazer login:", error);
+        alert("Erro ao conectar com o servidor.");
+      });
   });
-  </script>
+</script>
 </body>
 </html>
