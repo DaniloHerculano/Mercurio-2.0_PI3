@@ -414,57 +414,64 @@ document.addEventListener("DOMContentLoaded", function() {
     button.disabled = true;
     button.textContent = "Entrando...";
 
-    // Cria um iframe oculto
-    const iframe = document.createElement('iframe');
-    iframe.name = 'hidden-iframe';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-
-    // Cria um form
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = SCRIPT_URL;
-    form.target = 'hidden-iframe';
-    
-    // Adiciona campos
-    const addField = (name, value) => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = name;
-      input.value = value;
-      form.appendChild(input);
-    };
-    
-    addField('login', login);
-    addField('password', password);
-    
-    // Adiciona à página e envia
-    document.body.appendChild(form);
-    form.submit();
-
-    // Verifica a resposta após um tempo
-    setTimeout(() => {
-      try {
-        const response = iframe.contentDocument.body.textContent;
-        const result = JSON.parse(response);
-        
-        if (result.success) {
-          localStorage.setItem("user", JSON.stringify(result.user));
-          window.location.href = "dashboard.html";
-        } else {
-          alert(result.message || "Credenciais inválidas");
-        }
-      } catch (error) {
-        alert("Erro ao processar resposta do servidor");
-      } finally {
-        button.disabled = false;
-        button.textContent = "Entrar";
-        document.body.removeChild(iframe);
-        document.body.removeChild(form);
-      }
-    }, 2000);
+    // Método 1: Tenta primeiro com Fetch + CORS
+    tryFetchLogin(login, password)
+      .then(result => handleLoginResult(result, button))
+      .catch(() => {
+        // Se Fetch falhar, tenta com JSONP
+        tryJsonpLogin(login, password, button);
+      });
   });
 });
+
+function tryFetchLogin(login, password) {
+  return new Promise((resolve, reject) => {
+    fetch(`${SCRIPT_URL}?login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`, {
+      method: 'GET',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    .then(response => {
+      if (!response.ok) throw new Error('Network response was not ok');
+      return response.json();
+    })
+    .then(data => resolve(data))
+    .catch(error => reject(error));
+  });
+}
+
+function tryJsonpLogin(login, password, button) {
+  const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+  
+  window[callbackName] = function(response) {
+    delete window[callbackName];
+    handleLoginResult(response, button);
+  };
+
+  const script = document.createElement('script');
+  script.src = `${SCRIPT_URL}?login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}&callback=${callbackName}`;
+  
+  script.onerror = function() {
+    button.disabled = false;
+    button.textContent = "Entrar";
+    alert("Erro ao conectar com o servidor. Tente novamente.");
+  };
+  
+  document.body.appendChild(script);
+}
+
+function handleLoginResult(result, button) {
+  if (result.success) {
+    localStorage.setItem("user", JSON.stringify(result.user));
+    window.location.href = "dashboard.html";
+  } else {
+    alert(result.message || "Credenciais inválidas");
+    button.disabled = false;
+    button.textContent = "Entrar";
+  }
+}
 </script>
 </body>
 </html>
