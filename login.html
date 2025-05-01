@@ -399,7 +399,7 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyEhcOZm-PyP0AsWCPbgfJBKutKQRfhTNMZ8Fqwq_WATWZ2P7bvV7XB3mXyhAjL1SnJ/exec";
 
 document.addEventListener("DOMContentLoaded", function() {
-  document.getElementById("loginForm").addEventListener("submit", async function(e) {
+  document.getElementById("loginForm").addEventListener("submit", function(e) {
     e.preventDefault();
     
     const login = document.getElementById("login").value.trim();
@@ -414,63 +414,57 @@ document.addEventListener("DOMContentLoaded", function() {
     button.disabled = true;
     button.textContent = "Entrando...";
 
-    try {
-      // Método 1: Tentativa com Fetch API
-      const response = await fetch(`${SCRIPT_URL}?login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        redirect: 'follow'
-      });
-
-      if (!response.ok) throw new Error('Erro na rede');
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        localStorage.setItem("user", JSON.stringify(result.user));
-        window.location.href = "dashboard.html";
-      } else {
-        throw new Error(result.message || "Credenciais inválidas");
-      }
-    } catch (error) {
-      // Método 2: Fallback com JSONP se Fetch falhar
+    // Cria um formulário oculto
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = SCRIPT_URL;
+    form.style.display = 'none';
+    
+    // Adiciona campos
+    const addField = (name, value) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    };
+    
+    addField('login', login);
+    addField('password', password);
+    
+    // Cria iframe para resposta
+    const iframe = document.createElement('iframe');
+    iframe.name = 'login-response';
+    iframe.style.display = 'none';
+    
+    iframe.onload = function() {
       try {
-        await jsonpLogin(login, password);
-      } catch (jsonpError) {
-        alert(error.message || "Erro ao fazer login");
-        console.error("Erro completo:", jsonpError);
-      }
-    } finally {
-      button.disabled = false;
-      button.textContent = "Entrar";
-    }
-  });
-
-  function jsonpLogin(login, password) {
-    return new Promise((resolve, reject) => {
-      const callbackName = 'jsonpCallback_' + Math.random().toString(36).substring(2);
-      
-      window[callbackName] = function(response) {
-        delete window[callbackName];
-        document.body.removeChild(script);
+        const response = iframe.contentDocument.body.textContent;
+        const result = JSON.parse(response);
         
-        if (response.success) {
-          localStorage.setItem("user", JSON.stringify(response.user));
+        if (result.success) {
+          localStorage.setItem("user", JSON.stringify(result.user));
           window.location.href = "dashboard.html";
-          resolve();
         } else {
-          reject(new Error(response.message || "Login falhou"));
+          alert(result.message || "Credenciais inválidas");
         }
-      };
-      
-      const script = document.createElement('script');
-      script.src = `${SCRIPT_URL}?login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}&callback=${callbackName}`;
-      script.onerror = () => reject(new Error("Erro ao conectar com o servidor"));
-      document.body.appendChild(script);
-    });
-  }
+      } catch (error) {
+        alert("Erro ao processar resposta");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Entrar";
+        document.body.removeChild(iframe);
+        document.body.removeChild(form);
+      }
+    };
+    
+    document.body.appendChild(iframe);
+    document.body.appendChild(form);
+    
+    // Define o target e envia
+    form.target = 'login-response';
+    form.submit();
+  });
 });
 </script>
 </body>
