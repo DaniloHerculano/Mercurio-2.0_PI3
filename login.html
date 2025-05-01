@@ -396,15 +396,17 @@
   </footer>
 <!------------- JAVASCRIPT ------------>
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwy38poYYBCBH4_xtO-vK0ce7i-lYmPaP8Z-cy-1vkoPmvxW_8EedTy_gpuV7E66AE5/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_qaAUcn_wA1U4xPlSQRsJytrihvQuYDL1ndov2YQCutvLv_wO4GtwWwVhxlYlL_u7eg/exec";
 
 document.addEventListener("DOMContentLoaded", function() {
-  document.getElementById("loginForm").addEventListener("submit", function(e) {
+  const loginForm = document.getElementById("loginForm");
+  
+  loginForm.addEventListener("submit", async function(e) {
     e.preventDefault();
     
     const login = document.getElementById("login").value.trim();
     const password = document.getElementById("password").value.trim();
-    const button = e.target.querySelector("button[type='submit']");
+    const button = document.querySelector("#loginForm button[type='submit']");
     
     if (!login || !password) {
       alert("Por favor, preencha todos os campos");
@@ -414,58 +416,40 @@ document.addEventListener("DOMContentLoaded", function() {
     button.disabled = true;
     button.textContent = "Entrando...";
 
-    // Cria um formulário dinâmico
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = SCRIPT_URL;
-    form.style.display = 'none';
-    
-    // Adiciona campos ao formulário
-    const addField = (name, value) => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = name;
-      input.value = value;
-      form.appendChild(input);
-    };
-    
-    addField('login', login);
-    addField('password', password);
-    
-    // Cria um iframe para receber a resposta
-    const iframe = document.createElement('iframe');
-    iframe.name = 'login-response-iframe';
-    iframe.style.display = 'none';
-    
-    iframe.onload = function() {
-      try {
-        const response = iframe.contentDocument.body.textContent;
-        const result = JSON.parse(response);
-        
-        if (result.success) {
-          localStorage.setItem("user", JSON.stringify(result.user));
-          window.location.href = "dashboard.html";
-        } else {
-          alert(result.message || "Credenciais inválidas");
-        }
-      } catch (error) {
-        alert("Erro ao processar resposta do servidor");
-      } finally {
-        button.disabled = false;
-        button.textContent = "Entrar";
-        document.body.removeChild(iframe);
-        document.body.removeChild(form);
+    try {
+      const formData = new FormData();
+      formData.append('login', login);
+      formData.append('password', password);
+
+      const response = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: formData,
+        redirect: 'follow'
+      });
+
+      const result = await response.text();
+      
+      if (result === "CREDENCIAIS_INVALIDAS") {
+        throw new Error("Credenciais inválidas");
+      } else if (result === "DADOS_INCOMPLETOS") {
+        throw new Error("Dados incompletos");
+      } else if (result.includes("ERRO_INTERNO")) {
+        throw new Error("Erro no servidor");
       }
-    };
-    
-    document.body.appendChild(iframe);
-    document.body.appendChild(form);
-    
-    // Define o target do formulário para o iframe
-    form.target = 'login-response-iframe';
-    
-    // Envia o formulário
-    form.submit();
+
+      const data = JSON.parse(result);
+      
+      if (data.status === "success") {
+        localStorage.setItem("user", JSON.stringify(data.user));
+        window.location.href = "dashboard.html";
+      } else {
+        throw new Error("Login falhou");
+      }
+    } catch (error) {
+      alert(error.message);
+      button.disabled = false;
+      button.textContent = "Entrar";
+    }
   });
 });
 </script>
