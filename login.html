@@ -437,6 +437,14 @@ document.addEventListener("DOMContentLoaded", function() {
     iframe.name = 'login-response';
     iframe.style.display = 'none';
     
+    // Função para limpeza
+    const cleanUp = () => {
+      if (iframe.parentNode) document.body.removeChild(iframe);
+      if (form.parentNode) document.body.removeChild(form);
+      button.disabled = false;
+      button.textContent = "Entrar";
+    };
+    
     iframe.onload = function() {
       try {
         const response = iframe.contentDocument.body.textContent;
@@ -449,14 +457,19 @@ document.addEventListener("DOMContentLoaded", function() {
           alert(result.message || "Credenciais inválidas");
         }
       } catch (error) {
-        alert("Erro ao processar resposta");
+        alert("Erro ao processar resposta do servidor");
       } finally {
-        button.disabled = false;
-        button.textContent = "Entrar";
-        document.body.removeChild(iframe);
-        document.body.removeChild(form);
+        cleanUp();
       }
     };
+    
+    // Fallback para timeout
+    setTimeout(() => {
+      if (iframe.parentNode || form.parentNode) {
+        cleanUp();
+        alert("Tempo de resposta excedido. Tente novamente.");
+      }
+    }, 10000);
     
     document.body.appendChild(iframe);
     document.body.appendChild(form);
