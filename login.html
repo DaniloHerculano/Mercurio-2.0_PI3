@@ -420,7 +420,7 @@ document.addEventListener("DOMContentLoaded", function() {
     form.action = SCRIPT_URL;
     form.style.display = 'none';
     
-    // Adiciona campos
+    // Adiciona campos necessários
     const addField = (name, value) => {
       const input = document.createElement('input');
       input.type = 'hidden';
@@ -429,6 +429,7 @@ document.addEventListener("DOMContentLoaded", function() {
       form.appendChild(input);
     };
     
+    addField('action', 'login_user');
     addField('login', login);
     addField('password', password);
     
@@ -436,14 +437,6 @@ document.addEventListener("DOMContentLoaded", function() {
     const iframe = document.createElement('iframe');
     iframe.name = 'login-response';
     iframe.style.display = 'none';
-    
-    // Função para limpeza
-    const cleanUp = () => {
-      if (iframe.parentNode) document.body.removeChild(iframe);
-      if (form.parentNode) document.body.removeChild(form);
-      button.disabled = false;
-      button.textContent = "Entrar";
-    };
     
     iframe.onload = function() {
       try {
@@ -459,17 +452,13 @@ document.addEventListener("DOMContentLoaded", function() {
       } catch (error) {
         alert("Erro ao processar resposta do servidor");
       } finally {
-        cleanUp();
+        // Limpeza segura
+        if (iframe.parentNode) document.body.removeChild(iframe);
+        if (form.parentNode) document.body.removeChild(form);
+        button.disabled = false;
+        button.textContent = "Entrar";
       }
     };
-    
-    // Fallback para timeout
-    setTimeout(() => {
-      if (iframe.parentNode || form.parentNode) {
-        cleanUp();
-        alert("Tempo de resposta excedido. Tente novamente.");
-      }
-    }, 10000);
     
     document.body.appendChild(iframe);
     document.body.appendChild(form);
