@@ -414,31 +414,55 @@ document.addEventListener("DOMContentLoaded", function() {
     button.disabled = true;
     button.textContent = "Entrando...";
 
-    // Cria um callback único
-    const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+    // Cria um iframe oculto
+    const iframe = document.createElement('iframe');
+    iframe.name = 'hidden-iframe';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    // Cria um form
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = SCRIPT_URL;
+    form.target = 'hidden-iframe';
     
-    // Cria o script
-    const script = document.createElement('script');
-    script.src = `${SCRIPT_URL}?login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}&callback=${callbackName}`;
-    
-    // Define a função de callback
-    window[callbackName] = function(response) {
-      delete window[callbackName];
-      document.body.removeChild(script);
-      
-      if (response.success) {
-        localStorage.setItem("user", JSON.stringify(response.user));
-        window.location.href = "dashboard.html";
-      } else {
-        alert(response.message || "Credenciais inválidas");
-      }
-      
-      button.disabled = false;
-      button.textContent = "Entrar";
+    // Adiciona campos
+    const addField = (name, value) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
     };
     
-    // Adiciona o script à página
-    document.body.appendChild(script);
+    addField('login', login);
+    addField('password', password);
+    
+    // Adiciona à página e envia
+    document.body.appendChild(form);
+    form.submit();
+
+    // Verifica a resposta após um tempo
+    setTimeout(() => {
+      try {
+        const response = iframe.contentDocument.body.textContent;
+        const result = JSON.parse(response);
+        
+        if (result.success) {
+          localStorage.setItem("user", JSON.stringify(result.user));
+          window.location.href = "dashboard.html";
+        } else {
+          alert(result.message || "Credenciais inválidas");
+        }
+      } catch (error) {
+        alert("Erro ao processar resposta do servidor");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Entrar";
+        document.body.removeChild(iframe);
+        document.body.removeChild(form);
+      }
+    }, 2000);
   });
 });
 </script>
