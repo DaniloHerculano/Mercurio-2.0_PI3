@@ -408,37 +408,22 @@
       status.className = "status-message";
       status.textContent = "Autenticando...";
 
-      fetch("https://script.google.com/macros/s/AKfycbyEhcOZm-PyP0AsWCPbgfJBKutKQRfhTNMZ8Fqwq_WATWZ2P7bvV7XB3mXyhAjL1SnJ/exec", {
+      fetch("https://script.google.com/macros/s/SEU_SCRIPT_ID/exec", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          action: "login",
-          login: login,
-          password: password
+        body: new URLSearchParams({
+          email: "teste@email.com",
+          senha: "123456"
         })
       })
       .then(response => response.json())
       .then(data => {
-        if (data.status === "success") {
-          status.classList.add("status-success");
-          status.textContent = "Login bem-sucedido! Redirecionando...";
-          localStorage.setItem("usuario_logado", JSON.stringify(data.usuario));
-          setTimeout(() => {
-            window.location.href = "area-do-cliente.html";
-          }, 1500);
+        if (data.sucesso) {
+          alert("Bem-vindo, " + data.usuario.nome_usuario);
+          // redireciona ou salva login
         } else {
-          status.classList.add("status-error");
-          status.textContent = "Erro: " + data.message;
+          alert(data.mensagem);
         }
-      })
-      .catch(error => {
-        status.classList.add("status-error");
-        status.textContent = "Erro na requisição. Verifique sua conexão.";
-        console.error("Erro:", error);
       });
-    });
 
     // Modal de Recuperação
     document.getElementById("forgot-password").addEventListener("click", function(e) {
