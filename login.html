@@ -397,43 +397,35 @@
   </footer>
 <!------------- JAVASCRIPT ------------>
 <script>
-    // Login funcional com Google Apps Script
-    document.getElementById("loginForm").addEventListener("submit", function(event) {
-      event.preventDefault();
+  // Captura o formulário
+  const loginForm = document.getElementById("loginForm");
 
-      const login = document.getElementById("login").value;
-      const password = document.getElementById("password").value;
-      const status = document.getElementById("statusMessage");
-      status.style.display = "block";
-      status.className = "status-message";
-      status.textContent = "Autenticando...";
+  // Ao submeter o formulário
+  loginForm.addEventListener("submit", function(event) {
+    event.preventDefault(); // Impede o comportamento padrão de envio do formulário
 
-      fetch("https://script.google.com/macros/s/AKfycbyEhcOZm-PyP0AsWCPbgfJBKutKQRfhTNMZ8Fqwq_WATWZ2P7bvV7XB3mXyhAjL1SnJ/exec", {
-        method: "POST",
-        body: new URLSearchParams({
-          email: "teste@email.com",
-          senha: "123456"
-        })
+    // Captura os valores dos campos
+    const login = document.getElementById("login").value;
+    const password = document.getElementById("password").value;
+
+    // Envia os dados para o Apps Script via fetch
+    fetch("https://script.google.com/macros/s/AKfycbyEhcOZm-PyP0AsWCPbgfJBKutKQRfhTNMZ8Fqwq_WATWZ2P7bvV7XB3mXyhAjL1SnJ/exec", {
+      method: "POST",
+      body: new URLSearchParams({
+        login: login,    // E-mail ou nome de usuário digitado
+        password: password // Senha digitada
       })
-      .then(response => response.json())
-      .then(data => {
-        if (data.sucesso) {
-          alert("Bem-vindo, " + data.usuario.nome_usuario);
-          // redireciona ou salva login
-        } else {
-          alert(data.mensagem);
-        }
-      });
-
-    // Modal de Recuperação
-    document.getElementById("forgot-password").addEventListener("click", function(e) {
-      e.preventDefault();
-      document.getElementById("password-recovery-modal").style.display = "flex";
-    });
-
-    document.getElementById("close-modal").addEventListener("click", function() {
-      document.getElementById("password-recovery-modal").style.display = "none";
-    });
-  </script>
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.sucesso) {
+        alert("Bem-vindo, " + data.usuario.nome); // Caso o login seja bem-sucedido
+      } else {
+        alert(data.mensagem); // Caso ocorra algum erro no login
+      }
+    })
+    .catch(err => console.error("Erro ao fazer login:", err));
+  });
+</script>
 </body>
 </html>
