@@ -467,28 +467,25 @@
     });
   });
 
-  async function carregarDadosUsuarioCompletos(email) {
-    showLoader(true);
-    try {
-      // Busca os dados completos do servidor
-      const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
-      
-      // Verifica se a resposta é um JSON válido
-      let data;
+    async function carregarDadosUsuarioCompletos(email) {
+      showLoader(true);
       try {
-        data = await response.json();
-      } catch (e) {
-        // Se não for JSON, trata como texto (para compatibilidade)
-        const text = await response.text();
-        if (text.startsWith("{") || text.startsWith("[")) {
-          data = JSON.parse(text);
-        } else {
-          // Se for texto simples (como no login tradicional)
+        // Busca os dados completos do servidor
+        const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
+        
+        // Armazena o texto da resposta para podermos usá-lo múltiplas vezes
+        const responseText = await response.text();
+        
+        let data;
+        try {
+          // Tenta parsear como JSON
+          data = JSON.parse(responseText);
+        } catch (e) {
+          // Se não for JSON válido, cria um objeto básico com o email
           data = {
+            email: email,
             nome: "",
             sobrenome: "",
-            email: email,
-            // Outros campos padrão
             telefone: "",
             rua: "",
             numero: "",
@@ -500,20 +497,19 @@
             pais: "Brasil"
           };
         }
+        
+        // Armazena os dados no localStorage
+        localStorage.setItem('userData', JSON.stringify(data));
+        
+        // Exibe os dados na página
+        exibirDadosUsuario(data);
+      } catch (error) {
+        console.error("Erro ao carregar dados do usuário:", error);
+        alert("Erro ao carregar dados. Por favor, recarregue a página.");
+      } finally {
+        showLoader(false);
       }
-      
-      // Armazena os dados no localStorage
-      localStorage.setItem('userData', JSON.stringify(data));
-      
-      // Exibe os dados na página
-      exibirDadosUsuario(data);
-    } catch (error) {
-      console.error("Erro ao carregar dados do usuário:", error);
-      alert("Erro ao carregar dados. Por favor, recarregue a página.");
-    } finally {
-      showLoader(false);
     }
-  }
 
   function exibirDadosUsuario(userData) {
     const userInfoDiv = document.getElementById('userInfo');
@@ -572,61 +568,59 @@
     }
   }
 
-  async function carregarPedidosUsuario(email) {
-    const pedidosContainer = document.getElementById('meusPedidos');
-    pedidosContainer.innerHTML = '<div class="loading">Carregando...</div>';
-    
-    try {
-      // Busca os pedidos do usuário
-      const response = await fetch(`${SCRIPT_URL}?action=get_user_orders&email=${encodeURIComponent(email)}`);
+    async function carregarPedidosUsuario(email) {
+      const pedidosContainer = document.getElementById('meusPedidos');
+      pedidosContainer.innerHTML = '<div class="loading">Carregando...</div>';
       
-      if (!response.ok) {
-        throw new Error(`Erro HTTP: ${response.status}`);
-      }
-      
-      // Tenta parsear como JSON
-      let pedidos;
       try {
-        pedidos = await response.json();
-      } catch (e) {
-        // Se falhar, tenta como texto
-        const text = await response.text();
-        pedidos = JSON.parse(text);
-      }
-      
-      if (!Array.isArray(pedidos)) {
-        throw new Error("Formato de dados inválido");
-      }
-      
-      if (pedidos.length === 0) {
+        // Busca os pedidos do usuário
+        const response = await fetch(`${SCRIPT_URL}?action=get_user_orders&email=${encodeURIComponent(email)}`);
+        
+        // Armazena o texto da resposta para podermos usá-lo múltiplas vezes
+        const responseText = await response.text();
+        
+        let pedidos;
+        try {
+          // Tenta parsear como JSON
+          pedidos = JSON.parse(responseText);
+        } catch (e) {
+          // Se não for JSON válido, usa array vazio
+          pedidos = [];
+        }
+        
+        if (!Array.isArray(pedidos)) {
+          throw new Error("Formato de dados inválido");
+        }
+        
+        if (pedidos.length === 0) {
+          pedidosContainer.innerHTML = `
+            <div class="no-orders">
+              <p>Nenhum pedido encontrado.</p>
+              <a href="encomendar.html" class="btn">Fazer primeiro pedido</a>
+            </div>
+          `;
+          return;
+        }
+    
+        // Exibe os pedidos
+        pedidosContainer.innerHTML = '';
+        pedidos.forEach(pedido => {
+          const pedidoDiv = document.createElement('div');
+          pedidoDiv.className = 'pedido-item';
+          pedidoDiv.innerHTML = criarHTMLPedido(pedido);
+          pedidosContainer.appendChild(pedidoDiv);
+        });
+          
+      } catch (error) {
+        console.error("Erro ao carregar pedidos:", error);
         pedidosContainer.innerHTML = `
-          <div class="no-orders">
-            <p>Nenhum pedido encontrado.</p>
-            <a href="encomendar.html" class="btn">Fazer primeiro pedido</a>
+          <div class="error">
+            <p>Não foi possível carregar seus pedidos.</p>
+            <button onclick="location.reload()" class="btn2">Recarregar</button>
           </div>
         `;
-        return;
       }
-
-      // Exibe os pedidos
-      pedidosContainer.innerHTML = '';
-      pedidos.forEach(pedido => {
-        const pedidoDiv = document.createElement('div');
-        pedidoDiv.className = 'pedido-item';
-        pedidoDiv.innerHTML = criarHTMLPedido(pedido);
-        pedidosContainer.appendChild(pedidoDiv);
-      });
-        
-    } catch (error) {
-      console.error("Erro ao carregar pedidos:", error);
-      pedidosContainer.innerHTML = `
-        <div class="error">
-          <p>Não foi possível carregar seus pedidos.</p>
-          <button onclick="location.reload()" class="btn2">Recarregar</button>
-        </div>
-      `;
     }
-  }
 
   function criarHTMLPedido(pedido) {
     return `
