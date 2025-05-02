@@ -480,19 +480,23 @@
       }
       
       // Parseia a resposta como JSON
-      const userData = await response.json();
+      const result = await response.json();
       
-      console.log("Dados do usuário:", userData);
+      console.log("Resposta do servidor:", result);
       
-      if (userData.error) {
-        throw new Error(userData.error);
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
+      if (result.status === "error") {
+        throw new Error(result.message || "Erro ao buscar dados");
       }
       
       // Armazena os dados no localStorage
-      localStorage.setItem('userData', JSON.stringify(userData));
+      localStorage.setItem('userData', JSON.stringify(result));
       
       // Exibe os dados na página
-      exibirDadosUsuario(userData);
+      exibirDadosUsuario(result);
       
     } catch (error) {
       console.error("Falha ao carregar dados:", error);
@@ -501,8 +505,11 @@
       const storedData = localStorage.getItem('userData');
       if (storedData) {
         try {
-          exibirDadosUsuario(JSON.parse(storedData));
-          return;
+          const parsedData = JSON.parse(storedData);
+          if (parsedData.email) {
+            exibirDadosUsuario(parsedData);
+            return;
+          }
         } catch (e) {
           console.error("Erro ao ler localStorage:", e);
         }
