@@ -209,31 +209,31 @@
   transition: transform 0.2s;
 }
 
-.pedido-item:hover {
-  transform: translateY(-2px);
-}
-
-.btn2 {
-  background-color: #1b6222;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 10px;
-  transition: background-color 0.3s;
-}
-
-.btn2:hover {
-  background-color: #f0a500;
-}
-
-.address-section {
-  background-color: #f8f9fa;
-  padding: 10px;
-  border-radius: 5px;
-  margin-top: 10px;
-}
+    .pedido-item:hover {
+      transform: translateY(-2px);
+    }
+    
+    .btn2 {
+      background-color: #1b6222;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background-color 0.3s;
+    }
+    
+    .btn2:hover {
+      background-color: #f0a500;
+    }
+    
+    .address-section {
+      background-color: #f8f9fa;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
     
     /* RODAPÉ */
     footer {
@@ -293,11 +293,38 @@
       .titulo-principal {
         font-size: 1.3em;
       }
-      
+    }
       .btn, .btn-exit {
         width: 100%;
         box-sizing: border-box;
       }
+
+      /* Estilos adicionais para a exibição dos dados do usuário */
+    .user-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    @media (max-width: 600px) {
+      .user-info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .info-item {
+      padding: 10px;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .address-section {
+      grid-column: 1 / -1;
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -331,7 +358,7 @@
   <div class="content">
     <div class="container_12">
       <div class="grid_6">
-        <h3>Bem-vindo(a) à Área do Cliente</h3>
+        <h3 id="welcome-title">Bem-vindo(a) à Área do Cliente</h3>
         
         <!-- Seção de Informações do Usuário -->
         <div class="user-info-container">
@@ -394,10 +421,8 @@
       </div>
     </div>
   </footer>
-
 <!------------- JAVASCRIPT ------------>
-
- <script>
+<script>
   // Configurações da Planilha Google
   const SHEET_ID = "1QKnR6pWhemrdT5csvGpsy-pLxq0qQuKjniY7yvH3d48";
   const PEDIDOS_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Pedidos&tqx=out:json`;
@@ -429,14 +454,7 @@
     }
 
     // Carrega dados do usuário
-    const userData = JSON.parse(localStorage.getItem(loggedInUserEmail));
-    if (!userData) {
-      alert('Dados do usuário não encontrados!');
-      window.location.href = "login.html";
-      return;
-    }
-
-    exibirDadosUsuario(userData);
+    await carregarDadosUsuarioCompletos(loggedInUserEmail);
     await carregarEstoque();
     await carregarPedidosUsuario(loggedInUserEmail);
 
@@ -444,35 +462,65 @@
     document.getElementById('logout').addEventListener('click', function(e) {
       e.preventDefault();
       localStorage.removeItem('loggedInUser');
+      localStorage.removeItem('userData');
       window.location.href = "login.html";
     });
   });
 
-  function exibirDadosUsuario(userData) {
-    const registrationDate = new Date(userData.registrationDate);
-    const formattedDate = registrationDate.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  async function carregarDadosUsuarioCompletos(email) {
+    showLoader(true);
+    try {
+      // Primeiro verifica se já temos os dados no localStorage
+      const storedUserData = localStorage.getItem('userData');
+      if (storedUserData) {
+        exibirDadosUsuario(JSON.parse(storedUserData));
+        return;
+      }
 
+      // Se não, busca os dados completos do servidor
+      const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        // Armazena todos os dados do usuário no localStorage
+        localStorage.setItem('userData', JSON.stringify(data.user));
+        exibirDadosUsuario(data.user);
+      } else {
+        alert('Erro ao carregar dados do usuário: ' + data.message);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar dados do usuário:", error);
+      alert("Erro ao carregar dados. Por favor, recarregue a página.");
+    } finally {
+      showLoader(false);
+    }
+  }
+
+  function exibirDadosUsuario(userData) {
     const userInfoDiv = document.getElementById('userInfo');
     userInfoDiv.innerHTML = `
-      <div class="info-item"><strong>Nome:</strong> ${userData.firstname} ${userData.lastname}</div>
-      <div class="info-item"><strong>E-mail:</strong> ${userData.email}</div>
-      <div class="info-item"><strong>Telefone:</strong> ${userData.phone || 'Não informado'}</div>
+      <div class="info-item"><strong>Nome:</strong> ${userData.nome || ''} ${userData.sobrenome || ''}</div>
+      <div class="info-item"><strong>Nome de usuário:</strong> ${userData.usuario || ''}</div>
+      <div class="info-item"><strong>E-mail:</strong> ${userData.email || ''}</div>
+      <div class="info-item"><strong>Telefone:</strong> ${userData.telefone || 'Não informado'}</div>
+      <div class="info-item"><strong>Idade:</strong> ${userData.idade || 'Não informada'}</div>
+      <div class="info-item"><strong>Gênero:</strong> ${userData.genero || 'Não informado'}</div>
       <div class="address-section">
         <div class="info-item"><strong>Endereço:</strong></div>
         ${userData.rua ? `<div class="address-line">${userData.rua}, ${userData.numero || 'S/N'}</div>` : ''}
         ${userData.complemento ? `<div class="address-line">${userData.complemento}</div>` : ''}
         ${userData.bairro ? `<div class="address-line">Bairro: ${userData.bairro}</div>` : ''}
-        ${userData.cidade ? `<div class="address-line">${userData.cidade} - ${userData.estado || ''}</div>` : ''}
         ${userData.cep ? `<div class="address-line">CEP: ${userData.cep}</div>` : ''}
+        ${userData.cidade ? `<div class="address-line">${userData.cidade} - ${userData.estado || ''}</div>` : ''}
+        ${userData.pais ? `<div class="address-line">${userData.pais}</div>` : ''}
       </div>
-      <div class="info-item"><strong>Cadastrado em:</strong> ${formattedDate}</div>
     `;
+    
+    // Atualiza o título de boas-vindas
+    const welcomeTitle = document.getElementById('welcome-title');
+    if (welcomeTitle && userData.nome) {
+      welcomeTitle.textContent = `Bem-vindo(a), ${userData.nome}!`;
+    }
   }
 
   async function carregarEstoque() {
@@ -501,83 +549,82 @@
   }
 
   async function carregarPedidosUsuario(email) {
-  const pedidosContainer = document.getElementById('meusPedidos');
-  pedidosContainer.innerHTML = '<div class="loading">Carregando...</div>';
-  
-  try {
-    const API_URL = "SUA_URL_DE_SCRIPT_AQUI";
-    const response = await fetch(`${API_URL}?email=${encodeURIComponent(email)}`);
+    const pedidosContainer = document.getElementById('meusPedidos');
+    pedidosContainer.innerHTML = '<div class="loading">Carregando...</div>';
     
-    if (!response.ok) {
-      throw new Error(`Erro HTTP: ${response.status}`);
-    }
-    
-    const text = await response.text();
-    console.log("Resposta bruta:", text); // Para debug
-    
-    let pedidos;
     try {
-      pedidos = JSON.parse(text);
-    } catch (e) {
-      throw new Error("Resposta inválida da API");
-    }
-    
-    if (!Array.isArray(pedidos)) {
-      throw new Error("Formato de dados inválido");
-    }
-    
-    if (pedidos.length === 0) {
+      const response = await fetch(`${SCRIPT_URL}?action=get_user_orders&email=${encodeURIComponent(email)}`);
+      
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
+      }
+      
+      const text = await response.text();
+      console.log("Resposta bruta:", text);
+      
+      let pedidos;
+      try {
+        pedidos = JSON.parse(text);
+      } catch (e) {
+        throw new Error("Resposta inválida da API");
+      }
+      
+      if (!Array.isArray(pedidos)) {
+        throw new Error("Formato de dados inválido");
+      }
+      
+      if (pedidos.length === 0) {
+        pedidosContainer.innerHTML = `
+          <div class="no-orders">
+            <p>Nenhum pedido encontrado.</p>
+            <a href="encomendar.html" class="btn">Fazer primeiro pedido</a>
+          </div>
+        `;
+        return;
+      }
+
+      pedidosContainer.innerHTML = '';
+      pedidos.sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio))
+        .forEach(pedido => {
+          const pedidoDiv = document.createElement('div');
+          pedidoDiv.className = 'pedido-item';
+          pedidoDiv.innerHTML = criarHTMLPedido(pedido);
+          pedidosContainer.appendChild(pedidoDiv);
+        });
+        
+    } catch (error) {
+      console.error("Erro detalhado:", error);
       pedidosContainer.innerHTML = `
-        <div class="no-orders">
-          <p>Nenhum pedido encontrado.</p>
-          <a href="encomendar.html" class="btn">Fazer primeiro pedido</a>
+        <div class="error">
+          <p>Não foi possível carregar seus pedidos.</p>
+          <p><small>${error.message}</small></p>
+          <button onclick="location.reload()" class="btn2">Recarregar</button>
         </div>
       `;
-      return;
     }
+  }
 
-    pedidosContainer.innerHTML = '';
-    pedidos.sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio))
-      .forEach(pedido => {
-        const pedidoDiv = document.createElement('div');
-        pedidoDiv.className = 'pedido-item';
-        pedidoDiv.innerHTML = criarHTMLPedido(pedido);
-        pedidosContainer.appendChild(pedidoDiv);
-      });
-      
-  } catch (error) {
-    console.error("Erro detalhado:", error);
-    pedidosContainer.innerHTML = `
-      <div class="error">
-        <p>Não foi possível carregar seus pedidos.</p>
-        <p><small>${error.message}</small></p>
-        <button onclick="location.reload()" class="btn2">Recarregar</button>
+  function criarHTMLPedido(pedido) {
+    return `
+      <div class="pedido-header">
+        <h4>Pedido #${pedido.id}</h4>
+        <span class="status-badge ${pedido.status.toLowerCase()}">${pedido.status}</span>
       </div>
+      <div class="pedido-body">
+        <p><i class="fa fa-calendar"></i> <strong>Período:</strong> ${formatarData(pedido.dataInicio)} - ${formatarData(pedido.dataFim)}</p>
+        <p><i class="fa fa-cubes"></i> <strong>Itens:</strong> ${pedido.mesas} mesa(s), ${pedido.cadeiras} cadeira(s), ${pedido.bancos} banco(s)</p>
+        <p><i class="fa fa-money"></i> <strong>Total:</strong> R$ ${pedido.total?.toFixed(2) || '0.00'}</p>
+        <p><i class="fa fa-map-marker"></i> <strong>Endereço:</strong> ${pedido.endereco || 'Retirada na loja'}</p>
+      </div>
+      ${pedido.status === 'Ativo' ? `
+      <div class="pedido-actions">
+        <button onclick="devolverPedido('${pedido.id}', ${pedido.mesas}, ${pedido.cadeiras}, ${pedido.bancos})" 
+                class="btn2">
+          <i class="fa fa-undo"></i> Devolver Itens
+        </button>
+      </div>` : ''}
     `;
   }
-}
-
-function criarHTMLPedido(pedido) {
-  return `
-    <div class="pedido-header">
-      <h4>Pedido #${pedido.id}</h4>
-      <span class="status-badge ${pedido.status.toLowerCase()}">${pedido.status}</span>
-    </div>
-    <div class="pedido-body">
-      <p><i class="fa fa-calendar"></i> <strong>Período:</strong> ${formatarData(pedido.dataInicio)} - ${formatarData(pedido.dataFim)}</p>
-      <p><i class="fa fa-cubes"></i> <strong>Itens:</strong> ${pedido.mesas} mesa(s), ${pedido.cadeiras} cadeira(s), ${pedido.bancos} banco(s)</p>
-      <p><i class="fa fa-money"></i> <strong>Total:</strong> R$ ${pedido.total?.toFixed(2) || '0.00'}</p>
-      <p><i class="fa fa-map-marker"></i> <strong>Endereço:</strong> ${pedido.endereco || 'Retirada na loja'}</p>
-    </div>
-    ${pedido.status === 'Ativo' ? `
-    <div class="pedido-actions">
-      <button onclick="devolverPedido('${pedido.id}', ${pedido.mesas}, ${pedido.cadeiras}, ${pedido.bancos})" 
-              class="btn2">
-        <i class="fa fa-undo"></i> Devolver Itens
-      </button>
-    </div>` : ''}
-  `;
-}
 
   function formatarData(dataString) {
     if (!dataString) return 'Não definida';
@@ -623,19 +670,8 @@ function criarHTMLPedido(pedido) {
   }
    
   function showLoader(show) {
-  document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
-}
-
-// Exemplo de uso:
-async function carregarDados() {
-  showLoader(true);
-  try {
-    await carregarEstoque();
-    await carregarPedidosUsuario();
-  } finally {
-    showLoader(false);
+    document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
   }
-} 
 </script>
 </body>
 </html>
