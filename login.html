@@ -404,32 +404,51 @@
 <script>
   // Função para enviar o login via JavaScript
   function fazerLogin(event) {
-    event.preventDefault(); // Evita o envio padrão do formulário
-
+    event.preventDefault();
+    
+    // Mostra o loader
+    document.getElementById('loading-overlay').style.display = 'flex';
+    
     // Coleta os dados do formulário
-    var email = document.getElementById('login').value;
-    var senha = document.getElementById('password').value;
-
-    // Envia os dados para o Apps Script via GET
-    $.get('https://script.google.com/macros/s/AKfycbzfDbfbHbkR-nYYT-biWN0XOH1dTYGh28Ge8BhSfKXgxZFNqTnqUtrpe6yqaA_GBwY/exec', {
-      email: email,
-      senha: senha
-    }, function(resposta) {
-      if (typeof resposta === 'string') {
-        try {
-          resposta = JSON.parse(resposta);
-        } catch (e) {
-          alert("Erro: " + resposta);
-          return;
+    var login = document.getElementById('login').value.trim();
+    var senha = document.getElementById('password').value.trim();
+  
+    // Envia os dados para o Apps Script
+    $.ajax({
+      url: 'https://script.google.com/macros/s/AKfycbzfDbfbHbkR-nYYT-biWN0XOH1dTYGh28Ge8BhSfKXgxZFNqTnqUtrpe6yqaA_GBwY/exec',
+      method: 'GET',
+      data: {
+        action: 'login_user',
+        email: login,
+        password: senha
+      },
+      success: function(resposta) {
+        // Esconde o loader
+        document.getElementById('loading-overlay').style.display = 'none';
+        
+        if (typeof resposta === 'string') {
+          try {
+            resposta = JSON.parse(resposta);
+          } catch (e) {
+            alert("Erro: " + resposta);
+            return;
+          }
         }
-      }
-
-      if (resposta.status === "sucesso") {
-        alert("Login bem-sucedido. Bem-vindo(a), " + resposta.nome);
-        // Aqui você pode salvar no localStorage ou redirecionar
-        window.location.href = 'login-success.html';  // Redireciona após o login
-      } else {
-        alert("Erro: " + resposta.mensagem);
+  
+        if (resposta.success) {
+          // Armazena os dados do usuário no localStorage
+          localStorage.setItem('loggedInUser', resposta.user.email);
+          localStorage.setItem('userData', JSON.stringify(resposta.user));
+          
+          // Redireciona para a área do cliente
+          window.location.href = 'customer_area.html';
+        } else {
+          alert("Erro: " + resposta.message);
+        }
+      },
+      error: function(xhr, status, error) {
+        document.getElementById('loading-overlay').style.display = 'none';
+        alert("Erro na comunicação com o servidor: " + error);
       }
     });
   }
