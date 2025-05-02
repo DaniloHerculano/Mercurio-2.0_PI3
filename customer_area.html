@@ -472,11 +472,21 @@
     try {
       const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
       
+      // Verifica se a resposta é OK (status 200)
       if (!response.ok) {
-        throw new Error(`Erro na requisição: ${response.status}`);
+        throw new Error(`Erro no servidor: ${response.status}`);
+      }
+      
+      // Verifica o tipo de conteúdo
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error("Resposta não é JSON");
       }
       
       const userData = await response.json();
+      
+      // Debug: mostre os dados recebidos no console
+      console.log("Dados recebidos do servidor:", userData);
       
       if (userData.error) {
         throw new Error(userData.error);
@@ -491,11 +501,14 @@
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
       
-      // Tenta exibir pelo menos o email se houver falha
-      exibirDadosUsuario({
-        email: email,
-        error: error.message
-      });
+      // Tenta obter dados do localStorage como fallback
+      const storedData = localStorage.getItem('userData');
+      if (storedData) {
+        exibirDadosUsuario(JSON.parse(storedData));
+      } else {
+        // Exibe apenas o email se tudo mais falhar
+        exibirDadosUsuario({ email: email, error: error.message });
+      }
       
     } finally {
       showLoader(false);
