@@ -467,79 +467,88 @@
     });
   });
 
-    async function carregarDadosUsuarioCompletos(email) {
-      showLoader(true);
-      try {
-        // Busca os dados completos do servidor
-        const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
-        
-        // Armazena o texto da resposta para podermos usá-lo múltiplas vezes
-        const responseText = await response.text();
-        
-        let data;
-        try {
-          // Tenta parsear como JSON
-          data = JSON.parse(responseText);
-        } catch (e) {
-          // Se não for JSON válido, cria um objeto básico com o email
-          data = {
-            email: email,
-            nome: "",
-            sobrenome: "",
-            telefone: "",
-            rua: "",
-            numero: "",
-            complemento: "",
-            bairro: "",
-            cidade: "",
-            estado: "",
-            cep: "",
-            pais: "Brasil"
-          };
-        }
-        
-        // Armazena os dados no localStorage
-        localStorage.setItem('userData', JSON.stringify(data));
-        
-        // Exibe os dados na página
-        exibirDadosUsuario(data);
-      } catch (error) {
-        console.error("Erro ao carregar dados do usuário:", error);
-        alert("Erro ao carregar dados. Por favor, recarregue a página.");
-      } finally {
-        showLoader(false);
+  async function carregarDadosUsuarioCompletos(email) {
+    showLoader(true);
+    try {
+      const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
+      
+      if (!response.ok) {
+        throw new Error(`Erro na requisição: ${response.status}`);
       }
+      
+      const userData = await response.json();
+      
+      if (userData.error) {
+        throw new Error(userData.error);
+      }
+      
+      // Armazena os dados no localStorage
+      localStorage.setItem('userData', JSON.stringify(userData));
+      
+      // Exibe os dados na página
+      exibirDadosUsuario(userData);
+      
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+      
+      // Tenta exibir pelo menos o email se houver falha
+      exibirDadosUsuario({
+        email: email,
+        error: error.message
+      });
+      
+    } finally {
+      showLoader(false);
     }
-
+  }
+  
   function exibirDadosUsuario(userData) {
     const userInfoDiv = document.getElementById('userInfo');
     
-    // Verifica se userData é um objeto válido
-    if (typeof userData !== 'object' || userData === null) {
-      userInfoDiv.innerHTML = '<p>Erro ao carregar dados do usuário</p>';
-      return;
-    }
-    
-    // Cria o HTML com os dados do usuário
+    // Função auxiliar para exibir campos
+    const displayField = (label, value) => {
+      if (value === undefined || value === null || value === '') {
+        return '';
+      }
+      return `<div class="info-item"><strong>${label}:</strong> ${value}</div>`;
+    };
+  
+    // Função para formatar endereço
+    const formatAddress = () => {
+      const parts = [];
+      if (userData.rua) parts.push(userData.rua + (userData.numero ? `, ${userData.numero}` : ''));
+      if (userData.complemento) parts.push(userData.complemento);
+      if (userData.bairro) parts.push(`Bairro: ${userData.bairro}`);
+      if (userData.cidade) parts.push(userData.cidade + (userData.estado ? ` - ${userData.estado}` : ''));
+      if (userData.cep) parts.push(`CEP: ${userData.cep}`);
+      if (userData.pais) parts.push(userData.pais);
+      
+      return parts.length > 0 
+        ? parts.map(part => `<div class="address-line">${part}</div>`).join('')
+        : '<div class="address-line">Endereço não informado</div>';
+    };
+  
+    // Monta o HTML
     userInfoDiv.innerHTML = `
-      <div class="info-item"><strong>Nome:</strong> ${userData.nome || ''} ${userData.sobrenome || ''}</div>
-      <div class="info-item"><strong>E-mail:</strong> ${userData.email || ''}</div>
-      <div class="info-item"><strong>Telefone:</strong> ${userData.telefone || 'Não informado'}</div>
+      ${displayField('Nome', userData.nome ? `${userData.nome} ${userData.sobrenome || ''}`.trim() : null)}
+      ${displayField('Usuário', userData.usuario)}
+      ${displayField('E-mail', userData.email)}
+      ${displayField('Telefone', userData.telefone)}
+      ${displayField('Idade', userData.idade)}
+      ${displayField('Gênero', userData.genero)}
+      
       <div class="address-section">
-        <div><strong>Endereço:</strong></div>
-        ${userData.rua ? `<div>${userData.rua}, ${userData.numero || 'S/N'}</div>` : ''}
-        ${userData.complemento ? `<div>${userData.complemento}</div>` : ''}
-        ${userData.bairro ? `<div>Bairro: ${userData.bairro}</div>` : ''}
-        ${userData.cidade ? `<div>${userData.cidade} - ${userData.estado || ''}</div>` : ''}
-        ${userData.cep ? `<div>CEP: ${userData.cep}</div>` : ''}
-        ${userData.pais ? `<div>${userData.pais}</div>` : ''}
+        <div class="info-item"><strong>Endereço:</strong></div>
+        ${formatAddress()}
       </div>
     `;
     
     // Atualiza o título de boas-vindas
     const welcomeTitle = document.querySelector('h3');
-    if (welcomeTitle && userData.nome) {
-      welcomeTitle.textContent = `Bem-vindo(a), ${userData.nome}!`;
+    if (welcomeTitle) {
+      welcomeTitle.textContent = userData.nome 
+        ? `Bem-vindo(a), ${userData.nome}!` 
+        : `Bem-vindo à Área do Cliente!`;
     }
   }
 
