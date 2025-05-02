@@ -500,21 +500,20 @@
     try {
       console.log("Buscando dados para:", email);
       
-      // Adicione um timestamp para evitar cache
+      // URL com cache-buster
       const url = `${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}&t=${Date.now()}`;
       
       const response = await fetch(url);
-      const responseText = await response.text();
       
-      console.log("Resposta bruta:", responseText);
-      
-      // Tente parsear como JSON
-      let userData;
-      try {
-        userData = JSON.parse(responseText);
-      } catch (e) {
-        throw new Error(`Resposta inválida do servidor: ${responseText}`);
+      // Verifica se a resposta é OK
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
       }
+      
+      // Parseia a resposta como JSON
+      const userData = await response.json();
+      
+      console.log("Dados recebidos:", userData);
       
       if (userData.status === "error") {
         throw new Error(userData.message || "Erro ao buscar dados");
@@ -524,7 +523,7 @@
         throw new Error("Dados do usuário incompletos");
       }
       
-      console.log("Dados recebidos:", userData);
+      // Armazena e exibe os dados
       localStorage.setItem('userData', JSON.stringify(userData));
       exibirDadosUsuario(userData);
       
