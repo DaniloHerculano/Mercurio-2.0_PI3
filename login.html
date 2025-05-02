@@ -413,7 +413,7 @@
     var login = document.getElementById('login').value.trim();
     var senha = document.getElementById('password').value.trim();
   
-    // Envia os dados para o Apps Script
+    // Envia os dados para o Apps Script no formato esperado
     $.ajax({
       url: 'https://script.google.com/macros/s/AKfycbzfDbfbHbkR-nYYT-biWN0XOH1dTYGh28Ge8BhSfKXgxZFNqTnqUtrpe6yqaA_GBwY/exec',
       method: 'GET',
@@ -452,6 +452,6 @@
       }
     });
   }
-</script>
+  </script>
 </body>
 </html>
