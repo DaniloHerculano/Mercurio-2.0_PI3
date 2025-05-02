@@ -470,44 +470,46 @@
   async function carregarDadosUsuarioCompletos(email) {
     showLoader(true);
     try {
-      console.log("Iniciando busca por:", email);
+      console.log("Buscando dados para:", email);
       
-      const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
+      // Adicione um timestamp para evitar cache
+      const url = `${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}&t=${Date.now()}`;
       
-      // Verifica se a resposta é OK
-      if (!response.ok) {
-        throw new Error(`Erro HTTP: ${response.status}`);
+      const response = await fetch(url);
+      const responseText = await response.text();
+      
+      console.log("Resposta bruta:", responseText);
+      
+      // Tente parsear como JSON
+      let userData;
+      try {
+        userData = JSON.parse(responseText);
+      } catch (e) {
+        throw new Error(`Resposta inválida do servidor: ${responseText}`);
       }
       
-      // Parseia a resposta como JSON
-      const result = await response.json();
-      
-      console.log("Resposta do servidor:", result);
-      
-      if (result.error) {
-        throw new Error(result.error);
+      if (userData.status === "error") {
+        throw new Error(userData.message || "Erro ao buscar dados");
       }
       
-      if (result.status === "error") {
-        throw new Error(result.message || "Erro ao buscar dados");
+      if (!userData.email) {
+        throw new Error("Dados do usuário incompletos");
       }
       
-      // Armazena os dados no localStorage
-      localStorage.setItem('userData', JSON.stringify(result));
-      
-      // Exibe os dados na página
-      exibirDadosUsuario(result);
+      console.log("Dados recebidos:", userData);
+      localStorage.setItem('userData', JSON.stringify(userData));
+      exibirDadosUsuario(userData);
       
     } catch (error) {
-      console.error("Falha ao carregar dados:", error);
+      console.error("Erro:", error);
       
-      // Tenta usar dados do localStorage se disponível
-      const storedData = localStorage.getItem('userData');
-      if (storedData) {
+      // Fallback para dados locais
+      const localData = localStorage.getItem('userData');
+      if (localData) {
         try {
-          const parsedData = JSON.parse(storedData);
-          if (parsedData.email) {
-            exibirDadosUsuario(parsedData);
+          const parsed = JSON.parse(localData);
+          if (parsed.email) {
+            exibirDadosUsuario(parsed);
             return;
           }
         } catch (e) {
@@ -515,13 +517,11 @@
         }
       }
       
-      // Exibe mensagem de erro
-      const userInfoDiv = document.getElementById('userInfo');
-      userInfoDiv.innerHTML = `
+      document.getElementById('userInfo').innerHTML = `
         <div class="error-message">
+          <p>Falha ao carregar dados: ${error.message}</p>
           <p>E-mail: ${email}</p>
-          <p>Erro: ${error.message}</p>
-          <p>Por favor, tente novamente ou entre em contato com o suporte.</p>
+          <button onclick="window.location.reload()" class="btn">Tentar novamente</button>
         </div>
       `;
       
