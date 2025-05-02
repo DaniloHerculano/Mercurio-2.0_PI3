@@ -430,7 +430,7 @@
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzfDbfbHbkR-nYYT-biWN0XOH1dTYGh28Ge8BhSfKXgxZFNqTnqUtrpe6yqaA_GBwY/exec";
 
   document.addEventListener('DOMContentLoaded', async function() {
-    // Controle do menu mobile
+    // Controle do menu mobile (mantenha seu código existente)
     const menuToggle = document.getElementById('menuToggle');
     const mainNav = document.querySelector('.sf-menu');
     
@@ -470,24 +470,43 @@
   async function carregarDadosUsuarioCompletos(email) {
     showLoader(true);
     try {
-      // Primeiro verifica se já temos os dados no localStorage
-      const storedUserData = localStorage.getItem('userData');
-      if (storedUserData) {
-        exibirDadosUsuario(JSON.parse(storedUserData));
-        return;
-      }
-
-      // Se não, busca os dados completos do servidor
+      // Busca os dados completos do servidor
       const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
-      const data = await response.json();
       
-      if (data.success) {
-        // Armazena todos os dados do usuário no localStorage
-        localStorage.setItem('userData', JSON.stringify(data.user));
-        exibirDadosUsuario(data.user);
-      } else {
-        alert('Erro ao carregar dados do usuário: ' + data.message);
+      // Verifica se a resposta é um JSON válido
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        // Se não for JSON, trata como texto (para compatibilidade)
+        const text = await response.text();
+        if (text.startsWith("{") || text.startsWith("[")) {
+          data = JSON.parse(text);
+        } else {
+          // Se for texto simples (como no login tradicional)
+          data = {
+            nome: "",
+            sobrenome: "",
+            email: email,
+            // Outros campos padrão
+            telefone: "",
+            rua: "",
+            numero: "",
+            complemento: "",
+            bairro: "",
+            cidade: "",
+            estado: "",
+            cep: "",
+            pais: "Brasil"
+          };
+        }
       }
+      
+      // Armazena os dados no localStorage
+      localStorage.setItem('userData', JSON.stringify(data));
+      
+      // Exibe os dados na página
+      exibirDadosUsuario(data);
     } catch (error) {
       console.error("Erro ao carregar dados do usuário:", error);
       alert("Erro ao carregar dados. Por favor, recarregue a página.");
@@ -498,26 +517,31 @@
 
   function exibirDadosUsuario(userData) {
     const userInfoDiv = document.getElementById('userInfo');
+    
+    // Verifica se userData é um objeto válido
+    if (typeof userData !== 'object' || userData === null) {
+      userInfoDiv.innerHTML = '<p>Erro ao carregar dados do usuário</p>';
+      return;
+    }
+    
+    // Cria o HTML com os dados do usuário
     userInfoDiv.innerHTML = `
       <div class="info-item"><strong>Nome:</strong> ${userData.nome || ''} ${userData.sobrenome || ''}</div>
-      <div class="info-item"><strong>Nome de usuário:</strong> ${userData.usuario || ''}</div>
       <div class="info-item"><strong>E-mail:</strong> ${userData.email || ''}</div>
       <div class="info-item"><strong>Telefone:</strong> ${userData.telefone || 'Não informado'}</div>
-      <div class="info-item"><strong>Idade:</strong> ${userData.idade || 'Não informada'}</div>
-      <div class="info-item"><strong>Gênero:</strong> ${userData.genero || 'Não informado'}</div>
       <div class="address-section">
-        <div class="info-item"><strong>Endereço:</strong></div>
-        ${userData.rua ? `<div class="address-line">${userData.rua}, ${userData.numero || 'S/N'}</div>` : ''}
-        ${userData.complemento ? `<div class="address-line">${userData.complemento}</div>` : ''}
-        ${userData.bairro ? `<div class="address-line">Bairro: ${userData.bairro}</div>` : ''}
-        ${userData.cep ? `<div class="address-line">CEP: ${userData.cep}</div>` : ''}
-        ${userData.cidade ? `<div class="address-line">${userData.cidade} - ${userData.estado || ''}</div>` : ''}
-        ${userData.pais ? `<div class="address-line">${userData.pais}</div>` : ''}
+        <div><strong>Endereço:</strong></div>
+        ${userData.rua ? `<div>${userData.rua}, ${userData.numero || 'S/N'}</div>` : ''}
+        ${userData.complemento ? `<div>${userData.complemento}</div>` : ''}
+        ${userData.bairro ? `<div>Bairro: ${userData.bairro}</div>` : ''}
+        ${userData.cidade ? `<div>${userData.cidade} - ${userData.estado || ''}</div>` : ''}
+        ${userData.cep ? `<div>CEP: ${userData.cep}</div>` : ''}
+        ${userData.pais ? `<div>${userData.pais}</div>` : ''}
       </div>
     `;
     
     // Atualiza o título de boas-vindas
-    const welcomeTitle = document.getElementById('welcome-title');
+    const welcomeTitle = document.querySelector('h3');
     if (welcomeTitle && userData.nome) {
       welcomeTitle.textContent = `Bem-vindo(a), ${userData.nome}!`;
     }
@@ -553,20 +577,21 @@
     pedidosContainer.innerHTML = '<div class="loading">Carregando...</div>';
     
     try {
+      // Busca os pedidos do usuário
       const response = await fetch(`${SCRIPT_URL}?action=get_user_orders&email=${encodeURIComponent(email)}`);
       
       if (!response.ok) {
         throw new Error(`Erro HTTP: ${response.status}`);
       }
       
-      const text = await response.text();
-      console.log("Resposta bruta:", text);
-      
+      // Tenta parsear como JSON
       let pedidos;
       try {
-        pedidos = JSON.parse(text);
+        pedidos = await response.json();
       } catch (e) {
-        throw new Error("Resposta inválida da API");
+        // Se falhar, tenta como texto
+        const text = await response.text();
+        pedidos = JSON.parse(text);
       }
       
       if (!Array.isArray(pedidos)) {
@@ -583,21 +608,20 @@
         return;
       }
 
+      // Exibe os pedidos
       pedidosContainer.innerHTML = '';
-      pedidos.sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio))
-        .forEach(pedido => {
-          const pedidoDiv = document.createElement('div');
-          pedidoDiv.className = 'pedido-item';
-          pedidoDiv.innerHTML = criarHTMLPedido(pedido);
-          pedidosContainer.appendChild(pedidoDiv);
-        });
+      pedidos.forEach(pedido => {
+        const pedidoDiv = document.createElement('div');
+        pedidoDiv.className = 'pedido-item';
+        pedidoDiv.innerHTML = criarHTMLPedido(pedido);
+        pedidosContainer.appendChild(pedidoDiv);
+      });
         
     } catch (error) {
-      console.error("Erro detalhado:", error);
+      console.error("Erro ao carregar pedidos:", error);
       pedidosContainer.innerHTML = `
         <div class="error">
           <p>Não foi possível carregar seus pedidos.</p>
-          <p><small>${error.message}</small></p>
           <button onclick="location.reload()" class="btn2">Recarregar</button>
         </div>
       `;
@@ -607,18 +631,22 @@
   function criarHTMLPedido(pedido) {
     return `
       <div class="pedido-header">
-        <h4>Pedido #${pedido.id}</h4>
-        <span class="status-badge ${pedido.status.toLowerCase()}">${pedido.status}</span>
+        <h4>Pedido #${pedido.id || 'N/A'}</h4>
+        ${pedido.status ? `<span class="status-badge ${pedido.status.toLowerCase()}">${pedido.status}</span>` : ''}
       </div>
       <div class="pedido-body">
-        <p><i class="fa fa-calendar"></i> <strong>Período:</strong> ${formatarData(pedido.dataInicio)} - ${formatarData(pedido.dataFim)}</p>
-        <p><i class="fa fa-cubes"></i> <strong>Itens:</strong> ${pedido.mesas} mesa(s), ${pedido.cadeiras} cadeira(s), ${pedido.bancos} banco(s)</p>
-        <p><i class="fa fa-money"></i> <strong>Total:</strong> R$ ${pedido.total?.toFixed(2) || '0.00'}</p>
-        <p><i class="fa fa-map-marker"></i> <strong>Endereço:</strong> ${pedido.endereco || 'Retirada na loja'}</p>
+        ${pedido.dataInicio ? `<p><i class="fa fa-calendar"></i> <strong>Período:</strong> ${formatarData(pedido.dataInicio)} - ${formatarData(pedido.dataFim)}</p>` : ''}
+        <p><i class="fa fa-cubes"></i> <strong>Itens:</strong> 
+          ${pedido.mesas || 0} mesa(s), 
+          ${pedido.cadeiras || 0} cadeira(s), 
+          ${pedido.bancos || 0} banco(s)
+        </p>
+        ${pedido.total ? `<p><i class="fa fa-money"></i> <strong>Total:</strong> R$ ${pedido.total.toFixed(2)}</p>` : ''}
+        ${pedido.endereco ? `<p><i class="fa fa-map-marker"></i> <strong>Endereço:</strong> ${pedido.endereco}</p>` : ''}
       </div>
       ${pedido.status === 'Ativo' ? `
       <div class="pedido-actions">
-        <button onclick="devolverPedido('${pedido.id}', ${pedido.mesas}, ${pedido.cadeiras}, ${pedido.bancos})" 
+        <button onclick="devolverPedido('${pedido.id}', ${pedido.mesas || 0}, ${pedido.cadeiras || 0}, ${pedido.bancos || 0})" 
                 class="btn2">
           <i class="fa fa-undo"></i> Devolver Itens
         </button>
@@ -628,8 +656,12 @@
 
   function formatarData(dataString) {
     if (!dataString) return 'Não definida';
-    const data = new Date(dataString);
-    return data.toLocaleDateString('pt-BR');
+    try {
+      const data = new Date(dataString);
+      return data.toLocaleDateString('pt-BR');
+    } catch (e) {
+      return dataString; // Retorna o valor original se não puder converter
+    }
   }
 
   async function devolverPedido(pedidoId, mesas, cadeiras, bancos) {
@@ -639,15 +671,12 @@
   
     try {
       // 1. Atualizar estoque
-      await atualizarEstoque('mesas', mesas);
-      await atualizarEstoque('cadeiras', cadeiras);
-      await atualizarEstoque('bancos', bancos);
+      await fetch(`${SCRIPT_URL}?action=update_stock&item=mesas&quantidade=${mesas}`, { method: 'POST' });
+      await fetch(`${SCRIPT_URL}?action=update_stock&item=cadeiras&quantidade=${cadeiras}`, { method: 'POST' });
+      await fetch(`${SCRIPT_URL}?action=update_stock&item=bancos&quantidade=${bancos}`, { method: 'POST' });
       
       // 2. Marcar pedido como devolvido
-      const response = await fetch(`${SCRIPT_URL}?action=return_order&pedido_id=${pedidoId}`, {
-        method: 'POST',
-        mode: 'no-cors'
-      });
+      await fetch(`${SCRIPT_URL}?action=return_order&pedido_id=${pedidoId}`, { method: 'POST' });
       
       alert('Devolução realizada com sucesso!');
       location.reload();
@@ -656,21 +685,12 @@
       alert("Erro ao processar devolução. Tente novamente.");
     }
   }
-
-  async function atualizarEstoque(item, quantidade) {
-    try {
-      await fetch(`${SCRIPT_URL}?item=${item}&quantidade=${quantidade}`, {
-        method: 'POST',
-        mode: 'no-cors'
-      });
-    } catch (error) {
-      console.error(`Erro ao atualizar estoque (${item}):`, error);
-      throw error;
-    }
-  }
    
   function showLoader(show) {
-    document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+    const loader = document.getElementById('loading-overlay');
+    if (loader) {
+      loader.style.display = show ? 'flex' : 'none';
+    }
   }
 </script>
 </body>
