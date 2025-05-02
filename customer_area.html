@@ -467,6 +467,34 @@
     });
   });
 
+  // Código de diagnóstico
+  async function testarEndpoint() {
+    const testEmail = "dvherculano@gmail.com"; // substitua por um email válido
+    const url = `${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(testEmail)}`;
+    
+    try {
+      const response = await fetch(url);
+      const text = await response.text();
+      console.log("TESTE DIRETO DO ENDPOINT:");
+      console.log("URL:", url);
+      console.log("Status:", response.status);
+      console.log("Resposta:", text);
+      
+      // Tenta parsear como JSON
+      try {
+        const json = JSON.parse(text);
+        console.log("JSON parseado:", json);
+      } catch (e) {
+        console.error("Não é JSON válido:", e);
+      }
+    } catch (error) {
+      console.error("Erro no teste:", error);
+    }
+  }
+  
+  // Execute o teste quando a página carregar
+  window.addEventListener('load', testarEndpoint);
+  
   async function carregarDadosUsuarioCompletos(email) {
     showLoader(true);
     try {
