@@ -518,32 +518,23 @@
   function exibirDadosUsuario(userData) {
     const userInfoDiv = document.getElementById('userInfo');
     
-    // Função auxiliar para exibir campos
-    const displayField = (label, value) => {
-      if (value === undefined || value === null || value === '') {
-        return '';
-      }
-      return `<div class="info-item"><strong>${label}:</strong> ${value}</div>`;
-    };
+    // Debug: verifique os dados recebidos
+    console.log("Dados para exibição:", userData);
+    
+    // Verifica se userData é válido
+    if (!userData || typeof userData !== 'object') {
+      userInfoDiv.innerHTML = '<div class="error">Erro ao carregar dados do usuário</div>';
+      return;
+    }
   
-    // Função para formatar endereço
-    const formatAddress = () => {
-      const parts = [];
-      if (userData.rua) parts.push(userData.rua + (userData.numero ? `, ${userData.numero}` : ''));
-      if (userData.complemento) parts.push(userData.complemento);
-      if (userData.bairro) parts.push(`Bairro: ${userData.bairro}`);
-      if (userData.cidade) parts.push(userData.cidade + (userData.estado ? ` - ${userData.estado}` : ''));
-      if (userData.cep) parts.push(`CEP: ${userData.cep}`);
-      if (userData.pais) parts.push(userData.pais);
-      
-      return parts.length > 0 
-        ? parts.map(part => `<div class="address-line">${part}</div>`).join('')
-        : '<div class="address-line">Endereço não informado</div>';
+    // Função para exibir campo somente se existir
+    const displayField = (label, value) => {
+      return value ? `<div class="info-item"><strong>${label}:</strong> ${value}</div>` : '';
     };
   
     // Monta o HTML
     userInfoDiv.innerHTML = `
-      ${displayField('Nome', userData.nome ? `${userData.nome} ${userData.sobrenome || ''}`.trim() : null)}
+      ${displayField('Nome', userData.nome ? `${userData.nome} ${userData.sobrenome || ''}`.trim() : '')}
       ${displayField('Usuário', userData.usuario)}
       ${displayField('E-mail', userData.email)}
       ${displayField('Telefone', userData.telefone)}
@@ -551,13 +542,21 @@
       ${displayField('Gênero', userData.genero)}
       
       <div class="address-section">
-        <div class="info-item"><strong>Endereço:</strong></div>
-        ${formatAddress()}
+        <div><strong>Endereço:</strong></div>
+        ${userData.rua ? `<div>${userData.rua}${userData.numero ? `, ${userData.numero}` : ''}</div>` : ''}
+        ${userData.complemento ? `<div>${userData.complemento}</div>` : ''}
+        ${userData.bairro ? `<div>Bairro: ${userData.bairro}</div>` : ''}
+        ${userData.cidade ? `<div>${userData.cidade}${userData.estado ? ` - ${userData.estado}` : ''}</div>` : ''}
+        ${userData.cep ? `<div>CEP: ${userData.cep}</div>` : ''}
+        ${userData.pais ? `<div>${userData.pais}</div>` : ''}
+        ${!userData.rua && !userData.cidade ? '<div>Endereço não informado</div>' : ''}
       </div>
+      
+      ${userData.error ? `<div class="error-message">${userData.error}</div>` : ''}
     `;
     
     // Atualiza o título de boas-vindas
-    const welcomeTitle = document.querySelector('h3');
+    const welcomeTitle = document.getElementById('welcome-title');
     if (welcomeTitle) {
       welcomeTitle.textContent = userData.nome 
         ? `Bem-vindo(a), ${userData.nome}!` 
