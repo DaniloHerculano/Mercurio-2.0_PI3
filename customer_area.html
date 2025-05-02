@@ -473,31 +473,20 @@
       console.log("Iniciando busca por:", email);
       
       const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
-      console.log("Resposta recebida, status:", response.status);
       
       // Verifica se a resposta é OK
       if (!response.ok) {
         throw new Error(`Erro HTTP: ${response.status}`);
       }
       
-      // Força a leitura como texto primeiro
-      const responseText = await response.text();
-      console.log("Conteúdo bruto:", responseText);
+      // Parseia a resposta como JSON
+      const userData = await response.json();
       
-      // Tenta parsear como JSON
-      let userData;
-      try {
-        userData = JSON.parse(responseText);
-      } catch (e) {
-        throw new Error("Não foi possível interpretar a resposta do servidor");
-      }
+      console.log("Dados do usuário:", userData);
       
-      // Verifica se há erro na resposta
       if (userData.error) {
         throw new Error(userData.error);
       }
-      
-      console.log("Dados do usuário:", userData);
       
       // Armazena os dados no localStorage
       localStorage.setItem('userData', JSON.stringify(userData));
