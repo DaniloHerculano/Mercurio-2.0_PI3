@@ -470,33 +470,43 @@
   async function carregarDadosUsuarioCompletos(email) {
     showLoader(true);
     try {
+      console.log("Buscando dados para:", email); // Log para debug
+      
       const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
+      
+      console.log("Status da resposta:", response.status); // Log para debug
       
       // Verifica se a resposta é OK (status 200)
       if (!response.ok) {
         throw new Error(`Erro no servidor: ${response.status}`);
       }
       
-      // Verifica o tipo de conteúdo
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error("Resposta não é JSON");
+      // Tenta parsear como JSON independente do header
+      const responseText = await response.text();
+      console.log("Resposta bruta:", responseText); // Log para debug
+      
+      let userData;
+      try {
+        userData = JSON.parse(responseText);
+      } catch (e) {
+        throw new Error("Resposta não é JSON válido");
       }
       
-      const userData = await response.json();
+      console.log("Dados parseados:", userData); // Log para debug
       
-      // Debug: mostre os dados recebidos no console
-      console.log("Dados recebidos do servidor:", userData);
+      if (userData.status === "error") {
+        throw new Error(userData.message || "Erro ao carregar dados");
+      }
       
-      if (userData.error) {
-        throw new Error(userData.error);
+      if (!userData.data) {
+        throw new Error("Dados do usuário não encontrados");
       }
       
       // Armazena os dados no localStorage
-      localStorage.setItem('userData', JSON.stringify(userData));
+      localStorage.setItem('userData', JSON.stringify(userData.data));
       
       // Exibe os dados na página
-      exibirDadosUsuario(userData);
+      exibirDadosUsuario(userData.data);
       
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
@@ -504,11 +514,22 @@
       // Tenta obter dados do localStorage como fallback
       const storedData = localStorage.getItem('userData');
       if (storedData) {
-        exibirDadosUsuario(JSON.parse(storedData));
-      } else {
-        // Exibe apenas o email se tudo mais falhar
-        exibirDadosUsuario({ email: email, error: error.message });
+        try {
+          exibirDadosUsuario(JSON.parse(storedData));
+          return;
+        } catch (e) {
+          console.error("Erro ao parsear dados do localStorage:", e);
+        }
       }
+      
+      // Exibe mensagem de erro na página
+      const userInfoDiv = document.getElementById('userInfo');
+      userInfoDiv.innerHTML = `
+        <div class="error-message">
+          <p>Erro ao carregar dados do usuário: ${error.message}</p>
+          <p>E-mail: ${email}</p>
+        </div>
+      `;
       
     } finally {
       showLoader(false);
@@ -518,47 +539,42 @@
   function exibirDadosUsuario(userData) {
     const userInfoDiv = document.getElementById('userInfo');
     
-    // Debug: verifique os dados recebidos
-    console.log("Dados para exibição:", userData);
-    
     // Verifica se userData é válido
     if (!userData || typeof userData !== 'object') {
-      userInfoDiv.innerHTML = '<div class="error">Erro ao carregar dados do usuário</div>';
+      userInfoDiv.innerHTML = '<div class="error-message">Dados do usuário inválidos</div>';
       return;
     }
   
-    // Função para exibir campo somente se existir
-    const displayField = (label, value) => {
-      return value ? `<div class="info-item"><strong>${label}:</strong> ${value}</div>` : '';
+    // Função para formatar campos
+    const formatField = (value, defaultValue = 'Não informado') => {
+      return value && value !== '' ? value : defaultValue;
     };
   
     // Monta o HTML
     userInfoDiv.innerHTML = `
-      ${displayField('Nome', userData.nome ? `${userData.nome} ${userData.sobrenome || ''}`.trim() : '')}
-      ${displayField('Usuário', userData.usuario)}
-      ${displayField('E-mail', userData.email)}
-      ${displayField('Telefone', userData.telefone)}
-      ${displayField('Idade', userData.idade)}
-      ${displayField('Gênero', userData.genero)}
+      <div class="info-item"><strong>Nome:</strong> ${formatField(userData.nome)} ${formatField(userData.sobrenome)}</div>
+      <div class="info-item"><strong>Usuário:</strong> ${formatField(userData.usuario)}</div>
+      <div class="info-item"><strong>E-mail:</strong> ${formatField(userData.email)}</div>
+      <div class="info-item"><strong>Telefone:</strong> ${formatField(userData.telefone)}</div>
+      <div class="info-item"><strong>Idade:</strong> ${formatField(userData.idade)}</div>
+      <div class="info-item"><strong>Gênero:</strong> ${formatField(userData.genero)}</div>
       
       <div class="address-section">
-        <div><strong>Endereço:</strong></div>
-        ${userData.rua ? `<div>${userData.rua}${userData.numero ? `, ${userData.numero}` : ''}</div>` : ''}
-        ${userData.complemento ? `<div>${userData.complemento}</div>` : ''}
-        ${userData.bairro ? `<div>Bairro: ${userData.bairro}</div>` : ''}
-        ${userData.cidade ? `<div>${userData.cidade}${userData.estado ? ` - ${userData.estado}` : ''}</div>` : ''}
-        ${userData.cep ? `<div>CEP: ${userData.cep}</div>` : ''}
-        ${userData.pais ? `<div>${userData.pais}</div>` : ''}
-        ${!userData.rua && !userData.cidade ? '<div>Endereço não informado</div>' : ''}
+        <div class="info-item"><strong>Endereço:</strong></div>
+        ${userData.rua ? `<div class="address-line">${userData.rua}${userData.numero ? `, ${userData.numero}` : ''}</div>` : ''}
+        ${userData.complemento ? `<div class="address-line">${userData.complemento}</div>` : ''}
+        ${userData.bairro ? `<div class="address-line">Bairro: ${userData.bairro}</div>` : ''}
+        ${userData.cidade ? `<div class="address-line">${userData.cidade}${userData.estado ? ` - ${userData.estado}` : ''}</div>` : ''}
+        ${userData.cep ? `<div class="address-line">CEP: ${userData.cep}</div>` : ''}
+        ${userData.pais ? `<div class="address-line">${userData.pais}</div>` : ''}
+        ${!userData.rua && !userData.cidade ? '<div class="address-line">Endereço não informado</div>' : ''}
       </div>
-      
-      ${userData.error ? `<div class="error-message">${userData.error}</div>` : ''}
     `;
     
     // Atualiza o título de boas-vindas
     const welcomeTitle = document.getElementById('welcome-title');
     if (welcomeTitle) {
-      welcomeTitle.textContent = userData.nome 
+      welcomeTitle.textContent = userData.nome && userData.nome !== 'Não informado' 
         ? `Bem-vindo(a), ${userData.nome}!` 
         : `Bem-vindo à Área do Cliente!`;
     }
