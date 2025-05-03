@@ -498,40 +498,46 @@
   async function carregarDadosUsuarioCompletos(email) {
     showLoader(true);
     try {
-      console.log("Buscando dados para:", email);
+      console.log("Iniciando busca por:", email);
       
-      const url = `${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}&t=${Date.now()}`;
-      console.log("URL de requisição:", url);
+      // URL com cache-buster e verificação extra
+      const url = new URL(SCRIPT_URL);
+      url.searchParams.append('action', 'get_user_data');
+      url.searchParams.append('email', email);
+      url.searchParams.append('t', Date.now());
+      url.searchParams.append('source', 'customer_area');
       
-      const response = await fetch(url);
+      console.log("URL completa:", url.toString());
       
-      // Verifica se a resposta é OK
+      const response = await fetch(url.toString());
+      
+      // Verificação rigorosa da resposta
       if (!response.ok) {
-        throw new Error(`Erro HTTP: ${response.status}`);
+        throw new Error(`Erro HTTP ${response.status}: ${response.statusText}`);
       }
       
-      // Força a leitura como texto primeiro para debug
       const responseText = await response.text();
       console.log("Resposta bruta:", responseText);
       
-      // Tenta parsear como JSON
-      let userData;
-      try {
-        userData = JSON.parse(responseText);
-      } catch (e) {
-        throw new Error(`Resposta inválida do servidor (não é JSON): ${responseText.substring(0, 100)}`);
+      // Verificação se é JSON válido
+      if (!responseText.trim().startsWith('{') && !responseText.trim().startsWith('[')) {
+        throw new Error(`Resposta não é JSON válido: ${responseText.substring(0, 100)}`);
       }
       
-      // Verifica a estrutura da resposta
-      if (userData.status === "error") {
-        throw new Error(userData.message || "Erro ao buscar dados");
+      const userData = JSON.parse(responseText);
+      
+      // Verificação da estrutura dos dados
+      if (userData.status === "error" || userData.success === false) {
+        throw new Error(userData.message || "Erro ao buscar dados do usuário");
       }
       
       if (!userData.email) {
-        throw new Error("Dados do usuário incompletos");
+        throw new Error("Dados do usuário incompletos - e-mail não encontrado");
       }
       
-      console.log("Dados parseados:", userData);
+      console.log("Dados do usuário recebidos:", userData);
+      
+      // Armazena e exibe os dados
       localStorage.setItem('userData', JSON.stringify(userData));
       exibirDadosUsuario(userData);
       
@@ -545,28 +551,42 @@
       const localData = localStorage.getItem('userData');
       if (localData) {
         try {
-          const parsed = JSON.parse(localData);
-          if (parsed.email) {
-            console.log("Usando dados do localStorage");
-            exibirDadosUsuario(parsed);
+          const parsedData = JSON.parse(localData);
+          if (parsedData.email && parsedData.email === email) {
+            console.log("Usando dados do localStorage como fallback");
+            exibirDadosUsuario(parsedData);
             return;
           }
         } catch (e) {
-          console.error("Erro ao ler localStorage:", e);
+          console.error("Erro ao processar dados locais:", e);
         }
       }
       
-      document.getElementById('userInfo').innerHTML = `
+      // Exibe mensagem de erro detalhada
+      const errorHtml = `
         <div class="error-message">
-          <p>Falha ao carregar dados: ${error.message}</p>
-          <p>E-mail: ${email}</p>
-          <button onclick="window.location.reload()" class="btn">Tentar novamente</button>
+          <h4>Erro ao carregar dados</h4>
+          <p><strong>E-mail:</strong> ${email}</p>
+          <p><strong>Erro:</strong> ${error.message}</p>
+          <div class="actions">
+            <button onclick="window.location.reload()" class="btn">Tentar novamente</button>
+            <button onclick="logout()" class="btn-exit">Sair</button>
+          </div>
         </div>
       `;
+      
+      document.getElementById('userInfo').innerHTML = errorHtml;
       
     } finally {
       showLoader(false);
     }
+  }
+  
+  // Função de logout para o botão de erro
+  function logout() {
+    localStorage.removeItem('loggedInUser');
+    localStorage.removeItem('userData');
+    window.location.href = "login.html";
   }
   
   function exibirDadosUsuario(userData) {
