@@ -504,16 +504,16 @@
       const url = `${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}&t=${Date.now()}`;
       
       const response = await fetch(url);
+      const responseText = await response.text();
       
-      // Verifica se a resposta é OK
-      if (!response.ok) {
-        throw new Error(`Erro HTTP: ${response.status}`);
+      console.log("Resposta bruta:", responseText);
+      
+      // Verifica se a resposta começa com { (JSON válido)
+      if (!responseText.trim().startsWith('{')) {
+        throw new Error(`Resposta inválida do servidor: ${responseText.substring(0, 50)}...`);
       }
       
-      // Parseia a resposta como JSON
-      const userData = await response.json();
-      
-      console.log("Dados recebidos:", userData);
+      const userData = JSON.parse(responseText);
       
       if (userData.status === "error") {
         throw new Error(userData.message || "Erro ao buscar dados");
@@ -523,7 +523,7 @@
         throw new Error("Dados do usuário incompletos");
       }
       
-      // Armazena e exibe os dados
+      console.log("Dados recebidos:", userData);
       localStorage.setItem('userData', JSON.stringify(userData));
       exibirDadosUsuario(userData);
       
