@@ -500,17 +500,16 @@
     try {
       console.log("Buscando dados para:", email);
       
-      // URL com cache-buster
       const url = `${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}&t=${Date.now()}`;
+      console.log("URL da requisição:", url);
       
       const response = await fetch(url);
       const responseText = await response.text();
-      
       console.log("Resposta bruta:", responseText);
       
-      // Verifica se a resposta começa com { (JSON válido)
-      if (!responseText.trim().startsWith('{')) {
-        throw new Error(`Resposta inválida do servidor: ${responseText.substring(0, 50)}...`);
+      // Verifica se é um JSON válido
+      if (!responseText.trim().startsWith('{') && !responseText.trim().startsWith('[')) {
+        throw new Error(`Resposta inválida do servidor: ${responseText.substring(0, 100)}`);
       }
       
       const userData = JSON.parse(responseText);
@@ -530,7 +529,7 @@
     } catch (error) {
       console.error("Erro:", error);
       
-      // Fallback para dados locais
+      // Tenta usar dados do localStorage
       const localData = localStorage.getItem('userData');
       if (localData) {
         try {
