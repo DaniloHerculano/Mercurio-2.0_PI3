@@ -501,21 +501,29 @@
       console.log("Buscando dados para:", email);
       
       const url = `${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}&t=${Date.now()}`;
-      console.log("URL:", url);
+      console.log("URL de requisição:", url);
       
       const response = await fetch(url);
+      
+      // Verifica se a resposta é OK
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
+      }
+      
+      // Força a leitura como texto primeiro para debug
       const responseText = await response.text();
       console.log("Resposta bruta:", responseText);
       
-      // Verifica se é JSON válido
+      // Tenta parsear como JSON
       let userData;
       try {
         userData = JSON.parse(responseText);
       } catch (e) {
-        throw new Error(`Resposta inválida do servidor: ${responseText.substring(0, 100)}`);
+        throw new Error(`Resposta inválida do servidor (não é JSON): ${responseText.substring(0, 100)}`);
       }
       
-      if (userData.status === "error" || userData.success === false) {
+      // Verifica a estrutura da resposta
+      if (userData.status === "error") {
         throw new Error(userData.message || "Erro ao buscar dados");
       }
       
@@ -523,12 +531,15 @@
         throw new Error("Dados do usuário incompletos");
       }
       
-      console.log("Dados recebidos:", userData);
+      console.log("Dados parseados:", userData);
       localStorage.setItem('userData', JSON.stringify(userData));
       exibirDadosUsuario(userData);
       
     } catch (error) {
-      console.error("Erro:", error);
+      console.error("Erro detalhado:", {
+        message: error.message,
+        stack: error.stack
+      });
       
       // Fallback para dados locais
       const localData = localStorage.getItem('userData');
@@ -536,6 +547,7 @@
         try {
           const parsed = JSON.parse(localData);
           if (parsed.email) {
+            console.log("Usando dados do localStorage");
             exibirDadosUsuario(parsed);
             return;
           }
