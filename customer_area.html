@@ -465,44 +465,55 @@ async function carregarDadosUsuario(email) {
   showLoader(true);
   
   try {
-    // 1. Busca dados completos
+    console.log("Iniciando busca por dados completos para:", email);
     const response = await fetch(`${SCRIPT_URL}?action=get_full_data&email=${encodeURIComponent(email)}`);
     
-    // Verifica se a resposta é válida
+    // Verificação adicional da resposta
     if (!response.ok) {
       throw new Error(`Erro HTTP ${response.status}`);
     }
     
-    const result = await response.json();
+    const responseText = await response.text();
+    console.log("Resposta recebida:", responseText);
     
-    // 2. Verifica a estrutura da resposta
-    if (result.status !== "success") {
-      throw new Error(result.message || "Dados não encontrados");
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (e) {
+      throw new Error("Resposta inválida do servidor: " + responseText);
     }
     
-    // 3. Combina com dados básicos do login
-    const userData = {
-      email: email,
-      ...result // Spread operator para incluir todos os dados
-    };
+    if (result.status !== "success") {
+      throw new Error(result.message || "Erro ao buscar dados");
+    }
     
-    // 4. Exibe os dados
-    exibirDadosUsuario(userData);
+    // Exibe todos os dados
+    exibirDadosUsuario({
+      email: email,
+      ...result.data // Combina com todos os dados adicionais
+    });
     
   } catch (error) {
-    console.error("Erro ao carregar dados:", error);
+    console.error("Erro detalhado:", error);
+    
     // Fallback: mostra pelo menos o e-mail
     exibirDadosUsuario({ email: email });
     
-    // Adiciona mensagem de erro visível ao usuário
-    document.getElementById('userInfo').innerHTML += `
-      <div class="error-message" style="color:red;margin-top:20px;">
-        <p>Alguns dados não puderam ser carregados.</p>
+    // Adiciona mensagem de erro detalhada
+    const errorHtml = `
+      <div class="error-message" style="color:red; margin-top:20px; padding:10px; background:#ffeeee;">
+        <p>Erro ao carregar dados completos:</p>
+        <p><strong>${error.message}</strong></p>
+        <button onclick="location.reload()" class="btn2">
+          Recarregar página
+        </button>
         <button onclick="carregarDadosUsuario('${email}')" class="btn2">
           Tentar novamente
         </button>
       </div>
     `;
+    document.getElementById('userInfo').insertAdjacentHTML('beforeend', errorHtml);
+    
   } finally {
     showLoader(false);
   }
@@ -520,33 +531,42 @@ function exibirDadosUsuario(data) {
     document.getElementById('welcome-title').textContent = `Bem-vindo(a), ${data.nome}!`;
     html = `
       <div class="info-item"><strong>Nome:</strong> ${format(data.nome)} ${format(data.sobrenome)}</div>
-      ${html}
       <div class="info-item"><strong>Usuário:</strong> ${format(data.usuario)}</div>
+      ${html}
     `;
   }
   
-  if (data.telefone) html += `<div class="info-item"><strong>Telefone:</strong> ${format(data.telefone)}</div>`;
-  if (data.idade) html += `<div class="info-item"><strong>Idade:</strong> ${format(data.idade)}</div>`;
-  if (data.genero) html += `<div class="info-item"><strong>Gênero:</strong> ${format(data.genero)}</div>`;
+  // Demais campos
+  const campos = [
+    { key: 'telefone', label: 'Telefone' },
+    { key: 'idade', label: 'Idade' },
+    { key: 'genero', label: 'Gênero' }
+  ];
   
-  // Adiciona endereço se existir
+  campos.forEach(campo => {
+    if (data[campo.key]) {
+      html += `<div class="info-item"><strong>${campo.label}:</strong> ${format(data[campo.key])}</div>`;
+    }
+  });
+  
+  // Endereço completo
   if (data.rua || data.cidade) {
     html += `
       <div class="address-section">
         <strong>Endereço:</strong>
-        <p>${format(data.rua)} ${format(data.numero)}</p>
+        ${data.rua ? `<p>${format(data.rua)} ${format(data.numero)}</p>` : ''}
         ${data.complemento ? `<p>Complemento: ${format(data.complemento)}</p>` : ''}
-        <p>Bairro: ${format(data.bairro)}</p>
-        <p>${format(data.cidade)}/${format(data.estado)}</p>
-        <p>CEP: ${format(data.cep)}</p>
-        <p>País: ${format(data.pais)}</p>
+        ${data.bairro ? `<p>Bairro: ${format(data.bairro)}</p>` : ''}
+        ${data.cidade ? `<p>${format(data.cidade)}/${format(data.estado)}</p>` : ''}
+        ${data.cep ? `<p>CEP: ${format(data.cep)}</p>` : ''}
+        ${data.pais ? `<p>País: ${format(data.pais)}</p>` : ''}
       </div>
     `;
   }
   
   document.getElementById('userInfo').innerHTML = html;
 }
-
+  
 // Restante das funções (carregarEstoque, carregarPedidosUsuario, etc.)
 async function carregarEstoque() {
     try {
