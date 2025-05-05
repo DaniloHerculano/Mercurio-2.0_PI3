@@ -465,63 +465,60 @@ async function carregarDadosUsuario(email) {
   showLoader(true);
   
   try {
-    // 1. Configura a requisição de forma explícita
+    // 1. Configuração robusta da requisição
     const url = new URL(SCRIPT_URL);
     url.searchParams.append('action', 'get_full_data');
-    url.searchParams.append('email', email);
+    url.searchParams.append('email', encodeURIComponent(email));
     
-    console.log("URL da requisição:", url.toString());
-    
-    // 2. Faz a requisição com cabeçalhos explícitos
-    const response = await fetch(url, {
+    const response = await fetch(url.toString(), {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json'
-      },
+      headers: { 'Accept': 'application/json' },
       redirect: 'follow'
     });
-    
-    // 3. Verificação rigorosa da resposta
-    if (!response.ok) {
-      throw new Error(`Erro HTTP: ${response.status}`);
+
+    // 2. Verificação estrita do tipo de conteúdo
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      const textData = await response.text();
+      throw new Error(`Resposta não é JSON. Servidor disse: "${textData}"`);
     }
-    
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      const textResponse = await response.text();
-      throw new Error(`Resposta não é JSON: ${textResponse.substring(0, 100)}`);
-    }
-    
+
     const result = await response.json();
     
-    // 4. Validação da estrutura da resposta
-    if (result.status !== "success") {
-      throw new Error(result.message || "Estrutura de resposta inválida");
+    // 3. Validação da estrutura da resposta
+    if (!result || result.status !== "success") {
+      throw new Error(result?.message || "Estrutura de resposta inválida");
     }
-    
-    // 5. Exibe os dados combinados
+
+    // 4. Exibição dos dados
     exibirDadosUsuario({
       email: email,
-      ...result
+      ...result.data
     });
-    
+
   } catch (error) {
     console.error("Erro detalhado:", error);
     
-    // Fallback seguro
-    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    // Fallback: exibe dados básicos do localStorage
+    const localData = JSON.parse(localStorage.getItem('userData') || {};
     exibirDadosUsuario({
       email: email,
-      nome: userData.nome || "",
-      sobrenome: userData.sobrenome || ""
+      nome: localData.nome || "",
+      sobrenome: localData.sobrenome || ""
     });
+
+    // Mensagem de erro detalhada
+    const errorMessage = error.message.includes("Servidor disse") 
+      ? error.message 
+      : `Erro: ${error.message}`;
     
-    // Mensagem de erro amigável
     document.getElementById('userInfo').insertAdjacentHTML('beforeend', `
-      <div class="error-message" style="margin-top:20px;padding:15px;background:#fff3f3;border-left:4px solid #ff6b6b;">
-        <p style="color:#d32f2f;font-weight:bold;">⚠️ Atenção: Dados incompletos</p>
-        <p>Algumas informações não puderam ser carregadas. Por favor, tente mais tarde.</p>
-        <p style="font-size:0.9em;color:#666;">Detalhes técnicos: ${error.message}</p>
+      <div class="error-message" style="margin-top:20px;padding:15px;background:#fff3f3;border-radius:5px;">
+        <p style="color:#d32f2f;font-weight:bold;">⚠️ Problema ao carregar dados</p>
+        <p>${errorMessage}</p>
+        <button onclick="window.location.reload()" class="btn2" style="margin-top:10px;">
+          Recarregar Página
+        </button>
       </div>
     `);
     
@@ -531,7 +528,7 @@ async function carregarDadosUsuario(email) {
 }
 
 function exibirDadosUsuario(data) {
-  const format = (value) => value ? value : "Não informado";
+  const format = (value) => value || "Não informado";
   
   let html = `
     <div class="info-item"><strong>E-mail:</strong> ${format(data.email)}</div>
@@ -545,21 +542,16 @@ function exibirDadosUsuario(data) {
     `;
   }
   
-  // Adiciona campos extras
-  const camposExtras = [
-    { key: 'telefone', label: 'Telefone' },
-    { key: 'idade', label: 'Idade' },
-    { key: 'genero', label: 'Gênero' }
-  ];
-  
-  camposExtras.forEach(campo => {
-    if (data[campo.key]) {
-      html += `<div class="info-item"><strong>${campo.label}:</strong> ${format(data[campo.key])}</div>`;
+  // Campos adicionais
+  const campos = ['telefone', 'idade', 'genero'];
+  campos.forEach(campo => {
+    if (data[campo]) {
+      html += `<div class="info-item"><strong>${campo.charAt(0).toUpperCase() + campo.slice(1)}:</strong> ${format(data[campo])}</div>`;
     }
   });
   
-  // Adiciona endereço se existir
-  if (data.endereco && (data.endereco.rua || data.endereco.cidade)) {
+  // Endereço
+  if (data.endereco) {
     html += `
       <div class="address-section">
         <strong>Endereço:</strong>
