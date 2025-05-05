@@ -427,115 +427,84 @@
 // Configurações
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1SzcHJK5cAaGebZxPyYBy6W5xgENQlqsITzhwTvIspr1cqlTeCDBadQcAm6miiiSF/exec";
 
-document.addEventListener('DOMContentLoaded', function() {
-  // Controle do menu mobile (mantido igual)
-  const menuToggle = document.getElementById('menuToggle');
-  const mainNav = document.querySelector('.sf-menu');
-  
-  if (window.innerWidth <= 768) mainNav.style.display = 'none';
-  
-  menuToggle.addEventListener('click', function() {
-    mainNav.style.display = (mainNav.style.display === 'none' || mainNav.style.display === '') ? 'flex' : 'none';
-  });
-  
-  window.addEventListener('resize', function() {
-    mainNav.style.display = window.innerWidth > 768 ? 'flex' : 'none';
-  });
-
-  // Verificação de login (compatível com seu login.html atual)
-  const userEmail = localStorage.getItem('loggedInUser');
-  if (!userEmail) {
-    window.location.href = "login.html";
-    return;
-  }
-
-  // Carrega dados do usuário (adaptado ao seu fluxo atual)
-  carregarDadosUsuario(userEmail);
-
-  // Logout
-  document.getElementById('logout').addEventListener('click', function(e) {
-    e.preventDefault();
-    localStorage.removeItem('loggedInUser');
-    window.location.href = "login.html";
-  });
-});
-
-// Função para carregar dados com tratamento
+// Função para carregar dados do usuário
 async function carregarDadosUsuario(email) {
   showLoader(true);
   
   try {
-    // 1. Configuração robusta da requisição
-    const url = new URL(SCRIPT_URL);
-    url.searchParams.append('action', 'get_full_data');
-    url.searchParams.append('email', encodeURIComponent(email));
+    // 1. Busca dados completos
+    const response = await fetch(`${SCRIPT_URL}?action=get_full_data&email=${encodeURIComponent(email)}`);
     
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' },
-      redirect: 'follow'
-    });
-
-    // 2. Verificação estrita do tipo de conteúdo
+    // Verifica se a resposta é JSON
     const contentType = response.headers.get('content-type') || '';
     if (!contentType.includes('application/json')) {
-      const textData = await response.text();
-      throw new Error(`Resposta não é JSON. Servidor disse: "${textData}"`);
+      throw new Error(await response.text());
     }
-
+    
     const result = await response.json();
     
-    // 3. Validação da estrutura da resposta
-    if (!result || result.status !== "success") {
-      throw new Error(result?.message || "Estrutura de resposta inválida");
+    // 2. Valida a resposta
+    if (result.status !== "success") {
+      throw new Error(result.message || "Erro ao buscar dados");
     }
-
-    // 4. Exibição dos dados
-    exibirDadosUsuario({
+    
+    // 3. Combina com dados básicos
+    const userData = {
       email: email,
       ...result.data
-    });
-
+    };
+    
+    // 4. Armazena e exibe
+    localStorage.setItem('userData', JSON.stringify(userData));
+    exibirDadosUsuario(userData);
+    
   } catch (error) {
-    console.error("Erro detalhado:", error);
+    console.error("Erro ao carregar dados:", error);
     
-    // Fallback: exibe dados básicos do localStorage
-    const localData = JSON.parse(localStorage.getItem('userData') || {};
-    exibirDadosUsuario({
-      email: email,
-      nome: localData.nome || "",
-      sobrenome: localData.sobrenome || ""
-    });
-
-    // Mensagem de erro detalhada
-    const errorMessage = error.message.includes("Servidor disse") 
-      ? error.message 
-      : `Erro: ${error.message}`;
+    // Fallback: tenta usar dados locais
+    try {
+      const localData = JSON.parse(localStorage.getItem('userData') || '{}');
+      exibirDadosUsuario({
+        email: email,
+        nome: localData.nome || "",
+        sobrenome: localData.sobrenome || ""
+      });
+    } catch (e) {
+      exibirDadosUsuario({ email: email });
+    }
     
-    document.getElementById('userInfo').insertAdjacentHTML('beforeend', `
-      <div class="error-message" style="margin-top:20px;padding:15px;background:#fff3f3;border-radius:5px;">
-        <p style="color:#d32f2f;font-weight:bold;">⚠️ Problema ao carregar dados</p>
-        <p>${errorMessage}</p>
-        <button onclick="window.location.reload()" class="btn2" style="margin-top:10px;">
-          Recarregar Página
+    // Mostra mensagem de erro
+    document.getElementById('userInfo').innerHTML += `
+      <div class="error-message" style="margin-top:20px;padding:15px;background:#ffeeee;border-radius:5px;">
+        <p style="color:#d32f2f;">⚠️ Não foi possível carregar todos os dados</p>
+        <p style="font-size:0.9em;">${error.message || "Erro desconhecido"}</p>
+        <button onclick="carregarDadosUsuario('${email}')" class="btn2" style="margin-top:10px;">
+          Tentar novamente
         </button>
       </div>
-    `);
-    
+    `;
   } finally {
     showLoader(false);
   }
 }
 
+// Função para exibir dados (CORRIGIDA)
 function exibirDadosUsuario(data) {
-  const format = (value) => value || "Não informado";
+  const format = (value) => value ? value : "Não informado";
+  
+  // Garante que o elemento existe
+  const userInfoDiv = document.getElementById('userInfo');
+  if (!userInfoDiv) return;
   
   let html = `
     <div class="info-item"><strong>E-mail:</strong> ${format(data.email)}</div>
   `;
   
+  // Adiciona campos se existirem
   if (data.nome) {
-    document.getElementById('welcome-title').textContent = `Bem-vindo(a), ${data.nome}!`;
+    const welcomeTitle = document.getElementById('welcome-title');
+    if (welcomeTitle) welcomeTitle.textContent = `Bem-vindo(a), ${data.nome}!`;
+    
     html = `
       <div class="info-item"><strong>Nome:</strong> ${format(data.nome)} ${format(data.sobrenome)}</div>
       ${html}
@@ -543,8 +512,7 @@ function exibirDadosUsuario(data) {
   }
   
   // Campos adicionais
-  const campos = ['telefone', 'idade', 'genero'];
-  campos.forEach(campo => {
+  ['telefone', 'idade', 'genero'].forEach(campo => {
     if (data[campo]) {
       html += `<div class="info-item"><strong>${campo.charAt(0).toUpperCase() + campo.slice(1)}:</strong> ${format(data[campo])}</div>`;
     }
@@ -565,8 +533,39 @@ function exibirDadosUsuario(data) {
     `;
   }
   
-  document.getElementById('userInfo').innerHTML = html;
+  userInfoDiv.innerHTML = html;
 }
+
+// Inicialização CORRIGIDA
+document.addEventListener('DOMContentLoaded', function() {
+  // Verifica login
+  try {
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    const email = userData.email || localStorage.getItem('loggedInUser');
+    
+    if (!email) {
+      window.location.href = "login.html";
+      return;
+    }
+    
+    // Carrega dados
+    carregarDadosUsuario(email);
+    
+    // Configura logout
+    const logoutBtn = document.getElementById('logout');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        localStorage.removeItem('userData');
+        localStorage.removeItem('loggedInUser');
+        window.location.href = "login.html";
+      });
+    }
+  } catch (error) {
+    console.error("Erro ao verificar login:", error);
+    window.location.href = "login.html";
+  }
+});
   
 // Restante das funções (carregarEstoque, carregarPedidosUsuario, etc.)
 async function carregarEstoque() {
