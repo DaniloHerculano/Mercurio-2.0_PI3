@@ -427,15 +427,12 @@
 // Configurações
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1SzcHJK5cAaGebZxPyYBy6W5xgENQlqsITzhwTvIspr1cqlTeCDBadQcAm6miiiSF/exec";
 
-// Função principal quando o DOM carrega
 document.addEventListener('DOMContentLoaded', function() {
-  // Menu mobile
+  // Controle do menu mobile (mantido igual)
   const menuToggle = document.getElementById('menuToggle');
   const mainNav = document.querySelector('.sf-menu');
   
-  if (window.innerWidth <= 768) {
-    mainNav.style.display = 'none';
-  }
+  if (window.innerWidth <= 768) mainNav.style.display = 'none';
   
   menuToggle.addEventListener('click', function() {
     mainNav.style.display = (mainNav.style.display === 'none' || mainNav.style.display === '') ? 'flex' : 'none';
@@ -445,57 +442,43 @@ document.addEventListener('DOMContentLoaded', function() {
     mainNav.style.display = window.innerWidth > 768 ? 'flex' : 'none';
   });
 
-  // Verifica login
-  try {
-    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-    if (!userData || !userData.email) {
-      window.location.href = "login.html";
-      return;
-    }
-
-    // Carrega dados
-    carregarDadosUsuario(userData.email);
-    
-    // Logout
-    document.getElementById('logout').addEventListener('click', function(e) {
-      e.preventDefault();
-      localStorage.removeItem('userData');
-      window.location.href = "login.html";
-    });
-
-  } catch (e) {
-    console.error("Erro ao verificar login:", e);
+  // Verificação de login (compatível com seu login.html atual)
+  const userEmail = localStorage.getItem('loggedInUser');
+  if (!userEmail) {
     window.location.href = "login.html";
+    return;
   }
+
+  // Carrega dados do usuário (adaptado ao seu fluxo atual)
+  carregarDadosUsuario(userEmail);
+
+  // Logout
+  document.getElementById('logout').addEventListener('click', function(e) {
+    e.preventDefault();
+    localStorage.removeItem('loggedInUser');
+    window.location.href = "login.html";
+  });
 });
 
-// Função para carregar dados do usuário
+// Função para carregar dados (compatível com seu login existente)
 async function carregarDadosUsuario(email) {
   showLoader(true);
   
   try {
-    // 1. Pega dados básicos do localStorage
-    let userData = JSON.parse(localStorage.getItem('userData') || '{}');
-    
-    // 2. Busca dados complementares
+    // 1. Busca dados completos
     const response = await fetch(`${SCRIPT_URL}?action=get_full_data&email=${encodeURIComponent(email)}`);
-    const extraData = await response.json();
+    const userData = await response.json();
     
-    // 3. Combina dados
-    userData = {...userData, ...extraData};
-    localStorage.setItem('userData', JSON.stringify(userData));
-    
-    // 4. Exibe os dados
-    exibirDadosUsuario(userData);
-    
-    // 5. Carrega estoque e pedidos
-    await carregarEstoque();
-    await carregarPedidosUsuario(email);
+    // 2. Exibe os dados
+    exibirDadosUsuario({
+      email: email,
+      ...userData // Combina com dados adicionais
+    });
     
   } catch (error) {
-    console.error("Erro ao carregar dados:", error);
-    const localData = JSON.parse(localStorage.getItem('userData') || '{}');
-    exibirDadosUsuario(localData);
+    console.error("Erro:", error);
+    // Fallback: mostra pelo menos o e-mail
+    exibirDadosUsuario({ email: email });
   } finally {
     showLoader(false);
   }
@@ -504,34 +487,37 @@ async function carregarDadosUsuario(email) {
 function exibirDadosUsuario(data) {
   const format = (value) => value ? value : "Não informado";
   
+  // Monta HTML com os dados disponíveis
   let html = `
-    <div class="info-item"><strong>Nome:</strong> ${format(data.nome)} ${format(data.sobrenome)}</div>
-    <div class="info-item"><strong>Usuário:</strong> ${format(data.usuario)}</div>
     <div class="info-item"><strong>E-mail:</strong> ${format(data.email)}</div>
-    <div class="info-item"><strong>Telefone:</strong> ${format(data.telefone)}</div>
-    <div class="info-item"><strong>Idade:</strong> ${format(data.idade)}</div>
-    <div class="info-item"><strong>Gênero:</strong> ${format(data.genero)}</div>
   `;
   
+  // Adiciona campos extras se existirem
+  if (data.nome) {
+    document.getElementById('welcome-title').textContent = `Bem-vindo(a), ${data.nome}!`;
+    html = `
+      <div class="info-item"><strong>Nome:</strong> ${format(data.nome)} ${format(data.sobrenome)}</div>
+      ${html}
+    `;
+  }
+  
+  if (data.telefone) html += `<div class="info-item"><strong>Telefone:</strong> ${format(data.telefone)}</div>`;
+  
+  // Adiciona endereço se existir
   if (data.rua || data.cidade) {
     html += `
       <div class="address-section">
         <strong>Endereço:</strong>
         <p>${format(data.rua)} ${format(data.numero)}</p>
-        ${data.complemento ? `<p>Complemento: ${format(data.complemento)}</p>` : ''}
-        <p>Bairro: ${format(data.bairro)}</p>
+        ${data.complemento ? `<p>${format(data.complemento)}</p>` : ''}
+        <p>${format(data.bairro)}</p>
         <p>${format(data.cidade)}/${format(data.estado)}</p>
         <p>CEP: ${format(data.cep)}</p>
-        <p>País: ${format(data.pais)}</p>
       </div>
     `;
   }
   
   document.getElementById('userInfo').innerHTML = html;
-  
-  if (data.nome) {
-    document.getElementById('welcome-title').textContent = `Bem-vindo(a), ${data.nome}!`;
-  }
 }
 
 // Restante das funções (carregarEstoque, carregarPedidosUsuario, etc.) mantidas iguais
@@ -659,12 +645,10 @@ async function devolverPedido(pedidoId, mesas, cadeiras, bancos) {
     }
 }
    
-function showLoader(show) {
+  function showLoader(show) {
     const loader = document.getElementById('loading-overlay');
-    if (loader) {
-      loader.style.display = show ? 'flex' : 'none';
-    }
-}
+    if (loader) loader.style.display = show ? 'flex' : 'none';
+  }
 </script>
 </body>
 </html>
