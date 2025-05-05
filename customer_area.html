@@ -467,26 +467,42 @@ async function carregarDadosUsuario(email) {
   try {
     // 1. Busca dados completos
     const response = await fetch(`${SCRIPT_URL}?action=get_full_data&email=${encodeURIComponent(email)}`);
-    const result = await response.text();
     
-    let fullData = { email: email }; // Dados básicos
-    
-    try {
-      const parsedData = JSON.parse(result);
-      if (parsedData.status === "success") {
-        fullData = { ...fullData, ...parsedData.data };
-      }
-    } catch (e) {
-      console.log("Usando apenas dados básicos");
+    // Verifica se a resposta é válida
+    if (!response.ok) {
+      throw new Error(`Erro HTTP ${response.status}`);
     }
     
-    // 2. Exibe os dados
-    exibirDadosUsuario(fullData);
+    const result = await response.json();
+    
+    // 2. Verifica a estrutura da resposta
+    if (result.status !== "success") {
+      throw new Error(result.message || "Dados não encontrados");
+    }
+    
+    // 3. Combina com dados básicos do login
+    const userData = {
+      email: email,
+      ...result // Spread operator para incluir todos os dados
+    };
+    
+    // 4. Exibe os dados
+    exibirDadosUsuario(userData);
     
   } catch (error) {
     console.error("Erro ao carregar dados:", error);
     // Fallback: mostra pelo menos o e-mail
     exibirDadosUsuario({ email: email });
+    
+    // Adiciona mensagem de erro visível ao usuário
+    document.getElementById('userInfo').innerHTML += `
+      <div class="error-message" style="color:red;margin-top:20px;">
+        <p>Alguns dados não puderam ser carregados.</p>
+        <button onclick="carregarDadosUsuario('${email}')" class="btn2">
+          Tentar novamente
+        </button>
+      </div>
+    `;
   } finally {
     showLoader(false);
   }
@@ -505,6 +521,7 @@ function exibirDadosUsuario(data) {
     html = `
       <div class="info-item"><strong>Nome:</strong> ${format(data.nome)} ${format(data.sobrenome)}</div>
       ${html}
+      <div class="info-item"><strong>Usuário:</strong> ${format(data.usuario)}</div>
     `;
   }
   
@@ -522,6 +539,7 @@ function exibirDadosUsuario(data) {
         <p>Bairro: ${format(data.bairro)}</p>
         <p>${format(data.cidade)}/${format(data.estado)}</p>
         <p>CEP: ${format(data.cep)}</p>
+        <p>País: ${format(data.pais)}</p>
       </div>
     `;
   }
