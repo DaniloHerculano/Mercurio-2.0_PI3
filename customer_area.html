@@ -470,49 +470,42 @@
 async function carregarDadosUsuarioCompletos(email) {
   showLoader(true);
   try {
-    if (!email) {
-      throw new Error("E-mail do usuário não disponível");
-    }
-
+    // 1. Busca dados COMPLETOS do usuário via API
     const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
     
-    if (!response.ok) {
-      throw new Error(`Erro HTTP ${response.status}`);
+    // 2. Verifica se a resposta é JSON (sucesso) ou texto (erro)
+    let userData;
+    try {
+      userData = await response.json(); // Tenta parsear como JSON
+    } catch {
+      const textResponse = await response.text(); // Fallback para texto
+      throw new Error(textResponse || "Erro desconhecido");
     }
-    
-    const userData = await response.json();
-    
+
+    // 3. Se chegou aqui, é JSON válido
     if (userData.status !== "sucesso") {
-      throw new Error(userData.message || "Erro ao buscar dados do usuário");
+      throw new Error(userData.message || "Dados não encontrados");
     }
-    
-    // Armazena e exibe os dados
+
+    // 4. Atualiza localStorage e exibe os dados
     localStorage.setItem('userData', JSON.stringify(userData));
     exibirDadosUsuario(userData);
-    
+
   } catch (error) {
-    console.error("Erro ao carregar dados do usuário:", error);
+    console.error("Erro ao carregar dados:", error);
     
-    // Fallback para dados locais
-    const localData = localStorage.getItem('userData');
-    if (localData) {
-      try {
-        const parsedData = JSON.parse(localData);
-        if (parsedData.email && parsedData.email === email) {
-          exibirDadosUsuario(parsedData);
-          return;
-        }
-      } catch (e) {
-        console.error("Erro ao processar dados locais:", e);
-      }
+    // Fallback: Tenta usar dados locais se disponíveis
+    const localData = JSON.parse(localStorage.getItem('userData') || '{}');
+    if (localData.email === email) {
+      exibirDadosUsuario(localData);
+      return;
     }
     
     // Exibe mensagem de erro
     document.getElementById('userInfo').innerHTML = `
       <div class="error-message">
-        <h4>Erro ao carregar dados</h4>
-        <p>${error.message}</p>
-        <button onclick="location.reload()" class="btn">Tentar novamente</button>
+        <p>Erro: ${error.message}</p>
+        <button onclick="location.reload()" class="btn2">Tentar novamente</button>
       </div>
     `;
   } finally {
