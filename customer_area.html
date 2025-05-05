@@ -467,54 +467,57 @@
     });
   });
 
-  async function carregarDadosUsuarioCompletos(email) {
-    showLoader(true);
+async function carregarDadosUsuarioCompletos(email) {
+  showLoader(true);
+  try {
+    const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
+    
+    const responseData = await response.text(); // Primeiro obtém como texto
+    let userData;
+    
     try {
-      const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
-      
-      if (!response.ok) {
-        throw new Error(`Erro HTTP ${response.status}`);
-      }
-      
-      const userData = await response.json();
-      
-      if (userData.status !== "sucesso") {
-        throw new Error(userData.message || "Erro ao buscar dados do usuário");
-      }
-      
-      // Armazena e exibe os dados
-      localStorage.setItem('userData', JSON.stringify(userData));
-      exibirDadosUsuario(userData);
-      
-    } catch (error) {
-      console.error("Erro ao carregar dados do usuário:", error);
-      
-      // Fallback para dados locais
-      const localData = localStorage.getItem('userData');
-      if (localData) {
-        try {
-          const parsedData = JSON.parse(localData);
-          if (parsedData.email && parsedData.email === email) {
-            exibirDadosUsuario(parsedData);
-            return;
-          }
-        } catch (e) {
-          console.error("Erro ao processar dados locais:", e);
-        }
-      }
-      
-      // Exibe mensagem de erro
-      document.getElementById('userInfo').innerHTML = `
-        <div class="error-message">
-          <h4>Erro ao carregar dados</h4>
-          <p>${error.message}</p>
-          <button onclick="location.reload()" class="btn">Tentar novamente</button>
-        </div>
-      `;
-    } finally {
-      showLoader(false);
+      userData = JSON.parse(responseData); // Tenta parsear como JSON
+    } catch (e) {
+      throw new Error(responseData || "Resposta inválida do servidor");
     }
+    
+    if (!response.ok || userData.status !== "sucesso") {
+      throw new Error(userData.message || "Erro ao buscar dados do usuário");
+    }
+    
+    // Armazena e exibe os dados
+    localStorage.setItem('userData', JSON.stringify(userData));
+    exibirDadosUsuario(userData);
+    
+  } catch (error) {
+    console.error("Erro ao carregar dados do usuário:", error);
+    
+    // Fallback para dados locais
+    const localData = localStorage.getItem('userData');
+    if (localData) {
+      try {
+        const parsedData = JSON.parse(localData);
+        if (parsedData.email && parsedData.email === email) {
+          exibirDadosUsuario(parsedData);
+          return;
+        }
+      } catch (e) {
+        console.error("Erro ao processar dados locais:", e);
+      }
+    }
+    
+    // Exibe mensagem de erro
+    document.getElementById('userInfo').innerHTML = `
+      <div class="error-message">
+        <h4>Erro ao carregar dados</h4>
+        <p>${error.message}</p>
+        <button onclick="location.reload()" class="btn">Tentar novamente</button>
+      </div>
+    `;
+  } finally {
+    showLoader(false);
   }
+}
   
   function exibirDadosUsuario(userData) {
     const userInfoDiv = document.getElementById('userInfo');
