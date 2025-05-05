@@ -468,48 +468,47 @@
   });
 
 async function carregarDadosUsuarioCompletos(email) {
-  showLoader(true);
   try {
-    // 1. Busca dados COMPLETOS do usuário via API
     const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
+    const result = await response.json();
     
-    // 2. Verifica se a resposta é JSON (sucesso) ou texto (erro)
-    let userData;
-    try {
-      userData = await response.json(); // Tenta parsear como JSON
-    } catch {
-      const textResponse = await response.text(); // Fallback para texto
-      throw new Error(textResponse || "Erro desconhecido");
+    if (result.status === "success") {
+      // Exibe os dados formatados
+      exibirDadosUsuario(result.data);
+    } else {
+      // Fallback para dados básicos do login
+      const localData = JSON.parse(localStorage.getItem('userData') || '{}');
+      exibirDadosUsuario(localData);
     }
-
-    // 3. Se chegou aqui, é JSON válido
-    if (userData.status !== "sucesso") {
-      throw new Error(userData.message || "Dados não encontrados");
-    }
-
-    // 4. Atualiza localStorage e exibe os dados
-    localStorage.setItem('userData', JSON.stringify(userData));
-    exibirDadosUsuario(userData);
-
   } catch (error) {
     console.error("Erro ao carregar dados:", error);
-    
-    // Fallback: Tenta usar dados locais se disponíveis
+    // Fallback seguro
     const localData = JSON.parse(localStorage.getItem('userData') || '{}');
-    if (localData.email === email) {
-      exibirDadosUsuario(localData);
-      return;
-    }
+    exibirDadosUsuario(localData);
+  }
+}
+
+function exibirDadosUsuario(userData) {
+  const format = (value) => value || "Não informado";
+  
+  document.getElementById('userInfo').innerHTML = `
+    <div class="info-item"><strong>Nome:</strong> ${format(userData.nome)} ${format(userData.sobrenome)}</div>
+    <div class="info-item"><strong>Usuário:</strong> ${format(userData.usuario)}</div>
+    <div class="info-item"><strong>E-mail:</strong> ${format(userData.email)}</div>
+    ${userData.telefone ? `<div class="info-item"><strong>Telefone:</strong> ${format(userData.telefone)}</div>` : ''}
     
-    // Exibe mensagem de erro
-    document.getElementById('userInfo').innerHTML = `
-      <div class="error-message">
-        <p>Erro: ${error.message}</p>
-        <button onclick="location.reload()" class="btn2">Tentar novamente</button>
-      </div>
-    `;
-  } finally {
-    showLoader(false);
+    <div class="address-section">
+      <h4>Endereço</h4>
+      ${userData.rua ? `<p>${format(userData.rua)}, ${format(userData.numero)}</p>` : ''}
+      ${userData.complemento ? `<p>${format(userData.complemento)}</p>` : ''}
+      ${userData.bairro ? `<p>Bairro: ${format(userData.bairro)}</p>` : ''}
+      ${userData.cidade ? `<p>${format(userData.cidade)}/${format(userData.estado)}</p>` : ''}
+      ${userData.cep ? `<p>CEP: ${format(userData.cep)}</p>` : ''}
+    </div>
+  `;
+  
+  if (userData.nome) {
+    document.getElementById('welcome-title').textContent = `Bem-vindo(a), ${userData.nome}!`;
   }
 }
   
