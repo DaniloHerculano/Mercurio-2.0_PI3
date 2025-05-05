@@ -406,7 +406,7 @@
   function fazerLogin(event) {
     event.preventDefault();
     
-    // Mostra o loading
+    // Verifica se o elemento loading-overlay existe
     const loadingOverlay = document.getElementById('loading-overlay');
     if (loadingOverlay) {
       loadingOverlay.style.display = 'flex';
@@ -415,78 +415,42 @@
     // Coleta os dados do formulário
     var email = document.getElementById('login').value.trim();
     var senha = document.getElementById('password').value.trim();
-    
-    // Validação básica
-    if (!email || !senha) {
+  
+    // Envia os dados para o Apps Script
+    $.get('https://script.google.com/macros/s/AKfycbwb9oTgRZkyUlKOuWczWbmrlV7fnEz4xzfC9oXnh6YlBOzNpSvffoBKaK8Inc32purG/exec', {
+      email: email,
+      senha: senha
+    }, function(resposta) {
+      // Esconde o loader se existir
       if (loadingOverlay) {
         loadingOverlay.style.display = 'none';
       }
-      alert("Por favor, preencha todos os campos");
-      return;
-    }
-  
-    // Envia os dados para o Apps Script
-    $.ajax({
-      url: 'https://script.google.com/macros/s/AKfycbwcuAeKlFyZNMslzD7qNEoJpSBZ-LGlsxPnfqzrSw_sSss9IZxZnsm8Zpwnv_sczPY/exec',
-      method: 'GET',
-      dataType: 'json',
-      data: {
-        email: email,
-        senha: senha
-      },
-      success: function(resposta) {
-        // Esconde o loader
-        if (loadingOverlay) {
-          loadingOverlay.style.display = 'none';
+      
+      if (typeof resposta === 'string') {
+        try {
+          resposta = JSON.parse(resposta);
+        } catch (e) {
+          alert("Erro: " + resposta);
+          return;
         }
-        
-        // Verifica se a resposta é string (pode acontecer em alguns casos)
-        if (typeof resposta === 'string') {
-          try {
-            resposta = JSON.parse(resposta);
-          } catch (e) {
-            console.error("Erro ao parsear resposta:", e);
-            alert("Erro no servidor. Por favor, tente novamente.");
-            return;
-          }
-        }
-    
-        if (resposta.status === "sucesso" || resposta.status === "success") {
-          // Armazena os dados do usuário no localStorage
-          localStorage.setItem('userData', JSON.stringify({
-            nome: resposta.nome,
-            sobrenome: resposta.sobrenome,
-            email: resposta.email,
-            usuario: resposta.usuario,
-            telefone: resposta.telefone,
-            endereco: resposta.endereco
-          }));
-          
-          // Redireciona para a área do cliente
-          window.location.href = 'customer_area.html';
-        } else {
-          alert("Erro: " + (resposta.message || "Usuário ou senha inválidos"));
-        }
-      },
-      error: function(xhr, status, error) {
-        // Esconde o loader
-        if (loadingOverlay) {
-          loadingOverlay.style.display = 'none';
-        }
-        
-        console.error("Erro na requisição:", status, error);
-        alert("Erro na comunicação com o servidor. Por favor, tente novamente.");
       }
+  
+      if (resposta.status === "sucesso") {
+        // Armazena os dados básicos no localStorage
+        localStorage.setItem('loggedInUser', resposta.email);
+        
+        // Redireciona para a área do cliente
+        window.location.href = 'customer_area.html';
+      } else {
+        alert("Erro: " + (resposta.message || "Usuário ou senha inválidos"));
+      }
+    }).fail(function() {
+      if (loadingOverlay) {
+        loadingOverlay.style.display = 'none';
+      }
+      alert("Erro na comunicação com o servidor");
     });
   }
-
-  // Adiciona o event listener ao formulário
-  document.addEventListener('DOMContentLoaded', function() {
-    const loginForm = document.getElementById('login-form');
-    if (loginForm) {
-      loginForm.addEventListener('submit', fazerLogin);
-    }
-  });
-</script>
+  </script>
 </body>
 </html>
