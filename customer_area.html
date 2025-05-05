@@ -424,122 +424,118 @@
 <!------------- JAVASCRIPT ------------>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-  // Configurações
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1SzcHJK5cAaGebZxPyYBy6W5xgENQlqsITzhwTvIspr1cqlTeCDBadQcAm6miiiSF/exec";
+// Configurações
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1SzcHJK5cAaGebZxPyYBy6W5xgENQlqsITzhwTvIspr1cqlTeCDBadQcAm6miiiSF/exec";
 
-  document.addEventListener('DOMContentLoaded', async function() {
-    // Controle do menu mobile
-    const menuToggle = document.getElementById('menuToggle');
-    const mainNav = document.querySelector('.sf-menu');
-    
-    if (window.innerWidth <= 768) {
-      mainNav.style.display = 'none';
-    }
-    
-    menuToggle.addEventListener('click', function() {
-      mainNav.style.display = (mainNav.style.display === 'none' || mainNav.style.display === '') ? 'flex' : 'none';
-    });
-    
-    window.addEventListener('resize', function() {
-      mainNav.style.display = window.innerWidth > 768 ? 'flex' : 'none';
-    });
+// Função principal quando o DOM carrega
+document.addEventListener('DOMContentLoaded', function() {
+  // Menu mobile
+  const menuToggle = document.getElementById('menuToggle');
+  const mainNav = document.querySelector('.sf-menu');
+  
+  if (window.innerWidth <= 768) {
+    mainNav.style.display = 'none';
+  }
+  
+  menuToggle.addEventListener('click', function() {
+    mainNav.style.display = (mainNav.style.display === 'none' || mainNav.style.display === '') ? 'flex' : 'none';
+  });
+  
+  window.addEventListener('resize', function() {
+    mainNav.style.display = window.innerWidth > 768 ? 'flex' : 'none';
+  });
 
-    // Verifica usuário logado
-    const userData = JSON.parse(localStorage.getItem('userData'));
-    const loggedInUserEmail = userData?.email;
-    
-    if (!loggedInUserEmail) {
+  // Verifica login
+  try {
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    if (!userData || !userData.email) {
       window.location.href = "login.html";
       return;
     }
 
-    // Carrega dados do usuário
-    await carregarDadosUsuarioCompletos(loggedInUserEmail);
-    await carregarEstoque();
-    await carregarPedidosUsuario(loggedInUserEmail);
-
+    // Carrega dados
+    carregarDadosUsuario(userData.email);
+    
     // Logout
     document.getElementById('logout').addEventListener('click', function(e) {
       e.preventDefault();
-      localStorage.removeItem('loggedInUser');
       localStorage.removeItem('userData');
       window.location.href = "login.html";
     });
-  });
 
- // Função corrigida sem erros de sintaxe
-  async function carregarDadosUsuario() {
-    showLoader(true);
-    
-    try {
-      // 1. Pega dados do localStorage (corrigido)
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-      
-      // 2. Busca dados adicionais
-      if (userData.email) {
-        const response = await fetch(`${SCRIPT_URL}?action=get_full_data&email=${encodeURIComponent(userData.email)}`);
-        const extraData = await response.json();
-        
-        // Combina dados
-        Object.assign(userData, extraData);
-        localStorage.setItem('userData', JSON.stringify(userData));
-      }
-      
-      // 3. Exibe os dados
-      exibirDadosUsuario(userData);
-      
-    } catch (error) {
-      console.error("Erro:", error);
-      const localData = JSON.parse(localStorage.getItem('userData') || '{}');
-      exibirDadosUsuario(localData);
-    } finally {
-      showLoader(false);
-    }
+  } catch (e) {
+    console.error("Erro ao verificar login:", e);
+    window.location.href = "login.html";
   }
+});
+
+// Função para carregar dados do usuário
+async function carregarDadosUsuario(email) {
+  showLoader(true);
   
-  function exibirDadosUsuario(data) {
-    const format = (value) => value ? value : "Não informado";
+  try {
+    // 1. Pega dados básicos do localStorage
+    let userData = JSON.parse(localStorage.getItem('userData') || '{}');
     
-    let html = `
-      <div class="info-item"><strong>Nome:</strong> ${format(data.nome)} ${format(data.sobrenome)}</div>
-      <div class="info-item"><strong>Usuário:</strong> ${format(data.usuario)}</div>
-      <div class="info-item"><strong>E-mail:</strong> ${format(data.email)}</div>
-      <div class="info-item"><strong>Telefone:</strong> ${format(data.telefone)}</div>
+    // 2. Busca dados complementares
+    const response = await fetch(`${SCRIPT_URL}?action=get_full_data&email=${encodeURIComponent(email)}`);
+    const extraData = await response.json();
+    
+    // 3. Combina dados
+    userData = {...userData, ...extraData};
+    localStorage.setItem('userData', JSON.stringify(userData));
+    
+    // 4. Exibe os dados
+    exibirDadosUsuario(userData);
+    
+    // 5. Carrega estoque e pedidos
+    await carregarEstoque();
+    await carregarPedidosUsuario(email);
+    
+  } catch (error) {
+    console.error("Erro ao carregar dados:", error);
+    const localData = JSON.parse(localStorage.getItem('userData') || '{}');
+    exibirDadosUsuario(localData);
+  } finally {
+    showLoader(false);
+  }
+}
+
+function exibirDadosUsuario(data) {
+  const format = (value) => value ? value : "Não informado";
+  
+  let html = `
+    <div class="info-item"><strong>Nome:</strong> ${format(data.nome)} ${format(data.sobrenome)}</div>
+    <div class="info-item"><strong>Usuário:</strong> ${format(data.usuario)}</div>
+    <div class="info-item"><strong>E-mail:</strong> ${format(data.email)}</div>
+    <div class="info-item"><strong>Telefone:</strong> ${format(data.telefone)}</div>
+    <div class="info-item"><strong>Idade:</strong> ${format(data.idade)}</div>
+    <div class="info-item"><strong>Gênero:</strong> ${format(data.genero)}</div>
+  `;
+  
+  if (data.rua || data.cidade) {
+    html += `
+      <div class="address-section">
+        <strong>Endereço:</strong>
+        <p>${format(data.rua)} ${format(data.numero)}</p>
+        ${data.complemento ? `<p>Complemento: ${format(data.complemento)}</p>` : ''}
+        <p>Bairro: ${format(data.bairro)}</p>
+        <p>${format(data.cidade)}/${format(data.estado)}</p>
+        <p>CEP: ${format(data.cep)}</p>
+        <p>País: ${format(data.pais)}</p>
+      </div>
     `;
-    
-    if (data.rua || data.cidade) {
-      html += `
-        <div class="address-section">
-          <strong>Endereço:</strong>
-          <p>${format(data.rua)} ${format(data.numero)}</p>
-          ${data.complemento ? `<p>${format(data.complemento)}</p>` : ''}
-          <p>${format(data.bairro)}</p>
-          <p>${format(data.cidade)}/${format(data.estado)}</p>
-          <p>CEP: ${format(data.cep)}</p>
-        </div>
-      `;
-    }
-    
-    document.getElementById('userInfo').innerHTML = html;
-    
-    if (data.nome) {
-      document.getElementById('welcome-title').textContent = `Bem-vindo(a), ${data.nome}!`;
-    }
   }
   
-  // Inicialização segura
-  document.addEventListener('DOMContentLoaded', () => {
-    try {
-      const userData = JSON.parse(localStorage.getItem('userData'));
-      if (!userData?.email) window.location.href = "login.html";
-      else carregarDadosUsuario();
-    } catch (e) {
-      console.error("Erro:", e);
-      window.location.href = "login.html";
-    }
-  }); 
+  document.getElementById('userInfo').innerHTML = html;
   
-  async function carregarEstoque() {
+  if (data.nome) {
+    document.getElementById('welcome-title').textContent = `Bem-vindo(a), ${data.nome}!`;
+  }
+}
+
+// Restante das funções (carregarEstoque, carregarPedidosUsuario, etc.) mantidas iguais
+async function carregarEstoque() {
     try {
       const response = await fetch(`${SCRIPT_URL}?action=get_stock`);
       const data = await response.json();
@@ -559,9 +555,9 @@
         <p style="color: red;">Erro ao carregar estoque. Atualize a página.</p>
       `;
     }
-  }
+}
 
-  async function carregarPedidosUsuario(email) {
+async function carregarPedidosUsuario(email) {
     const pedidosContainer = document.getElementById('meusPedidos');
     pedidosContainer.innerHTML = '<div class="loading">Carregando...</div>';
     
@@ -583,7 +579,6 @@
         return;
       }
   
-      // Exibe os pedidos
       pedidosContainer.innerHTML = '';
       data.pedidos.forEach(pedido => {
         const pedidoDiv = document.createElement('div');
@@ -601,9 +596,9 @@
         </div>
       `;
     }
-  }
+}
 
-  function criarHTMLPedido(pedido) {
+function criarHTMLPedido(pedido) {
     return `
       <div class="pedido-header">
         <h4>Pedido #${pedido.id || 'N/A'}</h4>
@@ -627,9 +622,9 @@
         </button>
       </div>` : ''}
     `;
-  }
+}
 
-  function formatarData(dataString) {
+function formatarData(dataString) {
     if (!dataString) return 'Não definida';
     try {
       const data = new Date(dataString);
@@ -637,9 +632,9 @@
     } catch (e) {
       return dataString;
     }
-  }
+}
 
-  async function devolverPedido(pedidoId, mesas, cadeiras, bancos) {
+async function devolverPedido(pedidoId, mesas, cadeiras, bancos) {
     if (!confirm(`Confirmar devolução do pedido #${pedidoId}?\n\nItens:\n${mesas} mesas\n${cadeiras} cadeiras\n${bancos} bancos`)) {
       return;
     }
@@ -647,7 +642,6 @@
     try {
       showLoader(true);
       
-      // 1. Atualizar estoque
       await Promise.all([
         fetch(`${SCRIPT_URL}?action=update_stock&item=mesas&quantidade=${mesas}`),
         fetch(`${SCRIPT_URL}?action=update_stock&item=cadeiras&quantidade=${cadeiras}`),
@@ -663,14 +657,14 @@
     } finally {
       showLoader(false);
     }
-  }
+}
    
-  function showLoader(show) {
+function showLoader(show) {
     const loader = document.getElementById('loading-overlay');
     if (loader) {
       loader.style.display = show ? 'flex' : 'none';
     }
-  }
+}
 </script>
 </body>
 </html>
