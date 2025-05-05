@@ -422,15 +422,13 @@
     </div>
   </footer>
 <!------------- JAVASCRIPT ------------>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-  // Configurações da Planilha Google
-  const SHEET_ID = "1QKnR6pWhemrdT5csvGpsy-pLxq0qQuKjniY7yvH3d48";
-  const PEDIDOS_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Pedidos&tqx=out:json`;
-  const ESTOQUE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Estoque&tqx=out:json`;
+  // Configurações
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwcuAeKlFyZNMslzD7qNEoJpSBZ-LGlsxPnfqzrSw_sSss9IZxZnsm8Zpwnv_sczPY/exec";
 
   document.addEventListener('DOMContentLoaded', async function() {
-    // Controle do menu mobile (mantenha seu código existente)
+    // Controle do menu mobile
     const menuToggle = document.getElementById('menuToggle');
     const mainNav = document.querySelector('.sf-menu');
     
@@ -447,7 +445,9 @@
     });
 
     // Verifica usuário logado
-    const loggedInUserEmail = localStorage.getItem('loggedInUser');
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    const loggedInUserEmail = userData?.email || localStorage.getItem('loggedInUser');
+    
     if (!loggedInUserEmail) {
       window.location.href = "login.html";
       return;
@@ -467,85 +467,27 @@
     });
   });
 
-  /*// Código de diagnóstico
-  async function testarEndpoint() {
-    const testEmail = "dvherculano@gmail.com"; // substitua por um email válido
-    const url = `${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(testEmail)}`;
-    
-    try {
-      const response = await fetch(url);
-      const text = await response.text();
-      console.log("TESTE DIRETO DO ENDPOINT:");
-      console.log("URL:", url);
-      console.log("Status:", response.status);
-      console.log("Resposta:", text);
-      
-      // Tenta parsear como JSON
-      try {
-        const json = JSON.parse(text);
-        console.log("JSON parseado:", json);
-      } catch (e) {
-        console.error("Não é JSON válido:", e);
-      }
-    } catch (error) {
-      console.error("Erro no teste:", error);
-    }
-  }*/
-  
-  // Execute o teste quando a página carregar
-  window.addEventListener('load', testarEndpoint);
-  
   async function carregarDadosUsuarioCompletos(email) {
     showLoader(true);
     try {
-      console.log("Iniciando busca por:", email);
+      const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
       
-      // URL com cache-buster e verificação extra
-      const url = new URL(SCRIPT_URL);
-      url.searchParams.append('action', 'get_user_data');
-      url.searchParams.append('email', email);
-      url.searchParams.append('t', Date.now());
-      url.searchParams.append('source', 'customer_area');
-      
-      console.log("URL completa:", url.toString());
-      
-      const response = await fetch(url.toString());
-      
-      // Verificação rigorosa da resposta
       if (!response.ok) {
-        throw new Error(`Erro HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(`Erro HTTP ${response.status}`);
       }
       
-      const responseText = await response.text();
-      console.log("Resposta bruta:", responseText);
+      const userData = await response.json();
       
-      // Verificação se é JSON válido
-      if (!responseText.trim().startsWith('{') && !responseText.trim().startsWith('[')) {
-        throw new Error(`Resposta não é JSON válido: ${responseText.substring(0, 100)}`);
-      }
-      
-      const userData = JSON.parse(responseText);
-      
-      // Verificação da estrutura dos dados
-      if (userData.status === "error" || userData.success === false) {
+      if (userData.status !== "sucesso") {
         throw new Error(userData.message || "Erro ao buscar dados do usuário");
       }
-      
-      if (!userData.email) {
-        throw new Error("Dados do usuário incompletos - e-mail não encontrado");
-      }
-      
-      console.log("Dados do usuário recebidos:", userData);
       
       // Armazena e exibe os dados
       localStorage.setItem('userData', JSON.stringify(userData));
       exibirDadosUsuario(userData);
       
     } catch (error) {
-      console.error("Erro detalhado:", {
-        message: error.message,
-        stack: error.stack
-      });
+      console.error("Erro ao carregar dados do usuário:", error);
       
       // Fallback para dados locais
       const localData = localStorage.getItem('userData');
@@ -553,7 +495,6 @@
         try {
           const parsedData = JSON.parse(localData);
           if (parsedData.email && parsedData.email === email) {
-            console.log("Usando dados do localStorage como fallback");
             exibirDadosUsuario(parsedData);
             return;
           }
@@ -562,48 +503,31 @@
         }
       }
       
-      // Exibe mensagem de erro detalhada
-      const errorHtml = `
+      // Exibe mensagem de erro
+      document.getElementById('userInfo').innerHTML = `
         <div class="error-message">
           <h4>Erro ao carregar dados</h4>
-          <p><strong>E-mail:</strong> ${email}</p>
-          <p><strong>Erro:</strong> ${error.message}</p>
-          <div class="actions">
-            <button onclick="window.location.reload()" class="btn">Tentar novamente</button>
-            <button onclick="logout()" class="btn-exit">Sair</button>
-          </div>
+          <p>${error.message}</p>
+          <button onclick="location.reload()" class="btn">Tentar novamente</button>
         </div>
       `;
-      
-      document.getElementById('userInfo').innerHTML = errorHtml;
-      
     } finally {
       showLoader(false);
     }
   }
   
-  // Função de logout para o botão de erro
-  function logout() {
-    localStorage.removeItem('loggedInUser');
-    localStorage.removeItem('userData');
-    window.location.href = "login.html";
-  }
-  
   function exibirDadosUsuario(userData) {
     const userInfoDiv = document.getElementById('userInfo');
     
-    // Verifica se userData é válido
-    if (!userData || typeof userData !== 'object') {
+    if (!userData) {
       userInfoDiv.innerHTML = '<div class="error-message">Dados do usuário inválidos</div>';
       return;
     }
   
-    // Função para formatar campos
     const formatField = (value, defaultValue = 'Não informado') => {
       return value && value !== '' ? value : defaultValue;
     };
   
-    // Monta o HTML
     userInfoDiv.innerHTML = `
       <div class="info-item"><strong>Nome:</strong> ${formatField(userData.nome)} ${formatField(userData.sobrenome)}</div>
       <div class="info-item"><strong>Usuário:</strong> ${formatField(userData.usuario)}</div>
@@ -626,29 +550,24 @@
     
     // Atualiza o título de boas-vindas
     const welcomeTitle = document.getElementById('welcome-title');
-    if (welcomeTitle) {
-      welcomeTitle.textContent = userData.nome && userData.nome !== 'Não informado' 
-        ? `Bem-vindo(a), ${userData.nome}!` 
-        : `Bem-vindo à Área do Cliente!`;
+    if (welcomeTitle && userData.nome) {
+      welcomeTitle.textContent = `Bem-vindo(a), ${userData.nome}!`;
     }
   }
 
   async function carregarEstoque() {
     try {
-      const response = await fetch(ESTOQUE_SHEET_URL);
-      const text = await response.text();
-      const json = JSON.parse(text.substr(47).slice(0, -2));
+      const response = await fetch(`${SCRIPT_URL}?action=get_stock`);
+      const data = await response.json();
       
-      const estoque = {
-        mesas: json.table.rows[0]?.c[3]?.v || 0,
-        cadeiras: json.table.rows[1]?.c[3]?.v || 0,
-        bancos: json.table.rows[2]?.c[3]?.v || 0
-      };
-
+      if (data.status !== "sucesso") {
+        throw new Error(data.message || "Erro ao carregar estoque");
+      }
+      
       document.getElementById('estoqueAtual').innerHTML = `
-        <p><strong>Mesas disponíveis:</strong> ${estoque.mesas}</p>
-        <p><strong>Cadeiras disponíveis:</strong> ${estoque.cadeiras}</p>
-        <p><strong>Bancos disponíveis:</strong> ${estoque.bancos}</p>
+        <p><strong>Mesas disponíveis:</strong> ${data.estoque.mesas || 0}</p>
+        <p><strong>Cadeiras disponíveis:</strong> ${data.estoque.cadeiras || 0}</p>
+        <p><strong>Bancos disponíveis:</strong> ${data.estoque.bancos || 0}</p>
       `;
     } catch (error) {
       console.error("Erro ao carregar estoque:", error);
@@ -658,59 +577,47 @@
     }
   }
 
-    async function carregarPedidosUsuario(email) {
-      const pedidosContainer = document.getElementById('meusPedidos');
-      pedidosContainer.innerHTML = '<div class="loading">Carregando...</div>';
-      
-      try {
-        // Busca os pedidos do usuário
-        const response = await fetch(`${SCRIPT_URL}?action=get_user_orders&email=${encodeURIComponent(email)}`);
-        
-        // Armazena o texto da resposta para podermos usá-lo múltiplas vezes
-        const responseText = await response.text();
-        
-        let pedidos;
-        try {
-          // Tenta parsear como JSON
-          pedidos = JSON.parse(responseText);
-        } catch (e) {
-          // Se não for JSON válido, usa array vazio
-          pedidos = [];
-        }
-        
-        if (!Array.isArray(pedidos)) {
-          throw new Error("Formato de dados inválido");
-        }
-        
-        if (pedidos.length === 0) {
-          pedidosContainer.innerHTML = `
-            <div class="no-orders">
-              <p>Nenhum pedido encontrado.</p>
-              <a href="encomendar.html" class="btn">Fazer primeiro pedido</a>
-            </div>
-          `;
-          return;
-        }
+  async function carregarPedidosUsuario(email) {
+    const pedidosContainer = document.getElementById('meusPedidos');
+    pedidosContainer.innerHTML = '<div class="loading">Carregando...</div>';
     
-        // Exibe os pedidos
-        pedidosContainer.innerHTML = '';
-        pedidos.forEach(pedido => {
-          const pedidoDiv = document.createElement('div');
-          pedidoDiv.className = 'pedido-item';
-          pedidoDiv.innerHTML = criarHTMLPedido(pedido);
-          pedidosContainer.appendChild(pedidoDiv);
-        });
-          
-      } catch (error) {
-        console.error("Erro ao carregar pedidos:", error);
+    try {
+      const response = await fetch(`${SCRIPT_URL}?action=get_user_orders&email=${encodeURIComponent(email)}`);
+      const data = await response.json();
+      
+      if (data.status !== "sucesso") {
+        throw new Error(data.message || "Erro ao carregar pedidos");
+      }
+      
+      if (!data.pedidos || data.pedidos.length === 0) {
         pedidosContainer.innerHTML = `
-          <div class="error">
-            <p>Não foi possível carregar seus pedidos.</p>
-            <button onclick="location.reload()" class="btn2">Recarregar</button>
+          <div class="no-orders">
+            <p>Nenhum pedido encontrado.</p>
+            <a href="encomendar.html" class="btn">Fazer primeiro pedido</a>
           </div>
         `;
+        return;
       }
+  
+      // Exibe os pedidos
+      pedidosContainer.innerHTML = '';
+      data.pedidos.forEach(pedido => {
+        const pedidoDiv = document.createElement('div');
+        pedidoDiv.className = 'pedido-item';
+        pedidoDiv.innerHTML = criarHTMLPedido(pedido);
+        pedidosContainer.appendChild(pedidoDiv);
+      });
+        
+    } catch (error) {
+      console.error("Erro ao carregar pedidos:", error);
+      pedidosContainer.innerHTML = `
+        <div class="error">
+          <p>Não foi possível carregar seus pedidos.</p>
+          <button onclick="location.reload()" class="btn2">Recarregar</button>
+        </div>
+      `;
     }
+  }
 
   function criarHTMLPedido(pedido) {
     return `
@@ -719,13 +626,13 @@
         ${pedido.status ? `<span class="status-badge ${pedido.status.toLowerCase()}">${pedido.status}</span>` : ''}
       </div>
       <div class="pedido-body">
-        ${pedido.dataInicio ? `<p><i class="fa fa-calendar"></i> <strong>Período:</strong> ${formatarData(pedido.dataInicio)} - ${formatarData(pedido.dataFim)}</p>` : ''}
+        ${pedido.data_inicio ? `<p><i class="fa fa-calendar"></i> <strong>Período:</strong> ${formatarData(pedido.data_inicio)} - ${formatarData(pedido.data_fim)}</p>` : ''}
         <p><i class="fa fa-cubes"></i> <strong>Itens:</strong> 
           ${pedido.mesas || 0} mesa(s), 
           ${pedido.cadeiras || 0} cadeira(s), 
           ${pedido.bancos || 0} banco(s)
         </p>
-        ${pedido.total ? `<p><i class="fa fa-money"></i> <strong>Total:</strong> R$ ${pedido.total.toFixed(2)}</p>` : ''}
+        ${pedido.valor_total ? `<p><i class="fa fa-money"></i> <strong>Total:</strong> R$ ${pedido.valor_total.toFixed(2)}</p>` : ''}
         ${pedido.endereco ? `<p><i class="fa fa-map-marker"></i> <strong>Endereço:</strong> ${pedido.endereco}</p>` : ''}
       </div>
       ${pedido.status === 'Ativo' ? `
@@ -744,7 +651,7 @@
       const data = new Date(dataString);
       return data.toLocaleDateString('pt-BR');
     } catch (e) {
-      return dataString; // Retorna o valor original se não puder converter
+      return dataString;
     }
   }
 
@@ -754,19 +661,23 @@
     }
   
     try {
-      // 1. Atualizar estoque
-      await fetch(`${SCRIPT_URL}?action=update_stock&item=mesas&quantidade=${mesas}`, { method: 'POST' });
-      await fetch(`${SCRIPT_URL}?action=update_stock&item=cadeiras&quantidade=${cadeiras}`, { method: 'POST' });
-      await fetch(`${SCRIPT_URL}?action=update_stock&item=bancos&quantidade=${bancos}`, { method: 'POST' });
+      showLoader(true);
       
-      // 2. Marcar pedido como devolvido
-      await fetch(`${SCRIPT_URL}?action=return_order&pedido_id=${pedidoId}`, { method: 'POST' });
+      // 1. Atualizar estoque
+      await Promise.all([
+        fetch(`${SCRIPT_URL}?action=update_stock&item=mesas&quantidade=${mesas}`),
+        fetch(`${SCRIPT_URL}?action=update_stock&item=cadeiras&quantidade=${cadeiras}`),
+        fetch(`${SCRIPT_URL}?action=update_stock&item=bancos&quantidade=${bancos}`),
+        fetch(`${SCRIPT_URL}?action=return_order&pedido_id=${pedidoId}`)
+      ]);
       
       alert('Devolução realizada com sucesso!');
       location.reload();
     } catch (error) {
       console.error("Erro ao devolver pedido:", error);
       alert("Erro ao processar devolução. Tente novamente.");
+    } finally {
+      showLoader(false);
     }
   }
    
