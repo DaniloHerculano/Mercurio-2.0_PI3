@@ -460,23 +460,31 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-// Função para carregar dados (compatível com seu login existente)
+// Função para carregar dados com tratamento
 async function carregarDadosUsuario(email) {
   showLoader(true);
   
   try {
     // 1. Busca dados completos
     const response = await fetch(`${SCRIPT_URL}?action=get_full_data&email=${encodeURIComponent(email)}`);
-    const userData = await response.json();
+    const result = await response.text();
+    
+    let fullData = { email: email }; // Dados básicos
+    
+    try {
+      const parsedData = JSON.parse(result);
+      if (parsedData.status === "success") {
+        fullData = { ...fullData, ...parsedData.data };
+      }
+    } catch (e) {
+      console.log("Usando apenas dados básicos");
+    }
     
     // 2. Exibe os dados
-    exibirDadosUsuario({
-      email: email,
-      ...userData // Combina com dados adicionais
-    });
+    exibirDadosUsuario(fullData);
     
   } catch (error) {
-    console.error("Erro:", error);
+    console.error("Erro ao carregar dados:", error);
     // Fallback: mostra pelo menos o e-mail
     exibirDadosUsuario({ email: email });
   } finally {
@@ -487,12 +495,11 @@ async function carregarDadosUsuario(email) {
 function exibirDadosUsuario(data) {
   const format = (value) => value ? value : "Não informado";
   
-  // Monta HTML com os dados disponíveis
   let html = `
     <div class="info-item"><strong>E-mail:</strong> ${format(data.email)}</div>
   `;
   
-  // Adiciona campos extras se existirem
+  // Adiciona campos se existirem
   if (data.nome) {
     document.getElementById('welcome-title').textContent = `Bem-vindo(a), ${data.nome}!`;
     html = `
@@ -502,6 +509,8 @@ function exibirDadosUsuario(data) {
   }
   
   if (data.telefone) html += `<div class="info-item"><strong>Telefone:</strong> ${format(data.telefone)}</div>`;
+  if (data.idade) html += `<div class="info-item"><strong>Idade:</strong> ${format(data.idade)}</div>`;
+  if (data.genero) html += `<div class="info-item"><strong>Gênero:</strong> ${format(data.genero)}</div>`;
   
   // Adiciona endereço se existir
   if (data.rua || data.cidade) {
@@ -509,8 +518,8 @@ function exibirDadosUsuario(data) {
       <div class="address-section">
         <strong>Endereço:</strong>
         <p>${format(data.rua)} ${format(data.numero)}</p>
-        ${data.complemento ? `<p>${format(data.complemento)}</p>` : ''}
-        <p>${format(data.bairro)}</p>
+        ${data.complemento ? `<p>Complemento: ${format(data.complemento)}</p>` : ''}
+        <p>Bairro: ${format(data.bairro)}</p>
         <p>${format(data.cidade)}/${format(data.estado)}</p>
         <p>CEP: ${format(data.cep)}</p>
       </div>
@@ -520,7 +529,7 @@ function exibirDadosUsuario(data) {
   document.getElementById('userInfo').innerHTML = html;
 }
 
-// Restante das funções (carregarEstoque, carregarPedidosUsuario, etc.) mantidas iguais
+// Restante das funções (carregarEstoque, carregarPedidosUsuario, etc.)
 async function carregarEstoque() {
     try {
       const response = await fetch(`${SCRIPT_URL}?action=get_stock`);
