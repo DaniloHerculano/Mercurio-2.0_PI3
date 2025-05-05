@@ -471,26 +471,25 @@
     showLoader(true);
     
     try {
-      // 1. Pega dados básicos do login
-      const userData = JSON.parse(localStorage.getItem('userData') || {};
+      // 1. Pega dados básicos do login - CORREÇÃO AQUI
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}'); // Faltava as aspas em '{}'
       
-      // 2. Busca dados complementares da planilha
+      // 2. Busca dados complementares
       if (userData.email) {
         const response = await fetch(`${SCRIPT_URL}?action=get_full_data&email=${encodeURIComponent(userData.email)}`);
         const extraData = await response.json();
         
-        // Combina dados básicos + complementares
+        // Combina dados
         Object.assign(userData, extraData);
-        localStorage.setItem('userData', JSON.stringify(userData));
       }
       
-      // 3. Exibe TODOS os dados
+      // 3. Exibe os dados
       exibirDadosUsuario(userData);
       
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
       // Fallback: mostra pelo menos os dados básicos
-      const localData = JSON.parse(localStorage.getItem('userData')) || {};
+      const localData = JSON.parse(localStorage.getItem('userData') || '{}');
       exibirDadosUsuario(localData);
     } finally {
       showLoader(false);
