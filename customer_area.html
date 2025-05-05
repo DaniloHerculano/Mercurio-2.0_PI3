@@ -467,28 +467,29 @@
     });
   });
 
+ // Função corrigida sem erros de sintaxe
   async function carregarDadosUsuario() {
     showLoader(true);
     
     try {
-      // 1. Pega dados básicos do login - CORREÇÃO AQUI
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}'); // Faltava as aspas em '{}'
+      // 1. Pega dados do localStorage (corrigido)
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
       
-      // 2. Busca dados complementares
+      // 2. Busca dados adicionais
       if (userData.email) {
         const response = await fetch(`${SCRIPT_URL}?action=get_full_data&email=${encodeURIComponent(userData.email)}`);
         const extraData = await response.json();
         
         // Combina dados
         Object.assign(userData, extraData);
+        localStorage.setItem('userData', JSON.stringify(userData));
       }
       
       // 3. Exibe os dados
       exibirDadosUsuario(userData);
       
     } catch (error) {
-      console.error("Erro ao carregar dados:", error);
-      // Fallback: mostra pelo menos os dados básicos
+      console.error("Erro:", error);
       const localData = JSON.parse(localStorage.getItem('userData') || '{}');
       exibirDadosUsuario(localData);
     } finally {
@@ -504,8 +505,6 @@
       <div class="info-item"><strong>Usuário:</strong> ${format(data.usuario)}</div>
       <div class="info-item"><strong>E-mail:</strong> ${format(data.email)}</div>
       <div class="info-item"><strong>Telefone:</strong> ${format(data.telefone)}</div>
-      <div class="info-item"><strong>Idade:</strong> ${format(data.idade)}</div>
-      <div class="info-item"><strong>Gênero:</strong> ${format(data.genero)}</div>
     `;
     
     if (data.rua || data.cidade) {
@@ -513,11 +512,10 @@
         <div class="address-section">
           <strong>Endereço:</strong>
           <p>${format(data.rua)} ${format(data.numero)}</p>
-          ${data.complemento ? `<p>Complemento: ${format(data.complemento)}</p>` : ''}
-          <p>Bairro: ${format(data.bairro)}</p>
+          ${data.complemento ? `<p>${format(data.complemento)}</p>` : ''}
+          <p>${format(data.bairro)}</p>
           <p>${format(data.cidade)}/${format(data.estado)}</p>
           <p>CEP: ${format(data.cep)}</p>
-          <p>País: ${format(data.pais)}</p>
         </div>
       `;
     }
@@ -529,20 +527,17 @@
     }
   }
   
-  // Inicialização correta
+  // Inicialização segura
   document.addEventListener('DOMContentLoaded', () => {
     try {
       const userData = JSON.parse(localStorage.getItem('userData'));
-      if (!userData || !userData.email) {
-        window.location.href = "login.html";
-      } else {
-        carregarDadosUsuario();
-      }
+      if (!userData?.email) window.location.href = "login.html";
+      else carregarDadosUsuario();
     } catch (e) {
-      console.error("Erro ao verificar login:", e);
+      console.error("Erro:", e);
       window.location.href = "login.html";
     }
-  });
+  }); 
   
   async function carregarEstoque() {
     try {
