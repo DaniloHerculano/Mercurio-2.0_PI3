@@ -468,24 +468,54 @@
   });
 
 async function carregarDadosUsuarioCompletos(email) {
+  showLoader(true);
   try {
-    const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
-    const result = await response.json();
+    // 1. Primeiro tenta buscar dados completos
+    const response = await fetch(`${SCRIPT_URL}?email=${encodeURIComponent(email)}`);
+    const result = await response.text();
     
-    if (result.status === "success") {
-      // Exibe os dados formatados
-      exibirDadosUsuario(result.data);
-    } else {
-      // Fallback para dados básicos do login
-      const localData = JSON.parse(localStorage.getItem('userData') || '{}');
-      exibirDadosUsuario(localData);
+    let userData;
+    try {
+      userData = JSON.parse(result);
+    } catch {
+      // Se não for JSON, usa os dados locais do login
+      userData = JSON.parse(localStorage.getItem('userData') || {};
     }
+
+    // 2. Exibe os dados disponíveis
+    exibirDadosUsuario(userData);
+
   } catch (error) {
     console.error("Erro ao carregar dados:", error);
-    // Fallback seguro
-    const localData = JSON.parse(localStorage.getItem('userData') || '{}');
+    // Fallback para dados locais
+    const localData = JSON.parse(localStorage.getItem('userData') || {};
     exibirDadosUsuario(localData);
+  } finally {
+    showLoader(false);
   }
+}
+
+function exibirDadosUsuario(userData) {
+  const welcomeTitle = document.getElementById('welcome-title');
+  const userInfoDiv = document.getElementById('userInfo');
+  
+  if (userData?.nome) {
+    welcomeTitle.textContent = `Bem-vindo(a), ${userData.nome}!`;
+  }
+
+  // Formata os campos vazios
+  const format = (value) => value || "Não informado";
+  
+  userInfoDiv.innerHTML = `
+    <div class="info-item"><strong>Nome:</strong> ${format(userData.nome)} ${format(userData.sobrenome)}</div>
+    <div class="info-item"><strong>Usuário:</strong> ${format(userData.usuario)}</div>
+    <div class="info-item"><strong>E-mail:</strong> ${format(userData.email)}</div>
+    
+    <div class="address-section">
+      <p>Para ver todos os seus dados, atualize a página.</p>
+      <p>Se os dados não aparecerem completamente, faça login novamente.</p>
+    </div>
+  `;
 }
 
 function exibirDadosUsuario(userData) {
