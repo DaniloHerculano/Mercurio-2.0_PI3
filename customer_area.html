@@ -467,68 +467,76 @@
     });
   });
 
-  async function carregarDadosUsuarioCompletos(email) {
+  async function carregarDadosUsuario() {
     showLoader(true);
+    
     try {
-      // 1. Busca os dados básicos do localStorage (do login)
-      const localData = JSON.parse(localStorage.getItem('userData') || '{}');
+      // 1. Pega dados básicos do login
+      const userData = JSON.parse(localStorage.getItem('userData') || {};
       
-      // 2. Tenta buscar dados adicionais da planilha
-      const response = await fetch(`${SCRIPT_URL}?email=${encodeURIComponent(email)}`);
-      const result = await response.text();
-      
-      let fullData = localData; // Começa com os dados básicos
-      
-      try {
-        const additionalData = JSON.parse(result);
-        // Combina dados básicos com adicionais
-        fullData = {...localData, ...additionalData};
-      } catch (e) {
-        console.log("Usando apenas dados básicos do login");
+      // 2. Tenta buscar dados extras
+      if (userData.email) {
+        const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(userData.email)}`);
+        const extraData = await response.json();
+        
+        if (extraData.status === "success") {
+          // Combina dados básicos + extras
+          userData.telefone = extraData.telefone;
+          userData.endereco = extraData.endereco;
+        }
       }
       
-      // 3. Exibe os dados combinados
-      exibirDadosUsuario(fullData);
-  
+      // 3. Exibe tudo
+      exibirDadosUsuario(userData);
+      
     } catch (error) {
       console.error("Erro:", error);
       // Fallback: exibe pelo menos os dados básicos
-      const localData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const localData = JSON.parse(localStorage.getItem('userData') || {});
       exibirDadosUsuario(localData);
     } finally {
       showLoader(false);
     }
   }
-
-  function exibirDadosUsuario(userData) {
-    const welcomeTitle = document.getElementById('welcome-title');
-    const userInfoDiv = document.getElementById('userInfo');
+  
+  function exibirDadosUsuario(data) {
+    const format = (value) => value || "Não informado";
     
-    // Formatação segura de campos
-    const format = (value) => value ? value.toString().trim() : "Não informado";
+    let html = `
+      <div class="info-item"><strong>Nome:</strong> ${format(data.nome)} ${format(data.sobrenome)}</div>
+      <div class="info-item"><strong>Usuário:</strong> ${format(data.usuario)}</div>
+      <div class="info-item"><strong>E-mail:</strong> ${format(data.email)}</div>
+      <div class="info-item"><strong>Telefone:</strong> ${format(data.telefone)}</div>
+    `;
     
-    // Atualiza o título
-    if (userData.nome) {
-      welcomeTitle.textContent = `Bem-vindo(a), ${format(userData.nome)}!`;
+    if (data.endereco) {
+      html += `
+        <div class="address-section">
+          <strong>Endereço:</strong>
+          <p>${format(data.endereco.rua)} ${format(data.endereco.numero)}</p>
+          ${data.endereco.complemento ? `<p>${format(data.endereco.complemento)}</p>` : ''}
+          <p>${format(data.endereco.bairro)}</p>
+          <p>${format(data.endereco.cidade)}/${format(data.endereco.estado)}</p>
+          <p>CEP: ${format(data.endereco.cep)}</p>
+        </div>
+      `;
     }
     
-    // Monta o HTML dos dados
-    userInfoDiv.innerHTML = `
-      <div class="info-item"><strong>Nome:</strong> ${format(userData.nome)} ${format(userData.sobrenome)}</div>
-      <div class="info-item"><strong>Usuário:</strong> ${format(userData.usuario)}</div>
-      <div class="info-item"><strong>E-mail:</strong> ${format(userData.email)}</div>
-      <div class="info-item"><strong>Telefone:</strong> ${format(userData.telefone)}</div>
-      
-      <div class="address-section">
-        <h4>Endereço</h4>
-        <p>${format(userData.rua)}${userData.numero ? ', ' + format(userData.numero) : ''}</p>
-        ${userData.complemento ? `<p>${format(userData.complemento)}</p>` : ''}
-        ${userData.bairro ? `<p>Bairro: ${format(userData.bairro)}</p>` : ''}
-        <p>${format(userData.cidade)}/${format(userData.estado)}</p>
-        ${userData.cep ? `<p>CEP: ${format(userData.cep)}</p>` : ''}
-      </div>
-    `;
+    document.getElementById('userInfo').innerHTML = html;
+    
+    if (data.nome) {
+      document.getElementById('welcome-title').textContent = `Bem-vindo(a), ${data.nome}!`;
+    }
   }
+  
+  // Inicialização
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!localStorage.getItem('userData')) {
+      window.location.href = "login.html";
+    } else {
+      carregarDadosUsuario();
+    }
+  });
 
   async function carregarEstoque() {
     try {
