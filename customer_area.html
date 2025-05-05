@@ -467,118 +467,67 @@
     });
   });
 
-async function carregarDadosUsuarioCompletos(email) {
-  showLoader(true);
-  try {
-    // 1. Primeiro tenta buscar dados completos
-    const response = await fetch(`${SCRIPT_URL}?email=${encodeURIComponent(email)}`);
-    const result = await response.text();
-    
-    let userData;
+  async function carregarDadosUsuarioCompletos(email) {
+    showLoader(true);
     try {
-      userData = JSON.parse(result);
-    } catch {
-      // Se não for JSON, usa os dados locais do login
-      userData = JSON.parse(localStorage.getItem('userData') || {};
+      // 1. Busca os dados básicos do localStorage (do login)
+      const localData = JSON.parse(localStorage.getItem('userData') || '{}');
+      
+      // 2. Tenta buscar dados adicionais da planilha
+      const response = await fetch(`${SCRIPT_URL}?email=${encodeURIComponent(email)}`);
+      const result = await response.text();
+      
+      let fullData = localData; // Começa com os dados básicos
+      
+      try {
+        const additionalData = JSON.parse(result);
+        // Combina dados básicos com adicionais
+        fullData = {...localData, ...additionalData};
+      } catch (e) {
+        console.log("Usando apenas dados básicos do login");
+      }
+      
+      // 3. Exibe os dados combinados
+      exibirDadosUsuario(fullData);
+  
+    } catch (error) {
+      console.error("Erro:", error);
+      // Fallback: exibe pelo menos os dados básicos
+      const localData = JSON.parse(localStorage.getItem('userData') || '{}');
+      exibirDadosUsuario(localData);
+    } finally {
+      showLoader(false);
     }
-
-    // 2. Exibe os dados disponíveis
-    exibirDadosUsuario(userData);
-
-  } catch (error) {
-    console.error("Erro ao carregar dados:", error);
-    // Fallback para dados locais
-    const localData = JSON.parse(localStorage.getItem('userData') || {};
-    exibirDadosUsuario(localData);
-  } finally {
-    showLoader(false);
-  }
-}
-
-function exibirDadosUsuario(userData) {
-  const welcomeTitle = document.getElementById('welcome-title');
-  const userInfoDiv = document.getElementById('userInfo');
-  
-  if (userData?.nome) {
-    welcomeTitle.textContent = `Bem-vindo(a), ${userData.nome}!`;
   }
 
-  // Formata os campos vazios
-  const format = (value) => value || "Não informado";
-  
-  userInfoDiv.innerHTML = `
-    <div class="info-item"><strong>Nome:</strong> ${format(userData.nome)} ${format(userData.sobrenome)}</div>
-    <div class="info-item"><strong>Usuário:</strong> ${format(userData.usuario)}</div>
-    <div class="info-item"><strong>E-mail:</strong> ${format(userData.email)}</div>
-    
-    <div class="address-section">
-      <p>Para ver todos os seus dados, atualize a página.</p>
-      <p>Se os dados não aparecerem completamente, faça login novamente.</p>
-    </div>
-  `;
-}
-
-function exibirDadosUsuario(userData) {
-  const format = (value) => value || "Não informado";
-  
-  document.getElementById('userInfo').innerHTML = `
-    <div class="info-item"><strong>Nome:</strong> ${format(userData.nome)} ${format(userData.sobrenome)}</div>
-    <div class="info-item"><strong>Usuário:</strong> ${format(userData.usuario)}</div>
-    <div class="info-item"><strong>E-mail:</strong> ${format(userData.email)}</div>
-    ${userData.telefone ? `<div class="info-item"><strong>Telefone:</strong> ${format(userData.telefone)}</div>` : ''}
-    
-    <div class="address-section">
-      <h4>Endereço</h4>
-      ${userData.rua ? `<p>${format(userData.rua)}, ${format(userData.numero)}</p>` : ''}
-      ${userData.complemento ? `<p>${format(userData.complemento)}</p>` : ''}
-      ${userData.bairro ? `<p>Bairro: ${format(userData.bairro)}</p>` : ''}
-      ${userData.cidade ? `<p>${format(userData.cidade)}/${format(userData.estado)}</p>` : ''}
-      ${userData.cep ? `<p>CEP: ${format(userData.cep)}</p>` : ''}
-    </div>
-  `;
-  
-  if (userData.nome) {
-    document.getElementById('welcome-title').textContent = `Bem-vindo(a), ${userData.nome}!`;
-  }
-}
-  
   function exibirDadosUsuario(userData) {
+    const welcomeTitle = document.getElementById('welcome-title');
     const userInfoDiv = document.getElementById('userInfo');
     
-    if (!userData) {
-      userInfoDiv.innerHTML = '<div class="error-message">Dados do usuário inválidos</div>';
-      return;
+    // Formatação segura de campos
+    const format = (value) => value ? value.toString().trim() : "Não informado";
+    
+    // Atualiza o título
+    if (userData.nome) {
+      welcomeTitle.textContent = `Bem-vindo(a), ${format(userData.nome)}!`;
     }
-  
-    const formatField = (value, defaultValue = 'Não informado') => {
-      return value && value !== '' ? value : defaultValue;
-    };
-  
+    
+    // Monta o HTML dos dados
     userInfoDiv.innerHTML = `
-      <div class="info-item"><strong>Nome:</strong> ${formatField(userData.nome)} ${formatField(userData.sobrenome)}</div>
-      <div class="info-item"><strong>Usuário:</strong> ${formatField(userData.usuario)}</div>
-      <div class="info-item"><strong>E-mail:</strong> ${formatField(userData.email)}</div>
-      <div class="info-item"><strong>Telefone:</strong> ${formatField(userData.telefone)}</div>
-      <div class="info-item"><strong>Idade:</strong> ${formatField(userData.idade)}</div>
-      <div class="info-item"><strong>Gênero:</strong> ${formatField(userData.genero)}</div>
+      <div class="info-item"><strong>Nome:</strong> ${format(userData.nome)} ${format(userData.sobrenome)}</div>
+      <div class="info-item"><strong>Usuário:</strong> ${format(userData.usuario)}</div>
+      <div class="info-item"><strong>E-mail:</strong> ${format(userData.email)}</div>
+      <div class="info-item"><strong>Telefone:</strong> ${format(userData.telefone)}</div>
       
       <div class="address-section">
-        <div class="info-item"><strong>Endereço:</strong></div>
-        ${userData.rua ? `<div class="address-line">${userData.rua}${userData.numero ? `, ${userData.numero}` : ''}</div>` : ''}
-        ${userData.complemento ? `<div class="address-line">${userData.complemento}</div>` : ''}
-        ${userData.bairro ? `<div class="address-line">Bairro: ${userData.bairro}</div>` : ''}
-        ${userData.cidade ? `<div class="address-line">${userData.cidade}${userData.estado ? ` - ${userData.estado}` : ''}</div>` : ''}
-        ${userData.cep ? `<div class="address-line">CEP: ${userData.cep}</div>` : ''}
-        ${userData.pais ? `<div class="address-line">${userData.pais}</div>` : ''}
-        ${!userData.rua && !userData.cidade ? '<div class="address-line">Endereço não informado</div>' : ''}
+        <h4>Endereço</h4>
+        <p>${format(userData.rua)}${userData.numero ? ', ' + format(userData.numero) : ''}</p>
+        ${userData.complemento ? `<p>${format(userData.complemento)}</p>` : ''}
+        ${userData.bairro ? `<p>Bairro: ${format(userData.bairro)}</p>` : ''}
+        <p>${format(userData.cidade)}/${format(userData.estado)}</p>
+        ${userData.cep ? `<p>CEP: ${format(userData.cep)}</p>` : ''}
       </div>
     `;
-    
-    // Atualiza o título de boas-vindas
-    const welcomeTitle = document.getElementById('welcome-title');
-    if (welcomeTitle && userData.nome) {
-      welcomeTitle.textContent = `Bem-vindo(a), ${userData.nome}!`;
-    }
   }
 
   async function carregarEstoque() {
