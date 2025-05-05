@@ -465,54 +465,65 @@ async function carregarDadosUsuario(email) {
   showLoader(true);
   
   try {
-    console.log("Iniciando busca por dados completos para:", email);
-    const response = await fetch(`${SCRIPT_URL}?action=get_full_data&email=${encodeURIComponent(email)}`);
+    // 1. Configura a requisição de forma explícita
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.append('action', 'get_full_data');
+    url.searchParams.append('email', email);
     
-    // Verificação adicional da resposta
+    console.log("URL da requisição:", url.toString());
+    
+    // 2. Faz a requisição com cabeçalhos explícitos
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      },
+      redirect: 'follow'
+    });
+    
+    // 3. Verificação rigorosa da resposta
     if (!response.ok) {
-      throw new Error(`Erro HTTP ${response.status}`);
+      throw new Error(`Erro HTTP: ${response.status}`);
     }
     
-    const responseText = await response.text();
-    console.log("Resposta recebida:", responseText);
-    
-    let result;
-    try {
-      result = JSON.parse(responseText);
-    } catch (e) {
-      throw new Error("Resposta inválida do servidor: " + responseText);
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const textResponse = await response.text();
+      throw new Error(`Resposta não é JSON: ${textResponse.substring(0, 100)}`);
     }
     
+    const result = await response.json();
+    
+    // 4. Validação da estrutura da resposta
     if (result.status !== "success") {
-      throw new Error(result.message || "Erro ao buscar dados");
+      throw new Error(result.message || "Estrutura de resposta inválida");
     }
     
-    // Exibe todos os dados
+    // 5. Exibe os dados combinados
     exibirDadosUsuario({
       email: email,
-      ...result.data // Combina com todos os dados adicionais
+      ...result
     });
     
   } catch (error) {
     console.error("Erro detalhado:", error);
     
-    // Fallback: mostra pelo menos o e-mail
-    exibirDadosUsuario({ email: email });
+    // Fallback seguro
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    exibirDadosUsuario({
+      email: email,
+      nome: userData.nome || "",
+      sobrenome: userData.sobrenome || ""
+    });
     
-    // Adiciona mensagem de erro detalhada
-    const errorHtml = `
-      <div class="error-message" style="color:red; margin-top:20px; padding:10px; background:#ffeeee;">
-        <p>Erro ao carregar dados completos:</p>
-        <p><strong>${error.message}</strong></p>
-        <button onclick="location.reload()" class="btn2">
-          Recarregar página
-        </button>
-        <button onclick="carregarDadosUsuario('${email}')" class="btn2">
-          Tentar novamente
-        </button>
+    // Mensagem de erro amigável
+    document.getElementById('userInfo').insertAdjacentHTML('beforeend', `
+      <div class="error-message" style="margin-top:20px;padding:15px;background:#fff3f3;border-left:4px solid #ff6b6b;">
+        <p style="color:#d32f2f;font-weight:bold;">⚠️ Atenção: Dados incompletos</p>
+        <p>Algumas informações não puderam ser carregadas. Por favor, tente mais tarde.</p>
+        <p style="font-size:0.9em;color:#666;">Detalhes técnicos: ${error.message}</p>
       </div>
-    `;
-    document.getElementById('userInfo').insertAdjacentHTML('beforeend', errorHtml);
+    `);
     
   } finally {
     showLoader(false);
@@ -526,40 +537,38 @@ function exibirDadosUsuario(data) {
     <div class="info-item"><strong>E-mail:</strong> ${format(data.email)}</div>
   `;
   
-  // Adiciona campos se existirem
   if (data.nome) {
     document.getElementById('welcome-title').textContent = `Bem-vindo(a), ${data.nome}!`;
     html = `
       <div class="info-item"><strong>Nome:</strong> ${format(data.nome)} ${format(data.sobrenome)}</div>
-      <div class="info-item"><strong>Usuário:</strong> ${format(data.usuario)}</div>
       ${html}
     `;
   }
   
-  // Demais campos
-  const campos = [
+  // Adiciona campos extras
+  const camposExtras = [
     { key: 'telefone', label: 'Telefone' },
     { key: 'idade', label: 'Idade' },
     { key: 'genero', label: 'Gênero' }
   ];
   
-  campos.forEach(campo => {
+  camposExtras.forEach(campo => {
     if (data[campo.key]) {
       html += `<div class="info-item"><strong>${campo.label}:</strong> ${format(data[campo.key])}</div>`;
     }
   });
   
-  // Endereço completo
-  if (data.rua || data.cidade) {
+  // Adiciona endereço se existir
+  if (data.endereco && (data.endereco.rua || data.endereco.cidade)) {
     html += `
       <div class="address-section">
         <strong>Endereço:</strong>
-        ${data.rua ? `<p>${format(data.rua)} ${format(data.numero)}</p>` : ''}
-        ${data.complemento ? `<p>Complemento: ${format(data.complemento)}</p>` : ''}
-        ${data.bairro ? `<p>Bairro: ${format(data.bairro)}</p>` : ''}
-        ${data.cidade ? `<p>${format(data.cidade)}/${format(data.estado)}</p>` : ''}
-        ${data.cep ? `<p>CEP: ${format(data.cep)}</p>` : ''}
-        ${data.pais ? `<p>País: ${format(data.pais)}</p>` : ''}
+        ${data.endereco.rua ? `<p>${format(data.endereco.rua)} ${format(data.endereco.numero)}</p>` : ''}
+        ${data.endereco.complemento ? `<p>Complemento: ${format(data.endereco.complemento)}</p>` : ''}
+        ${data.endereco.bairro ? `<p>Bairro: ${format(data.endereco.bairro)}</p>` : ''}
+        ${data.endereco.cidade ? `<p>${format(data.endereco.cidade)}/${format(data.endereco.estado)}</p>` : ''}
+        ${data.endereco.cep ? `<p>CEP: ${format(data.endereco.cep)}</p>` : ''}
+        ${data.endereco.pais ? `<p>País: ${format(data.endereco.pais)}</p>` : ''}
       </div>
     `;
   }
