@@ -446,7 +446,7 @@
 
     // Verifica usuário logado
     const userData = JSON.parse(localStorage.getItem('userData'));
-    const loggedInUserEmail = userData?.email || localStorage.getItem('loggedInUser');
+    const loggedInUserEmail = userData?.email;
     
     if (!loggedInUserEmail) {
       window.location.href = "login.html";
@@ -470,18 +470,19 @@
 async function carregarDadosUsuarioCompletos(email) {
   showLoader(true);
   try {
+    if (!email) {
+      throw new Error("E-mail do usuário não disponível");
+    }
+
     const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
     
-    const responseData = await response.text(); // Primeiro obtém como texto
-    let userData;
-    
-    try {
-      userData = JSON.parse(responseData); // Tenta parsear como JSON
-    } catch (e) {
-      throw new Error(responseData || "Resposta inválida do servidor");
+    if (!response.ok) {
+      throw new Error(`Erro HTTP ${response.status}`);
     }
     
-    if (!response.ok || userData.status !== "sucesso") {
+    const userData = await response.json();
+    
+    if (userData.status !== "sucesso") {
       throw new Error(userData.message || "Erro ao buscar dados do usuário");
     }
     
