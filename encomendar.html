@@ -422,7 +422,7 @@
   </footer>
 
  <script>
-  // Dados globais
+  /* Dados globais
   let dados = {
     estoque: { mesas: 50, cadeiras: 100, bancos: 30 },
     pedidos: []
@@ -432,7 +432,7 @@
   const SHEET_ID = "1QKnR6pWhemrdT5csvGpsy-pLxq0qQuKjniY7yvH3d48";
   const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`; 
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzfDbfbHbkR-nYYT-biWN0XOH1dTYGh28Ge8BhSfKXgxZFNqTnqUtrpe6yqaA_GBwY/exec";
-    
+   */ 
   // CONTROLE DO MENU MOBILE
   document.addEventListener('DOMContentLoaded', function() {
     const menuToggle = document.getElementById('menuToggle');
@@ -474,14 +474,14 @@
       minDate: 1
     });
     
-    carregarEstoque();
+   carregarEstoque();
     
     const closeModalBtn = document.getElementById("close-modal");
     closeModalBtn.addEventListener("click", () => {
       document.getElementById("fade").style.display = "none";
       document.getElementById("modal").style.display = "none";
       window.location.href = "customer_area.html";
-    });
+    }); 
 
     toggleAddress(false);
   });
@@ -644,7 +644,7 @@
     document.getElementById("totalpedido").innerHTML = (totalSemFrete + frete).toFixed(2);
   }
 
-  // FUNÇÕES PARA INTEGRAÇÃO COM GOOGLE SHEETS
+  /* // FUNÇÕES PARA INTEGRAÇÃO COM GOOGLE SHEETS
   async function carregarEstoque() {
     try {
       const response = await fetch(SHEET_URL);
@@ -684,7 +684,7 @@
       if (item === 'mesas') dados.estoque.mesas -= quantidade;
       if (item === 'cadeiras') dados.estoque.cadeiras -= quantidade;
       if (item === 'bancos') dados.estoque.bancos -= quantidade;
-      
+      */
       exibirEstoque();
       
       // Recarrega após 2 segundos
