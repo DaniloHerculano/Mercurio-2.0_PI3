@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
+const pool = require('../db-pg');
 
 // Obter estoque
 router.get('/', async (req, res) => {
