@@ -34,7 +34,7 @@ app.listen(PORT, () => {
 
 // Ajuste o CORS para permitir seu frontend
 const corsOptions = {
-  origin: 'https://mercuriolocacoes.netlify.app/encomendar', // ou 'http://localhost:3000'
+  origin: 'https://mercuriolocacoes.netlify.app', // ou 'http://localhost:3000'
   methods: 'GET,POST',
   optionsSuccessStatus: 200
 };
