@@ -6,7 +6,7 @@ const pool = new Pool({
   password: 'Ferroviagravata12#',
   database: 'postgres',
   port: 6543,            // default port for PostgreSQL
-  max: 10,               // maximum number of connections
+  max: 15,               // maximum number of connections
   idleTimeoutMillis: 30000, // optional: how long a client is allowed to remain idle
 });
 
