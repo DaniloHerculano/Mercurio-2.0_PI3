@@ -695,11 +695,32 @@
   }
 */
    
+
+
+// FUNÇÃO PARA BUSCAR O ESTOQUE (BACKEND)
+async function obterEstoque() {
+  try {
+    const response = await fetch('http://localhost:6543/api/estoque');
+    const estoque = await response.json();
+    if (response.ok) {
+      // Exibe o estoque na interface
+      document.getElementById('estoqueMesas').innerText = `Mesas: ${estoque.estoqueMesas}`;
+      document.getElementById('estoqueCadeiras').innerText = `Cadeiras: ${estoque.estoqueCadeiras}`;
+      document.getElementById('estoqueBancos').innerText = `Bancos: ${estoque.estoqueBancos}`;
+    } else {
+      alert('Erro ao obter estoque');
+    }
+  } catch (error) {
+    console.error('Erro ao buscar estoque:', error);
+    alert('Erro ao conectar com o backend');
+  }
+}
+
 //CARREGAMENTO DE DADOS NO INÍCIO
 
 let dados = {};
 
-// Carregar dados de estoque no início
+// Carregar dados de estoque já no início
 async function carregarEstoque() {
   try {
     const response = await fetch('http://localhost:6543/api/estoque');
@@ -743,26 +764,6 @@ async function criarPedido(pedido) {
     alert('Erro ao enviar pedido');
   }
 }
-
-// FUNÇÃO PARA BUSCAR O ESTOQUE (BACKEND)
-async function obterEstoque() {
-  try {
-    const response = await fetch('http://localhost:6543/api/estoque');
-    const estoque = await response.json();
-    if (response.ok) {
-      // Exibe o estoque na interface
-      document.getElementById('estoqueMesas').innerText = `Mesas: ${estoque.estoqueMesas}`;
-      document.getElementById('estoqueCadeiras').innerText = `Cadeiras: ${estoque.estoqueCadeiras}`;
-      document.getElementById('estoqueBancos').innerText = `Bancos: ${estoque.estoqueBancos}`;
-    } else {
-      alert('Erro ao obter estoque');
-    }
-  } catch (error) {
-    console.error('Erro ao buscar estoque:', error);
-    alert('Erro ao conectar com o backend');
-  }
-}
-
   // FUNÇÃO DE ATUALIZAR O ESTOQUE
 
   async function atualizarEstoque(pedido) {
