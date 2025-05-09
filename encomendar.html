@@ -694,16 +694,42 @@
     }
   }
 */
+   
+//CARREGAMENTO DE DADOS NO INÍCIO
 
+let dados = {};
+
+// Carregar dados de estoque no início
+async function carregarEstoque() {
+  try {
+    const response = await fetch('http://localhost:6543/api/estoque');
+    dados = await response.json();
+    
+    if (response.ok) {
+      document.getElementById('estoqueMesas').innerText = `Mesas: ${dados.estoqueMesas}`;
+      document.getElementById('estoqueCadeiras').innerText = `Cadeiras: ${dados.estoqueCadeiras}`;
+      document.getElementById('estoqueBancos').innerText = `Bancos: ${dados.estoqueBancos}`;
+    } else {
+      alert('Erro ao obter estoque');
+    }
+  } catch (error) {
+    console.error('Erro ao buscar estoque:', error);
+    alert('Erro ao conectar com o backend');
+  }
+}
+
+// Chamar carregarEstoque antes de usar dados em outras funções
+document.addEventListener('DOMContentLoaded', carregarEstoque);
+   
   // FUNÇÃO DE ENVIO DOS DADOS DO PEDIDO PARA O BACKEND
 async function criarPedido(pedido) {
   try {
     const response = await fetch('http://localhost:6543/api/pedidos', {
-      method: 'POST', // método HTTP (POST para criar)
+      method: 'POST', 
       headers: {
-        'Content-Type': 'application/json', // definindo o tipo de conteúdo como JSON
+        'Content-Type': 'application/json', 
       },
-      body: JSON.stringify(pedido), // dados do pedido em formato JSON
+      body: JSON.stringify(pedido), 
     });
 
     const data = await response.json();
