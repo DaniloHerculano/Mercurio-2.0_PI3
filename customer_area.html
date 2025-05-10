@@ -433,46 +433,27 @@ async function carregarDadosUsuario(email) {
   try {
     console.log("Iniciando busca de dados para:", email);
     
-    // 1. Configuração da requisição com tratamento especial para CORS
+    // Configuração da URL
     const url = new URL(SCRIPT_URL);
     url.searchParams.append('action', 'get_user_data');
     url.searchParams.append('email', encodeURIComponent(email));
     
-    // Usando mode: 'no-cors' apenas para a requisição simples
+    // Faz a requisição SEM mode: 'no-cors' (que limita o acesso à resposta)
     const response = await fetch(url.toString(), {
       method: 'GET',
-      mode: 'cors', // Tenta primeiro com CORS
       cache: 'no-cache',
       headers: {
-        'Content-Type': 'text/plain' // Header simplificado para evitar preflight
+        'Accept': 'application/json'
       }
-    }).catch(async () => {
-      // Fallback para no-cors se a requisição CORS falhar
-      console.log("Tentando fallback no-cors...");
-      return await fetch(url.toString(), {
-        method: 'GET',
-        mode: 'no-cors',
-        cache: 'no-cache'
-      });
     });
 
     // Verifica se a resposta é válida
-    if (!response.ok && response.type !== 'opaque') {
+    if (!response.ok) {
       throw new Error(`Erro HTTP: ${response.status}`);
     }
 
-    // Tenta parsear a resposta mesmo em modo no-cors
-    let result;
-    try {
-      result = await response.json();
-    } catch (e) {
-      const text = await response.text();
-      try {
-        result = JSON.parse(text);
-      } catch (parseError) {
-        throw new Error("Resposta inválida do servidor");
-      }
-    }
+    // Lê a resposta UMA ÚNICA VEZ
+    const result = await response.json();
 
     // Validação da estrutura da resposta
     if (!result || result.status !== "success") {
@@ -487,6 +468,10 @@ async function carregarDadosUsuario(email) {
     
     localStorage.setItem('userData', JSON.stringify(userData));
     exibirDadosUsuario(userData);
+    
+    // Carrega os pedidos do usuário após obter os dados básicos
+    carregarPedidosUsuario(email);
+    carregarEstoque();
     
   } catch (error) {
     console.error("Erro ao carregar dados:", error);
@@ -505,10 +490,10 @@ async function carregarDadosUsuario(email) {
     // Exibe pelo menos o e-mail
     exibirDadosUsuario({ email: email });
     
-    // Mensagem de erro melhorada
+    // Mensagem de erro
     const errorMessage = error.message.includes("servidor") 
       ? "Servidor indisponível no momento. Tente mais tarde." 
-      : error.message;
+      : "Erro ao carregar dados do usuário";
     
     const errorDiv = document.createElement('div');
     errorDiv.className = 'error-message';
