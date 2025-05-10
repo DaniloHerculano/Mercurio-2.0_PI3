@@ -402,6 +402,35 @@
   </footer>
 <!------------- JAVASCRIPT ------------>
 <script>
+      // CONTROLE DO MENU MOBILE - VERSÃO GARANTIDA
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuToggle = document.getElementById('menuToggle');
+      const mainNav = document.querySelector('.sf-menu');
+      
+      // Verifica se é mobile no carregamento
+      if (window.innerWidth <= 768) {
+        mainNav.style.display = 'none';
+      }
+      
+      // Controle do clique no botão
+      menuToggle.addEventListener('click', function() {
+        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+      
+      // Atualiza ao redimensionar a tela
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+    });
+  
   // Função para enviar o login via JavaScript
   function fazerLogin(event) {
     event.preventDefault();
