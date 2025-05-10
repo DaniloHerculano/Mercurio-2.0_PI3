@@ -446,23 +446,27 @@ async function carregarDadosUsuario(email) {
         const response = await fetch(url.toString(), {
             method: 'GET',
             cache: 'no-cache',
-            headers: { 'Accept': 'application/json' }
+            headers: { 
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
         });
 
+        // Verificação mais robusta da resposta
         if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
+            const errorText = await response.text();
+            throw new Error(errorText || `Erro HTTP: ${response.status}`);
         }
 
         const result = await response.json();
         
-        if (!result || result.status !== "success" || !result.data) {
-            throw new Error(result?.message || "Dados inválidos recebidos");
+        if (!result || result.status !== "success") {
+            throw new Error(result?.message || "Resposta inválida do servidor");
         }
 
         const userData = { email, ...result.data };
         localStorage.setItem('userData', JSON.stringify(userData));
         
-        // Processamento paralelo
         await Promise.all([
             exibirDadosUsuario(userData),
             carregarPedidosUsuario(email),
