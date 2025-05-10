@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db-pg');
 
-// Criar pedido
+// PARTE DE CRIAÇÃO DO PEDIDO
 router.post('/', async (req, res) => {
   try {
     const {
@@ -14,8 +14,8 @@ router.post('/', async (req, res) => {
     const result = await pool.query(`
       INSERT INTO pedidos 
       (datepickerstart, datepickerend, modelo, quantidadebancos, quantidadecadeiras, quantidademesas,
-      endereco, tipo_entrega, totaldiaria, totalpedido_nfrete, valor_frete,
-      totalpedido, status, data_pedido, dias)
+       endereco, tipo_entrega, totaldiaria, totalpedido_nfrete, valor_frete,
+       totalpedido, status, data_pedido, dias)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
       RETURNING id
     `, [
@@ -23,11 +23,13 @@ router.post('/', async (req, res) => {
       endereco, tipoEntrega, totalDiario, totalSemFrete, frete,
       total, status, dataPedido, dias
     ]);
-    
-    res.status(201).json({ success: true, pedidoId: result.rows[0].id });
+
+    const pedidoId = result.rows[0].id;
+
+    res.status(201).json({ success: true, pedidoId });
   } catch (error) {
     console.error('Erro ao criar pedido:', error);
-    res.status(500).json({ success: false, message: 'Erro no servidor' });
+    res.status(500).json({ success: false, message: 'Erro no servidor ao criar pedido' });
   }
 });
 
