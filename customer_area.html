@@ -432,67 +432,90 @@ async function carregarDadosUsuario(email) {
   showLoader(true);
   
   try {
-    // 1. Busca dados completos
-    const response = await fetch(`${SCRIPT_URL}?action=get_full_data&email=${encodeURIComponent(email)}`);
+    console.log("Iniciando busca de dados para:", email);
     
-    // Verifica se a resposta é JSON
+    // 1. Configuração robusta da requisição
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.append('action', 'get_user_data');  // Alterado para match com o Apps Script
+    url.searchParams.append('email', encodeURIComponent(email));
+    
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: { 
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      redirect: 'follow'
+    });
+
+    console.log("Resposta recebida. Status:", response.status);
+    
+    // 2. Verificação estrita do tipo de conteúdo
     const contentType = response.headers.get('content-type') || '';
     if (!contentType.includes('application/json')) {
-      throw new Error(await response.text());
+      const textResponse = await response.text();
+      console.error("Resposta não é JSON:", textResponse);
+      throw new Error("O servidor retornou uma resposta inválida");
     }
-    
+
     const result = await response.json();
+    console.log("Dados recebidos:", result);
     
-    // 2. Valida a resposta
+    // 3. Validação da estrutura da resposta
     if (result.status !== "success") {
-      throw new Error(result.message || "Erro ao buscar dados");
+      throw new Error(result.message || "Erro ao buscar dados do usuário");
     }
-    
-    // 3. Combina com dados básicos
+
+    // 4. Combina dados básicos com complementares
     const userData = {
       email: email,
       ...result.data
     };
     
-    // 4. Armazena e exibe
+    // 5. Armazena e exibe
     localStorage.setItem('userData', JSON.stringify(userData));
     exibirDadosUsuario(userData);
     
   } catch (error) {
-    console.error("Erro ao carregar dados:", error);
+    console.error("Erro detalhado:", error);
     
     // Fallback: tenta usar dados locais
     try {
       const localData = JSON.parse(localStorage.getItem('userData') || '{}');
-      exibirDadosUsuario({
-        email: email,
-        nome: localData.nome || "",
-        sobrenome: localData.sobrenome || ""
-      });
+      if (localData.email) {
+        exibirDadosUsuario(localData);
+        return;
+      }
     } catch (e) {
-      exibirDadosUsuario({ email: email });
+      console.error("Erro ao ler dados locais:", e);
     }
     
-    // Mostra mensagem de erro
-    document.getElementById('userInfo').innerHTML += `
-      <div class="error-message" style="margin-top:20px;padding:15px;background:#ffeeee;border-radius:5px;">
-        <p style="color:#d32f2f;">⚠️ Não foi possível carregar todos os dados</p>
-        <p style="font-size:0.9em;">${error.message || "Erro desconhecido"}</p>
-        <button onclick="carregarDadosUsuario('${email}')" class="btn2" style="margin-top:10px;">
-          Tentar novamente
-        </button>
-      </div>
+    // Exibe pelo menos o e-mail
+    exibirDadosUsuario({ email: email });
+    
+    // Mensagem de erro amigável
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.style = 'margin-top:20px;padding:15px;background:#fff3f3;border-radius:5px;';
+    errorDiv.innerHTML = `
+      <p style="color:#d32f2f;font-weight:bold;">⚠️ Atenção: Dados incompletos</p>
+      <p>${error.message || "Alguns dados não puderam ser carregados."}</p>
+      <button onclick="carregarDadosUsuario('${email}')" class="btn2" style="margin-top:10px;">
+        Tentar novamente
+      </button>
     `;
+    document.getElementById('userInfo').appendChild(errorDiv);
+    
   } finally {
     showLoader(false);
   }
 }
 
-// Função para exibir dados (CORRIGIDA)
+// Função para exibir dados
 function exibirDadosUsuario(data) {
   const format = (value) => value ? value : "Não informado";
   
-  // Garante que o elemento existe
+  // Garante que o container existe
   const userInfoDiv = document.getElementById('userInfo');
   if (!userInfoDiv) return;
   
@@ -500,41 +523,78 @@ function exibirDadosUsuario(data) {
     <div class="info-item"><strong>E-mail:</strong> ${format(data.email)}</div>
   `;
   
-  // Adiciona campos se existirem
+  // Adiciona campos básicos se existirem
   if (data.nome) {
     const welcomeTitle = document.getElementById('welcome-title');
     if (welcomeTitle) welcomeTitle.textContent = `Bem-vindo(a), ${data.nome}!`;
     
     html = `
       <div class="info-item"><strong>Nome:</strong> ${format(data.nome)} ${format(data.sobrenome)}</div>
+      <div class="info-item"><strong>Usuário:</strong> ${format(data.usuario)}</div>
       ${html}
     `;
   }
   
   // Campos adicionais
-  ['telefone', 'idade', 'genero'].forEach(campo => {
-    if (data[campo]) {
-      html += `<div class="info-item"><strong>${campo.charAt(0).toUpperCase() + campo.slice(1)}:</strong> ${format(data[campo])}</div>`;
+  const camposAdicionais = [
+    { key: 'telefone', label: 'Telefone' },
+    { key: 'idade', label: 'Idade' },
+    { key: 'genero', label: 'Gênero' }
+  ];
+  
+  camposAdicionais.forEach(campo => {
+    if (data[campo.key]) {
+      html += `<div class="info-item"><strong>${campo.label}:</strong> ${format(data[campo.key])}</div>`;
     }
   });
   
-  // Endereço
+  // Endereço completo
   if (data.endereco) {
+    const end = data.endereco;
     html += `
       <div class="address-section">
         <strong>Endereço:</strong>
-        ${data.endereco.rua ? `<p>${format(data.endereco.rua)} ${format(data.endereco.numero)}</p>` : ''}
-        ${data.endereco.complemento ? `<p>Complemento: ${format(data.endereco.complemento)}</p>` : ''}
-        ${data.endereco.bairro ? `<p>Bairro: ${format(data.endereco.bairro)}</p>` : ''}
-        ${data.endereco.cidade ? `<p>${format(data.endereco.cidade)}/${format(data.endereco.estado)}</p>` : ''}
-        ${data.endereco.cep ? `<p>CEP: ${format(data.endereco.cep)}</p>` : ''}
-        ${data.endereco.pais ? `<p>País: ${format(data.endereco.pais)}</p>` : ''}
+        ${end.rua ? `<p>${format(end.rua)} ${format(end.numero)}</p>` : ''}
+        ${end.complemento ? `<p>Complemento: ${format(end.complemento)}</p>` : ''}
+        ${end.bairro ? `<p>Bairro: ${format(end.bairro)}</p>` : ''}
+        ${end.cidade ? `<p>${format(end.cidade)}/${format(end.estado)}</p>` : ''}
+        ${end.cep ? `<p>CEP: ${format(end.cep)}</p>` : ''}
+        ${end.pais ? `<p>País: ${format(end.pais)}</p>` : ''}
       </div>
     `;
   }
   
   userInfoDiv.innerHTML = html;
 }
+
+// Inicialização segura
+document.addEventListener('DOMContentLoaded', function() {
+  try {
+    // Verifica login
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    const email = userData.email || localStorage.getItem('loggedInUser');
+    
+    if (!email) {
+      window.location.href = "login.html";
+      return;
+    }
+    
+    // Carrega dados
+    carregarDadosUsuario(email);
+    
+    // Configura logout
+    document.getElementById('logout')?.addEventListener('click', function(e) {
+      e.preventDefault();
+      localStorage.removeItem('userData');
+      localStorage.removeItem('loggedInUser');
+      window.location.href = "login.html";
+    });
+    
+  } catch (error) {
+    console.error("Erro na inicialização:", error);
+    window.location.href = "login.html";
+  }
+});
 
 // Inicialização CORRIGIDA
 document.addEventListener('DOMContentLoaded', function() {
