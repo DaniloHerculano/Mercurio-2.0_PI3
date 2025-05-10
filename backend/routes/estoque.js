@@ -80,7 +80,7 @@ router.get('/', async (req, res) => {
 
 module.exports = router; */
 
-//TESTE FERNANDA
+//TESTE FERNANDA2
 
 const express = require('express');
 const router = express.Router();
@@ -88,26 +88,29 @@ const pool = require('../db-pg');
 
 // Obter estoque
 router.get('/', async (req, res) => {
-  const [rows] = await pool.query('SELECT * FROM estoque LIMIT 1');
-  res.json(rows[0]);
+  try {
+    const result = await pool.query('SELECT * FROM estoque LIMIT 1');
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Erro ao buscar estoque:', error);
+    res.status(500).json({ success: false, message: 'Erro ao buscar estoque' });
+  }
 });
 
 // Atualizar estoque
 router.post('/atualizar', async (req, res) => {
-  const { mesas, cadeiras, bancos } = req.body;
-  if (isNaN(mesas) || isNaN(cadeiras) || isNaN(bancos)) {
-    return res.status(400).json({ message: "Valores de estoque inválidos" });
+  try {
+    const { mesas, cadeiras, bancos } = req.body;
+    await pool.query(
+      'UPDATE estoque SET estoqueMesas = $1, estoqueCadeiras = $2, estoqueBancos = $3 WHERE id = 1',
+      [mesas, cadeiras, bancos]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erro ao atualizar estoque:', error);
+    res.status(500).json({ success: false, message: 'Erro ao atualizar estoque' });
   }
-  await pool.query('UPDATE estoque SET estoqueMesas = $1, estoqueCadeiras = $2, estoqueBancos = $3 WHERE id = 1', [mesas, cadeiras, bancos]);
-  res.json({ success: true });
 });
-
-//SE ERRO NA CONSULTA
-const [rows] = await pool.query('SELECT * FROM estoque LIMIT 1');
-if (rows.length === 0) {
-  return res.status(404).json({ message: "Estoque não encontrado" });
-}
-
 
 module.exports = router;
 
