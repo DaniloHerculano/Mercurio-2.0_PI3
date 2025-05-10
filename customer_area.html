@@ -427,57 +427,69 @@
 // Configurações
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1SzcHJK5cAaGebZxPyYBy6W5xgENQlqsITzhwTvIspr1cqlTeCDBadQcAm6miiiSF/exec";
 
-// Função para carregar dados do usuário
 async function carregarDadosUsuario(email) {
   showLoader(true);
   
   try {
     console.log("Iniciando busca de dados para:", email);
     
-    // 1. Configuração robusta da requisição
+    // 1. Configuração da requisição com tratamento especial para CORS
     const url = new URL(SCRIPT_URL);
-    url.searchParams.append('action', 'get_user_data');  // Alterado para match com o Apps Script
+    url.searchParams.append('action', 'get_user_data');
     url.searchParams.append('email', encodeURIComponent(email));
     
+    // Usando mode: 'no-cors' apenas para a requisição simples
     const response = await fetch(url.toString(), {
       method: 'GET',
-      headers: { 
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      redirect: 'follow'
+      mode: 'cors', // Tenta primeiro com CORS
+      cache: 'no-cache',
+      headers: {
+        'Content-Type': 'text/plain' // Header simplificado para evitar preflight
+      }
+    }).catch(async () => {
+      // Fallback para no-cors se a requisição CORS falhar
+      console.log("Tentando fallback no-cors...");
+      return await fetch(url.toString(), {
+        method: 'GET',
+        mode: 'no-cors',
+        cache: 'no-cache'
+      });
     });
 
-    console.log("Resposta recebida. Status:", response.status);
-    
-    // 2. Verificação estrita do tipo de conteúdo
-    const contentType = response.headers.get('content-type') || '';
-    if (!contentType.includes('application/json')) {
-      const textResponse = await response.text();
-      console.error("Resposta não é JSON:", textResponse);
-      throw new Error("O servidor retornou uma resposta inválida");
+    // Verifica se a resposta é válida
+    if (!response.ok && response.type !== 'opaque') {
+      throw new Error(`Erro HTTP: ${response.status}`);
     }
 
-    const result = await response.json();
-    console.log("Dados recebidos:", result);
-    
-    // 3. Validação da estrutura da resposta
-    if (result.status !== "success") {
-      throw new Error(result.message || "Erro ao buscar dados do usuário");
+    // Tenta parsear a resposta mesmo em modo no-cors
+    let result;
+    try {
+      result = await response.json();
+    } catch (e) {
+      const text = await response.text();
+      try {
+        result = JSON.parse(text);
+      } catch (parseError) {
+        throw new Error("Resposta inválida do servidor");
+      }
     }
 
-    // 4. Combina dados básicos com complementares
+    // Validação da estrutura da resposta
+    if (!result || result.status !== "success") {
+      throw new Error(result?.message || "Dados não encontrados");
+    }
+
+    // Combina e exibe os dados
     const userData = {
       email: email,
       ...result.data
     };
     
-    // 5. Armazena e exibe
     localStorage.setItem('userData', JSON.stringify(userData));
     exibirDadosUsuario(userData);
     
   } catch (error) {
-    console.error("Erro detalhado:", error);
+    console.error("Erro ao carregar dados:", error);
     
     // Fallback: tenta usar dados locais
     try {
@@ -493,17 +505,35 @@ async function carregarDadosUsuario(email) {
     // Exibe pelo menos o e-mail
     exibirDadosUsuario({ email: email });
     
-    // Mensagem de erro amigável
+    // Mensagem de erro melhorada
+    const errorMessage = error.message.includes("servidor") 
+      ? "Servidor indisponível no momento. Tente mais tarde." 
+      : error.message;
+    
     const errorDiv = document.createElement('div');
     errorDiv.className = 'error-message';
-    errorDiv.style = 'margin-top:20px;padding:15px;background:#fff3f3;border-radius:5px;';
+    errorDiv.style.cssText = `
+      margin-top: 20px;
+      padding: 15px;
+      background: #fff3f3;
+      border-radius: 5px;
+      border-left: 4px solid #ff6b6b;
+    `;
     errorDiv.innerHTML = `
-      <p style="color:#d32f2f;font-weight:bold;">⚠️ Atenção: Dados incompletos</p>
-      <p>${error.message || "Alguns dados não puderam ser carregados."}</p>
-      <button onclick="carregarDadosUsuario('${email}')" class="btn2" style="margin-top:10px;">
+      <p style="color:#d32f2f; font-weight:bold; margin-bottom:8px;">
+        ⚠️ Não foi possível carregar todos os dados
+      </p>
+      <p style="margin-bottom:12px;">${errorMessage}</p>
+      <button onclick="carregarDadosUsuario('${email}')" 
+              class="btn2" 
+              style="margin-right:10px;">
         Tentar novamente
       </button>
+      <button onclick="window.location.reload()" class="btn2">
+        Recarregar página
+      </button>
     `;
+    
     document.getElementById('userInfo').appendChild(errorDiv);
     
   } finally {
