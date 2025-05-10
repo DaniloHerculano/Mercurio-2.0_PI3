@@ -425,87 +425,89 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 // Configurações
+// Configurações
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1SzcHJK5cAaGebZxPyYBy6W5xgENQlqsITzhwTvIspr1cqlTeCDBadQcAm6miiiSF/exec";
 
-// Função principal para carregar dados do usuário
-async function carregarDadosUsuario(email) {
-    if (!email || !email.includes('@')) {
-        exibirDadosUsuario({ email: email });
-        return;
-    }
-
-    showLoader(true);
+// Nova função para fazer requisições sem CORS
+async function fazerRequisicaoSemCORS(params) {
+  const url = new URL(SCRIPT_URL);
+  Object.keys(params).forEach(key => 
+    url.searchParams.append(key, params[key]));
+  
+  try {
+    // Usando proxy para contornar CORS
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url.toString())}`;
+    const response = await fetch(proxyUrl);
+    const data = await response.json();
     
-    try {
-        console.log("Buscando dados para:", email);
-        
-        const url = new URL(SCRIPT_URL);
-        url.searchParams.append('action', 'get_user_data');
-        url.searchParams.append('email', encodeURIComponent(email));
-        
-        const response = await fetch(url.toString(), {
-            method: 'GET',
-            cache: 'no-cache',
-            headers: { 
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        });
-
-        // Verificação mais robusta da resposta
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(errorText || `Erro HTTP: ${response.status}`);
-        }
-
-        const result = await response.json();
-        
-        if (!result || result.status !== "success") {
-            throw new Error(result?.message || "Resposta inválida do servidor");
-        }
-
-        const userData = { email, ...result.data };
-        localStorage.setItem('userData', JSON.stringify(userData));
-        
-        await Promise.all([
-            exibirDadosUsuario(userData),
-            carregarPedidosUsuario(email),
-            carregarEstoque()
-        ]);
-        
-    } catch (error) {
-        console.error("Erro ao carregar dados:", error);
-        exibirDadosUsuarioFallback(email, error);
-    } finally {
-        showLoader(false);
+    if (data.contents) {
+      return JSON.parse(data.contents);
     }
+    throw new Error("Resposta inválida do proxy");
+  } catch (error) {
+    console.error("Erro na requisição:", error);
+    throw error;
+  }
 }
 
+// Função principal atualizada
+async function carregarDadosUsuario(email) {
+  showLoader(true);
+  
+  try {
+    const result = await fazerRequisicaoSemCORS({
+      action: 'get_user_data',
+      email: email
+    });
+
+    if (!result || result.status !== "success") {
+      throw new Error(result?.message || "Dados não encontrados");
+    }
+
+    const userData = {
+      email: email,
+      ...result.data
+    };
+    
+    localStorage.setItem('userData', JSON.stringify(userData));
+    exibirDadosUsuario(userData);
+    
+    // Carrega os pedidos e estoque
+    await Promise.all([
+      carregarPedidosUsuario(email),
+      carregarEstoque()
+    ]);
+    
+  } catch (error) {
+    console.error("Erro ao carregar dados:", error);
+    exibirDadosUsuarioFallback(email, error);
+  } finally {
+    showLoader(false);
+  }
+}
+
+// Função fallback atualizada
 function exibirDadosUsuarioFallback(email, error) {
-    // Tenta dados locais primeiro
-    try {
-        const localData = JSON.parse(localStorage.getItem('userData') || '{}');
-        if (localData.email === email) {
-            exibirDadosUsuario(localData);
-            return;
-        }
-    } catch (e) {
-        console.error("Erro ao ler dados locais:", e);
+  try {
+    const localData = JSON.parse(localStorage.getItem('userData') || {});
+    if (localData.email === email) {
+      exibirDadosUsuario(localData);
+      return;
     }
-    
-    // Exibe pelo menos o e-mail
-    const userInfoDiv = document.getElementById('userInfo');
-    if (userInfoDiv) {
-        userInfoDiv.innerHTML = `
-            <div class="info-item"><strong>E-mail:</strong> ${email}</div>
-            <div class="error-message">⚠️ Erro ao carregar dados completos</div>
-        `;
-    }
-    
-    // Exibe mensagem de erro detalhada se for relevante
-    if (!error.message.includes("servidor")) {
-        alert("Erro ao carregar dados: " + error.message);
-    }
+  } catch (e) {
+    console.error("Erro ao ler dados locais:", e);
+  }
+  
+  const userInfoDiv = document.getElementById('userInfo');
+  if (userInfoDiv) {
+    userInfoDiv.innerHTML = `
+      <div class="info-item"><strong>E-mail:</strong> ${email}</div>
+      <div class="error-message">
+        ⚠️ Não foi possível carregar dados completos
+        <p>${error.message}</p>
+      </div>
+    `;
+  }
 }
 
 // Função para exibir dados do usuário
