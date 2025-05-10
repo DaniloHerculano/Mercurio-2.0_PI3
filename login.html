@@ -432,54 +432,68 @@
     });
   
   // Função para enviar o login via JavaScript
-  function fazerLogin(event) {
-    event.preventDefault();
-    
-    // Verifica se o elemento loading-overlay existe
-    const loadingOverlay = document.getElementById('loading-overlay');
-    if (loadingOverlay) {
-      loadingOverlay.style.display = 'flex';
-    }
-    
-    // Coleta os dados do formulário
-    var email = document.getElementById('login').value.trim();
-    var senha = document.getElementById('password').value.trim();
-  
-    // Envia os dados para o Apps Script
-    $.get('https://script.google.com/macros/s/AKfycbx1SzcHJK5cAaGebZxPyYBy6W5xgENQlqsITzhwTvIspr1cqlTeCDBadQcAm6miiiSF/exec', {
-      email: email,
-      senha: senha
-    }, function(resposta) {
-      // Esconde o loader se existir
+    function fazerLogin(event) {
+      event.preventDefault();
+      
+      // Verifica se o elemento loading-overlay existe
+      const loadingOverlay = document.getElementById('loading-overlay');
+      const loginButton = document.querySelector('.btn');
+      
       if (loadingOverlay) {
-        loadingOverlay.style.display = 'none';
+        loadingOverlay.style.display = 'flex';
       }
       
-      if (typeof resposta === 'string') {
-        try {
-          resposta = JSON.parse(resposta);
-        } catch (e) {
-          alert("Erro: " + resposta);
-          return;
-        }
-      }
+      // Altera o texto do botão para "Entrando..." e o desabilita
+      loginButton.textContent = "Entrando...";
+      loginButton.disabled = true;
   
-      if (resposta.status === "sucesso") {
-        // Armazena os dados básicos no localStorage
-        localStorage.setItem('loggedInUser', resposta.email);
+      // Coleta os dados do formulário
+      var email = document.getElementById('login').value.trim();
+      var senha = document.getElementById('password').value.trim();
+    
+      // Envia os dados para o Apps Script
+      $.get('https://script.google.com/macros/s/AKfycbx1SzcHJK5cAaGebZxPyYBy6W5xgENQlqsITzhwTvIspr1cqlTeCDBadQcAm6miiiSF/exec', {
+        email: email,
+        senha: senha
+      }, function(resposta) {
+        // Esconde o loader se existir
+        if (loadingOverlay) {
+          loadingOverlay.style.display = 'none';
+        }
         
-        // Redireciona para a área do cliente
-        window.location.href = 'customer_area.html';
-      } else {
-        alert("Erro: " + (resposta.message || "Usuário ou senha inválidos"));
-      }
-    }).fail(function() {
-      if (loadingOverlay) {
-        loadingOverlay.style.display = 'none';
-      }
-      alert("Erro na comunicação com o servidor");
-    });
-  }
+        // Restaura o texto do botão e reativa
+        loginButton.textContent = "Entrar";
+        loginButton.disabled = false;
+  
+        if (typeof resposta === 'string') {
+          try {
+            resposta = JSON.parse(resposta);
+          } catch (e) {
+            alert("Erro: " + resposta);
+            return;
+          }
+        }
+    
+        if (resposta.status === "sucesso") {
+          // Armazena os dados básicos no localStorage
+          localStorage.setItem('loggedInUser', resposta.email);
+          
+          // Redireciona para a área do cliente
+          window.location.href = 'customer_area.html';
+        } else {
+          alert("Erro: " + (resposta.message || "Usuário ou senha inválidos"));
+        }
+      }).fail(function() {
+        if (loadingOverlay) {
+          loadingOverlay.style.display = 'none';
+        }
+        // Restaura o texto do botão e reativa
+        loginButton.textContent = "Entrar";
+        loginButton.disabled = false;
+        
+        alert("Erro na comunicação com o servidor");
+      });
+    }
   </script>
 </body>
 </html>
