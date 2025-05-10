@@ -429,33 +429,24 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1SzcHJK5cAaGebZxPy
 
 // Função para fazer requisições
 async function fazerRequisicaoSegura(params) {
-  const url = new URL(SCRIPT_URL);
-  Object.keys(params).forEach(key => 
-    url.searchParams.append(key, params[key]));
-  
-  try {
-    // Usando fetch com tratamento completo de erros
-    const response = await fetch(url.toString(), {
-      redirect: "follow" // Importante para Apps Script
-    });
-
-    // Verifica se a resposta é válida
-    if (!response.ok) {
-      throw new Error(`Erro HTTP: ${response.status}`);
-    }
-
-    // Tenta parsear como JSON
-    const data = await response.json();
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = `${SCRIPT_URL}?${new URLSearchParams(params)}&callback=handleJsonpResponse`;
     
-    if (!data || typeof data !== 'object') {
-      throw new Error("Resposta inválida do servidor");
-    }
+    window.handleJsonpResponse = (data) => {
+      document.body.removeChild(script);
+      delete window.handleJsonpResponse;
+      resolve(data);
+    };
     
-    return data;
-  } catch (error) {
-    console.error("Erro na requisição:", error);
-    throw error;
-  }
+    script.onerror = () => {
+      document.body.removeChild(script);
+      delete window.handleJsonpResponse;
+      reject(new Error("Erro ao carregar dados"));
+    };
+    
+    document.body.appendChild(script);
+  });
 }
 
 // Função principal
