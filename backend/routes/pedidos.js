@@ -14,7 +14,7 @@ router.post('/', async (req, res) => {
     const result = await pool.query(`
       INSERT INTO pedidos 
       (datepickerstart, datepickerend, modelo, quantidadebancos, quantidadecadeiras, quantidademesas,
-       endereco, tipo_entrega, totaldiaria, totalpedido_nfrete, valor_frete,
+       endereco, tipo_entrega, totaldiaria, totalpedido_frete, valor_frete,
        totalpedido, status, data_pedido, dias)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
       RETURNING id
