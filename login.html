@@ -418,77 +418,98 @@
 <!------------- JAVASCRIPT ------------>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // CONTROLE DO MENU MOBILE - VERSÃO GARANTIDA
+    const loginForm = document.getElementById('login-form');
+    const loginButton = document.getElementById('login-button');
+    const statusMessage = document.getElementById('status-message');
     const menuToggle = document.getElementById('menuToggle');
     const mainNav = document.querySelector('.sf-menu');
     
-    if (window.innerWidth <= 768) {
-      mainNav.style.display = 'none';
+    // Controle do Menu Mobile
+    if (menuToggle && mainNav) {
+      if (window.innerWidth <= 768) {
+        mainNav.style.display = 'none';
+      }
+
+      menuToggle.addEventListener('click', function() {
+        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
     }
 
-    menuToggle?.addEventListener('click', function() {
-      mainNav.style.display = (mainNav.style.display === 'none' || mainNav.style.display === '') ? 'flex' : 'none';
-    });
+    // Evento de Login
+    loginForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      loginButton.textContent = "Entrando...";
+      loginButton.disabled = true;
+      
+      const emailOrUser = document.getElementById('login').value.trim();
+      const senha = document.getElementById('password').value.trim();
+      
+      if (!emailOrUser || !senha) {
+        showMessage("Por favor, preencha todos os campos.", "error");
+        resetButton();
+        return;
+      }
 
-    window.addEventListener('resize', function() {
-      mainNav.style.display = window.innerWidth > 768 ? 'flex' : 'none';
-    });
-
-    // Manipulação do formulário de login
-    $(document).ready(function() {
-      $('#login-form').on('submit', function(e) {
-        e.preventDefault(); // Impede o envio padrão do formulário
-
-        const emailOrUser = $('#login').val().trim();
-        const senha = $('#senha').val().trim();
-        const loginButton = document.querySelector('.btn');
-
-        // Verifica se os campos não estão vazios
-        if (!emailOrUser || !senha) {
-          alert('Por favor, preencha todos os campos');
-          return;
+      // Envia a requisição para o Apps Script via AJAX
+      fetch('https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          action: 'login_user',
+          email: emailOrUser,
+          usuario: emailOrUser,
+          senha: senha
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          sessionStorage.setItem('user', JSON.stringify(data.data));
+          window.location.href = 'customer_area.html';
+        } else {
+          showMessage(data.message || 'Erro no login.', "error");
+          resetButton();
         }
-
-        // Altera o texto do botão para "Entrando..." e o desabilita
-        if (loginButton) {
-          loginButton.textContent = "Entrando...";
-          loginButton.disabled = true;
-        }
-
-        // Envia a requisição para o Apps Script via AJAX
-        $.ajax({
-          url: 'https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec',
-          type: 'POST',
-          data: {
-            action: 'login_user',
-            email: emailOrUser,
-            usuario: emailOrUser,
-            senha: senha
-          },
-          success: function(response) {
-            var data = typeof response === "string" ? JSON.parse(response) : response;
-            
-            if (data.status === 'success') {
-              window.location.href = 'customer_area.html';
-            } else {
-              alert(data.message || 'Erro no login');
-              if (loginButton) {
-                loginButton.textContent = "Entrar";
-                loginButton.disabled = false;
-              }
-            }
-          },
-          error: function(xhr, status, error) {
-            alert('Erro ao se conectar com o servidor. Tente novamente mais tarde.');
-            if (loginButton) {
-              loginButton.textContent = "Entrar";
-              loginButton.disabled = false;
-            }
-          }
-        });
+      })
+      .catch(() => {
+        showMessage('Erro ao se conectar com o servidor. Tente novamente mais tarde.', "error");
+        resetButton();
       });
     });
+
+    // Função para mostrar mensagens de status
+    function showMessage(message, type) {
+      statusMessage.textContent = message;
+      statusMessage.style.display = 'block';
+      statusMessage.style.color = (type === "error") ? "red" : "green";
+    }
+
+    // Função para resetar o botão
+    function resetButton() {
+      loginButton.textContent = "Entrar";
+      loginButton.disabled = false;
+    }
   });
+
+  // Função de logout (a ser chamada ao clicar em "Sair")
+  function logout() {
+    sessionStorage.removeItem('user');
+    window.location.href = 'login.html';
+  }
 </script>
 </body>
 </html>
