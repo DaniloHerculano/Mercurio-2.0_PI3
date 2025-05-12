@@ -424,314 +424,84 @@
 <!------------- JAVASCRIPT ------------>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-// Configurações
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1SzcHJK5cAaGebZxPyYBy6W5xgENQlqsITzhwTvIspr1cqlTeCDBadQcAm6miiiSF/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1SzcHJK5cAaGebZxPyYBy6W5xgENQlqsITzhwTvIspr1cqlTeCDBadQcAm6miiiSF/exec";
 
-// Função de requisição ultra-resiliente
-async function fazerRequisicaoConfiavel(params) {
-  const url = new URL(SCRIPT_URL);
-  Object.keys(params).forEach(key => 
-    url.searchParams.append(key, params[key]));
-  
-  // Adiciona timestamp para evitar cache
-  url.searchParams.append('_t', Date.now());
+    async function carregarDadosUsuario(email) {
+      showLoader(true);
 
-  try {
-    const response = await fetch(url, {
-      redirect: 'follow',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'text/plain' // Evita preflight CORS
-      }
-    });
+      try {
+        const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
+        const result = await response.json();
 
-    // Verifica se a resposta parece ser JSON
-    const text = await response.text();
-    try {
-      return JSON.parse(text);
-    } catch {
-      throw new Error(text || "Resposta inválida do servidor");
-    }
-  } catch (error) {
-    console.error("Erro na requisição:", error);
-    throw error;
-  }
-}
-
-// Função principal à prova de falhas
-async function carregarDadosUsuario(email) {
-  showLoader(true);
-  
-  try {
-    const result = await fazerRequisicaoConfiavel({
-      action: 'get_user_data',
-      email: email
-    });
-
-    if (!result || result.status !== "success") {
-      throw new Error(result?.message || "Dados não disponíveis");
-    }
-
-    const userData = {
-      email: email,
-      ...result.data
-    };
-    
-    localStorage.setItem('userData', JSON.stringify(userData));
-    exibirDadosUsuario(userData);
-    
-    // Carrega dados adicionais em paralelo
-    await Promise.allSettled([
-      carregarPedidosUsuario(email),
-      carregarEstoque()
-    ]);
-    
-  } catch (error) {
-    console.error("Erro ao carregar dados:", error);
-    exibirDadosUsuarioFallback(email, error);
-  } finally {
-    showLoader(false);
-  }
-}
-
-// Fallback melhorado
-function exibirDadosUsuarioFallback(email, error) {
-  try {
-    const savedData = localStorage.getItem('userData');
-    if (savedData) {
-      const localData = JSON.parse(savedData);
-      if (localData.email === email) {
-        exibirDadosUsuario(localData);
-        return;
-      }
-    }
-  } catch (e) {
-    console.error("Erro ao ler cache local:", e);
-  }
-
-  const userInfoDiv = document.getElementById('userInfo');
-  if (userInfoDiv) {
-    userInfoDiv.innerHTML = `
-      <div class="info-item"><strong>E-mail:</strong> ${email}</div>
-      <div class="error-message">
-        ⚠️ Dados incompletos (modo offline)
-        <p>${error.message || "Sem conexão com o servidor"}</p>
-        <button onclick="carregarDadosUsuario('${email}')" class="btn2">
-          Tentar novamente
-        </button>
-      </div>
-    `;
-  }
-}
-
-// Função para exibir dados do usuário
-function exibirDadosUsuario(data) {
-    const format = (value) => value ? value : "Não informado";
-    const userInfoDiv = document.getElementById('userInfo');
-    if (!userInfoDiv) return;
-    
-    let html = `
-        <div class="info-item"><strong>E-mail:</strong> ${format(data.email)}</div>
-    `;
-    
-    if (data.nome) {
-        const welcomeTitle = document.getElementById('welcome-title');
-        if (welcomeTitle) welcomeTitle.textContent = `Bem-vindo(a), ${data.nome}!`;
-        
-        html = `
-            <div class="info-item"><strong>Nome:</strong> ${format(data.nome)} ${format(data.sobrenome)}</div>
-            <div class="info-item"><strong>Usuário:</strong> ${format(data.usuario)}</div>
-            ${html}
-        `;
-    }
-    
-    // Campos adicionais
-    const camposAdicionais = [
-        { key: 'telefone', label: 'Telefone' },
-        { key: 'idade', label: 'Idade' },
-        { key: 'genero', label: 'Gênero' }
-    ];
-    
-    camposAdicionais.forEach(campo => {
-        if (data[campo.key]) {
-            html += `<div class="info-item"><strong>${campo.label}:</strong> ${format(data[campo.key])}</div>`;
+        if (result.status === "success") {
+          exibirDadosUsuario(result.data);
+          carregarPedidosUsuario(email);
+          carregarEstoque();
+        } else {
+          alert("Erro ao carregar dados do usuário.");
         }
-    });
-    
-    // Endereço completo
-    if (data.endereco) {
-        const end = data.endereco;
-        html += `
-            <div class="address-section">
-                <strong>Endereço:</strong>
-                ${end.rua ? `<p>${format(end.rua)} ${format(end.numero)}</p>` : ''}
-                ${end.complemento ? `<p>Complemento: ${format(end.complemento)}</p>` : ''}
-                ${end.bairro ? `<p>Bairro: ${format(end.bairro)}</p>` : ''}
-                ${end.cidade ? `<p>${format(end.cidade)}/${format(end.estado)}</p>` : ''}
-                ${end.cep ? `<p>CEP: ${format(end.cep)}</p>` : ''}
-                ${end.pais ? `<p>País: ${format(end.pais)}</p>` : ''}
-            </div>
-        `;
-    }
-    
-    userInfoDiv.innerHTML = html;
-}
-
-// Inicialização
-document.addEventListener('DOMContentLoaded', function() {
-    try {
-        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-        const email = userData.email || localStorage.getItem('loggedInUser');
-        
-        if (!email) {
-            window.location.href = "login.html";
-            return;
-        }
-        
-        carregarDadosUsuario(email);
-        
-        document.getElementById('logout')?.addEventListener('click', function(e) {
-            e.preventDefault();
-            localStorage.removeItem('userData');
-            localStorage.removeItem('loggedInUser');
-            window.location.href = "login.html";
-        });
-        
-    } catch (error) {
-        console.error("Erro na inicialização:", error);
-        window.location.href = "login.html";
-    }
-});
-
-// Funções de estoque e pedidos (mantidas originais)
-async function carregarEstoque() {
-    try {
-        const response = await fetch(`${SCRIPT_URL}?action=get_stock`);
-        const data = await response.json();
-        
-        if (data.status !== "sucesso") {
-            throw new Error(data.message || "Erro ao carregar estoque");
-        }
-        
-        document.getElementById('estoqueAtual').innerHTML = `
-            <p><strong>Mesas disponíveis:</strong> ${data.estoque.mesas || 0}</p>
-            <p><strong>Cadeiras disponíveis:</strong> ${data.estoque.cadeiras || 0}</p>
-            <p><strong>Bancos disponíveis:</strong> ${data.estoque.bancos || 0}</p>
-        `;
-    } catch (error) {
-        console.error("Erro ao carregar estoque:", error);
-        document.getElementById('estoqueAtual').innerHTML = `
-            <p style="color: red;">Erro ao carregar estoque. Atualize a página.</p>
-        `;
-    }
-}
-
-async function carregarPedidosUsuario(email) {
-    const pedidosContainer = document.getElementById('meusPedidos');
-    pedidosContainer.innerHTML = '<div class="loading">Carregando...</div>';
-    
-    try {
-        const response = await fetch(`${SCRIPT_URL}?action=get_user_orders&email=${encodeURIComponent(email)}`);
-        const data = await response.json();
-        
-        if (data.status !== "sucesso") {
-            throw new Error(data.message || "Erro ao carregar pedidos");
-        }
-        
-        if (!data.pedidos || data.pedidos.length === 0) {
-            pedidosContainer.innerHTML = `
-                <div class="no-orders">
-                    <p>Nenhum pedido encontrado.</p>
-                    <a href="encomendar.html" class="btn">Fazer primeiro pedido</a>
-                </div>
-            `;
-            return;
-        }
-    
-        pedidosContainer.innerHTML = '';
-        data.pedidos.forEach(pedido => {
-            const pedidoDiv = document.createElement('div');
-            pedidoDiv.className = 'pedido-item';
-            pedidoDiv.innerHTML = criarHTMLPedido(pedido);
-            pedidosContainer.appendChild(pedidoDiv);
-        });
-            
-    } catch (error) {
-        console.error("Erro ao carregar pedidos:", error);
-        pedidosContainer.innerHTML = `
-            <div class="error">
-                <p>Não foi possível carregar seus pedidos.</p>
-                <button onclick="location.reload()" class="btn2">Recarregar</button>
-            </div>
-        `;
-    }
-}
-
-function criarHTMLPedido(pedido) {
-    return `
-        <div class="pedido-header">
-            <h4>Pedido #${pedido.id || 'N/A'}</h4>
-            ${pedido.status ? `<span class="status-badge ${pedido.status.toLowerCase()}">${pedido.status}</span>` : ''}
-        </div>
-        <div class="pedido-body">
-            ${pedido.data_inicio ? `<p><i class="fa fa-calendar"></i> <strong>Período:</strong> ${formatarData(pedido.data_inicio)} - ${formatarData(pedido.data_fim)}</p>` : ''}
-            <p><i class="fa fa-cubes"></i> <strong>Itens:</strong> 
-                ${pedido.mesas || 0} mesa(s), 
-                ${pedido.cadeiras || 0} cadeira(s), 
-                ${pedido.bancos || 0} banco(s)
-            </p>
-            ${pedido.valor_total ? `<p><i class="fa fa-money"></i> <strong>Total:</strong> R$ ${pedido.valor_total.toFixed(2)}</p>` : ''}
-            ${pedido.endereco ? `<p><i class="fa fa-map-marker"></i> <strong>Endereço:</strong> ${pedido.endereco}</p>` : ''}
-        </div>
-        ${pedido.status === 'Ativo' ? `
-        <div class="pedido-actions">
-            <button onclick="devolverPedido('${pedido.id}', ${pedido.mesas || 0}, ${pedido.cadeiras || 0}, ${pedido.bancos || 0})" 
-                    class="btn2">
-                <i class="fa fa-undo"></i> Devolver Itens
-            </button>
-        </div>` : ''}
-    `;
-}
-
-function formatarData(dataString) {
-    if (!dataString) return 'Não definida';
-    try {
-        const data = new Date(dataString);
-        return data.toLocaleDateString('pt-BR');
-    } catch (e) {
-        return dataString;
-    }
-}
-
-async function devolverPedido(pedidoId, mesas, cadeiras, bancos) {
-    if (!confirm(`Confirmar devolução do pedido #${pedidoId}?\n\nItens:\n${mesas} mesas\n${cadeiras} cadeiras\n${bancos} bancos`)) {
-        return;
-    }
-  
-    try {
-        showLoader(true);
-        
-        await Promise.all([
-            fetch(`${SCRIPT_URL}?action=update_stock&item=mesas&quantidade=${mesas}`),
-            fetch(`${SCRIPT_URL}?action=update_stock&item=cadeiras&quantidade=${cadeiras}`),
-            fetch(`${SCRIPT_URL}?action=update_stock&item=bancos&quantidade=${bancos}`),
-            fetch(`${SCRIPT_URL}?action=return_order&pedido_id=${pedidoId}`)
-        ]);
-        
-        alert('Devolução realizada com sucesso!');
-        location.reload();
-    } catch (error) {
-        console.error("Erro ao devolver pedido:", error);
-        alert("Erro ao processar devolução. Tente novamente.");
-    } finally {
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+      } finally {
         showLoader(false);
+      }
     }
-}
 
-function showLoader(show) {
-    const loader = document.getElementById('loading-overlay');
-    if (loader) loader.style.display = show ? 'flex' : 'none';
-}
-</script>
+    function exibirDadosUsuario(data) {
+      const userInfoDiv = document.getElementById('userInfo');
+      userInfoDiv.innerHTML = `
+        <p><strong>Nome:</strong> ${data.nome || 'Não informado'}</p>
+        <p><strong>Email:</strong> ${data.email || 'Não informado'}</p>
+        <p><strong>Telefone:</strong> ${data.telefone || 'Não informado'}</p>
+        <p><strong>Endereço:</strong> ${data.endereco || 'Não informado'}</p>
+      `;
+    }
+
+    async function carregarPedidosUsuario(email) {
+      const pedidosDiv = document.getElementById('meusPedidos');
+      pedidosDiv.innerHTML = "Carregando...";
+
+      const response = await fetch(`${SCRIPT_URL}?action=get_user_orders&email=${encodeURIComponent(email)}`);
+      const result = await response.json();
+
+      if (result.status === "success") {
+        pedidosDiv.innerHTML = result.pedidos.map(p => `<p>Pedido #${p.id}: ${p.itens} - ${p.status}</p>`).join('');
+      } else {
+        pedidosDiv.innerHTML = "Nenhum pedido encontrado.";
+      }
+    }
+
+    async function carregarEstoque() {
+      const estoqueDiv = document.getElementById('estoqueAtual');
+      const response = await fetch(`${SCRIPT_URL}?action=get_stock`);
+      const result = await response.json();
+
+      if (result.status === "success") {
+        estoqueDiv.innerHTML = `<p>Mesas: ${result.estoque.mesas}</p><p>Cadeiras: ${result.estoque.cadeiras}</p><p>Bancos: ${result.estoque.bancos}</p>`;
+      } else {
+        estoqueDiv.innerHTML = "Erro ao carregar estoque.";
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const email = localStorage.getItem('loggedInUser');
+      if (!email) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      carregarDadosUsuario(email);
+
+      document.getElementById('logout').addEventListener('click', function() {
+        localStorage.removeItem('loggedInUser');
+        window.location.href = "login.html";
+      });
+    });
+
+    function showLoader(show) {
+      const loader = document.getElementById('loading-overlay');
+      loader.style.display = show ? 'flex' : 'none';
+    }
+  </script>
 </body>
 </html>
