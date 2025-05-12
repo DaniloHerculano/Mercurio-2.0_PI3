@@ -427,40 +427,49 @@
 // Configurações
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1SzcHJK5cAaGebZxPyYBy6W5xgENQlqsITzhwTvIspr1cqlTeCDBadQcAm6miiiSF/exec";
 
-// Função para fazer requisições
-async function fazerRequisicaoSegura(params) {
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = `${SCRIPT_URL}?${new URLSearchParams(params)}&callback=handleJsonpResponse`;
-    
-    window.handleJsonpResponse = (data) => {
-      document.body.removeChild(script);
-      delete window.handleJsonpResponse;
-      resolve(data);
-    };
-    
-    script.onerror = () => {
-      document.body.removeChild(script);
-      delete window.handleJsonpResponse;
-      reject(new Error("Erro ao carregar dados"));
-    };
-    
-    document.body.appendChild(script);
-  });
+// Função de requisição ultra-resiliente
+async function fazerRequisicaoConfiavel(params) {
+  const url = new URL(SCRIPT_URL);
+  Object.keys(params).forEach(key => 
+    url.searchParams.append(key, params[key]));
+  
+  // Adiciona timestamp para evitar cache
+  url.searchParams.append('_t', Date.now());
+
+  try {
+    const response = await fetch(url, {
+      redirect: 'follow',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'text/plain' // Evita preflight CORS
+      }
+    });
+
+    // Verifica se a resposta parece ser JSON
+    const text = await response.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error(text || "Resposta inválida do servidor");
+    }
+  } catch (error) {
+    console.error("Erro na requisição:", error);
+    throw error;
+  }
 }
 
-// Função principal
+// Função principal à prova de falhas
 async function carregarDadosUsuario(email) {
   showLoader(true);
   
   try {
-    const result = await fazerRequisicaoSegura({
+    const result = await fazerRequisicaoConfiavel({
       action: 'get_user_data',
       email: email
     });
 
     if (!result || result.status !== "success") {
-      throw new Error(result?.message || "Dados não encontrados");
+      throw new Error(result?.message || "Dados não disponíveis");
     }
 
     const userData = {
@@ -471,8 +480,8 @@ async function carregarDadosUsuario(email) {
     localStorage.setItem('userData', JSON.stringify(userData));
     exibirDadosUsuario(userData);
     
-    // Carrega os pedidos e estoque
-    await Promise.all([
+    // Carrega dados adicionais em paralelo
+    await Promise.allSettled([
       carregarPedidosUsuario(email),
       carregarEstoque()
     ]);
@@ -485,31 +494,31 @@ async function carregarDadosUsuario(email) {
   }
 }
 
-// Função fallback
+// Fallback melhorado
 function exibirDadosUsuarioFallback(email, error) {
-  let localData = { email: email };
-  
   try {
     const savedData = localStorage.getItem('userData');
     if (savedData) {
-      localData = JSON.parse(savedData);
+      const localData = JSON.parse(savedData);
       if (localData.email === email) {
         exibirDadosUsuario(localData);
         return;
       }
     }
   } catch (e) {
-    console.error("Erro ao ler dados locais:", e);
+    console.error("Erro ao ler cache local:", e);
   }
-  
+
   const userInfoDiv = document.getElementById('userInfo');
   if (userInfoDiv) {
     userInfoDiv.innerHTML = `
       <div class="info-item"><strong>E-mail:</strong> ${email}</div>
       <div class="error-message">
-        ⚠️ Não foi possível carregar dados completos
-        <p>${error.message || "Erro desconhecido"}</p>
-        <button onclick="location.reload()" class="btn2">Tentar novamente</button>
+        ⚠️ Dados incompletos (modo offline)
+        <p>${error.message || "Sem conexão com o servidor"}</p>
+        <button onclick="carregarDadosUsuario('${email}')" class="btn2">
+          Tentar novamente
+        </button>
       </div>
     `;
   }
