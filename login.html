@@ -419,7 +419,7 @@
     // Controle do menu mobile
     const menuToggle = document.getElementById('menuToggle');
     const mainNav = document.querySelector('.sf-menu');
-    
+
     if (window.innerWidth <= 768) {
       mainNav.style.display = 'none';
     }
@@ -440,7 +440,7 @@
       event.preventDefault();
       const emailOrUser = document.getElementById('login').value.trim();
       const senha = document.getElementById('password').value.trim();
-    
+
       if (!emailOrUser || !senha) {
         statusMessage.textContent = "Por favor, preencha todos os campos.";
         statusMessage.style.display = "block";
@@ -453,7 +453,7 @@
 
       fetch('https://script.google.com/macros/s/AKfycbycp5mm76dIIKbnOzgyadAlwrqmxm5ez5M7XI0P0tKyepWv7Dqo127lhUgysRC9AnFW/exec', {
         method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
           action: 'login_user',
           email: emailOrUser,
@@ -514,7 +514,7 @@
 
       fetch('https://script.google.com/macros/s/AKfycbycp5mm76dIIKbnOzgyadAlwrqmxm5ez5M7XI0P0tKyepWv7Dqo127lhUgysRC9AnFW/exec', {
         method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
           action: 'recover_password',
           email: email
@@ -522,7 +522,7 @@
       })
       .then(response => response.json())
       .then(data => {
-        if (data.status === 'success' && data.data.senha) {
+        if (data.status === 'success' && data.data) {
           recoveryMessage.textContent = `Sua senha é: ${data.data.senha}`;
         } else {
           recoveryMessage.textContent = 'Usuário não encontrado ou dados inválidos.';
@@ -536,6 +536,7 @@
         recoverPasswordBtn.disabled = false;
       });
     });
+
   });
 </script>
 </body>
