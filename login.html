@@ -483,7 +483,7 @@
       });
     });
 
-    // Exibir o modal de recuperação de senha
+    // Recuperação de senha
     const forgotPasswordBtn = document.getElementById('forgot-password');
     const recoveryModal = document.getElementById('password-recovery-modal');
     const closeModalBtn = document.getElementById('close-modal');
@@ -503,7 +503,7 @@
       recoveryMessage.textContent = '';
     });
 
- // Recuperar a senha
+    // Recuperar a senha
     recoverPasswordBtn?.addEventListener('click', function() {
       const email = recoveryEmailInput.value.trim();
       
@@ -511,7 +511,7 @@
         alert('Por favor, insira um e-mail válido.');
         return;
       }
-    
+
       recoverPasswordBtn.textContent = "Verificando...";
       recoverPasswordBtn.disabled = true;
       recoveryMessage.textContent = ''; // Limpar mensagem anterior
@@ -536,7 +536,7 @@
       .then(data => {
         console.log("Dados recebidos:", data);
         if (data.status === 'success') {
-          recoveryMessage.textContent = data.message; // Exibe a mensagem diretamente
+          recoveryMessage.textContent = data.message || `Sua senha é: ${data.data.senha}`; // Exibe a mensagem diretamente
         } else {
           recoveryMessage.textContent = 'Usuário não encontrado ou dados inválidos.';
         }
