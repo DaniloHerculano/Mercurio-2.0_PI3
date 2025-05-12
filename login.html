@@ -415,105 +415,133 @@
   </footer>
 <!------------- JAVASCRIPT ------------>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Controle do menu mobile
-      const menuToggle = document.getElementById('menuToggle');
-      const mainNav = document.querySelector('.sf-menu');
+  document.addEventListener('DOMContentLoaded', function() {
+    // Controle do menu mobile
+    const menuToggle = document.getElementById('menuToggle');
+    const mainNav = document.querySelector('.sf-menu');
     
-      if (window.innerWidth <= 768) {
-        mainNav.style.display = 'none';
+    if (window.innerWidth <= 768) {
+      mainNav.style.display = 'none';
+    }
+
+    menuToggle?.addEventListener('click', function() {
+      mainNav.style.display = mainNav.style.display === 'none' || mainNav.style.display === '' ? 'flex' : 'none';
+    });
+
+    window.addEventListener('resize', function() {
+      mainNav.style.display = window.innerWidth > 768 ? 'flex' : 'none';
+    });
+
+    // Função de login
+    const loginButton = document.getElementById('login-button');
+    const statusMessage = document.getElementById('status-message');
+
+    document.getElementById('login-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const emailOrUser = document.getElementById('login').value.trim();
+      const senha = document.getElementById('password').value.trim();
+    
+      if (!emailOrUser || !senha) {
+        statusMessage.textContent = "Por favor, preencha todos os campos.";
+        statusMessage.style.display = "block";
+        return;
       }
-    
-      menuToggle.addEventListener('click', function() {
-        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
-          mainNav.style.display = 'flex';
+
+      loginButton.textContent = "Entrando...";
+      loginButton.disabled = true;
+      statusMessage.style.display = "none";
+
+      fetch('https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          action: 'login_user',
+          email: emailOrUser,
+          usuario: emailOrUser,
+          senha: senha
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          localStorage.setItem("userData", JSON.stringify(data.data)); 
+          window.location.href = 'customer_area.html';
         } else {
-          mainNav.style.display = 'none';
-        }
-      });
-    
-      window.addEventListener('resize', function() {
-        if (window.innerWidth > 768) {
-          mainNav.style.display = 'flex';
-        } else {
-          mainNav.style.display = 'none';
-        }
-      });
-    
-      // Função de login
-      const loginButton = document.getElementById('login-button');
-      const statusMessage = document.getElementById('status-message');
-    
-      document.getElementById('login-form').addEventListener('submit', function(event) {
-        event.preventDefault();
-        const emailOrUser = document.getElementById('login').value.trim();
-        const senha = document.getElementById('password').value.trim();
-    
-        if (!emailOrUser || !senha) {
-          statusMessage.textContent = "Por favor, preencha todos os campos.";
+          statusMessage.textContent = data.message || "Erro no login.";
           statusMessage.style.display = "block";
-          return;
         }
-    
-        loginButton.textContent = "Entrando...";
-        loginButton.disabled = true;
-        statusMessage.style.display = "none";
-    
-        fetch('https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-          body: new URLSearchParams({action: 'login_user', email: emailOrUser, usuario: emailOrUser, senha: senha})
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.status === 'success') {
-            localStorage.setItem("userData", JSON.stringify(data.data)); 
-            window.location.href = 'customer_area.html';
-          } else {
-            statusMessage.textContent = data.message || "Erro no login.";
-          }
-          loginButton.textContent = "Entrar";
-          loginButton.disabled = false;
-        })
-        .catch(error => {
-          statusMessage.textContent = "Erro ao se conectar com o servidor.";
-          loginButton.textContent = "Entrar";
-          loginButton.disabled = false;
-        });
-      });
-    
-      // Recuperação de Senha
-      document.getElementById('recover-password').addEventListener('click', function() {
-        const recoveryButton = document.getElementById('recover-password');
-        const recoveryMessage = document.getElementById('recovery-message');
-        const email = document.getElementById('recovery-email').value.trim();
-    
-        if (!email) {
-          alert('Por favor, insira um e-mail válido.');
-          return;
-        }
-    
-        recoveryButton.textContent = "Verificando...";
-        recoveryButton.disabled = true;
-    
-        fetch('https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec?action=recover_password&email=' + encodeURIComponent(email))
-        .then(response => response.json())
-        .then(data => {
-          if (data.status === 'success') {
-            recoveryMessage.textContent = data.data.message;
-          } else {
-            recoveryMessage.textContent = 'Usuário não encontrado ou dados inválidos';
-          }
-        })
-        .catch(error => {
-          recoveryMessage.textContent = 'Erro ao recuperar a senha';
-        })
-        .finally(() => {
-          recoveryButton.textContent = "Recuperar Senha";
-          recoveryButton.disabled = false;
-        });
+      })
+      .catch(() => {
+        statusMessage.textContent = "Erro ao se conectar com o servidor.";
+        statusMessage.style.display = "block";
+      })
+      .finally(() => {
+        loginButton.textContent = "Entrar";
+        loginButton.disabled = false;
       });
     });
+
+    // Exibir o modal de recuperação de senha
+    const forgotPasswordBtn = document.getElementById('forgot-password');
+    const recoveryModal = document.getElementById('password-recovery-modal');
+    const closeModalBtn = document.getElementById('close-modal');
+    const recoveryMessage = document.getElementById('recovery-message');
+    const recoveryEmailInput = document.getElementById('recovery-email');
+    const recoverPasswordBtn = document.getElementById('recover-password');
+
+    forgotPasswordBtn?.addEventListener('click', function(event) {
+      event.preventDefault();
+      recoveryModal.style.display = 'block';
+    });
+
+    // Fechar o modal
+    closeModalBtn?.addEventListener('click', function() {
+      recoveryModal.style.display = 'none';
+      recoveryEmailInput.value = '';
+      recoveryMessage.textContent = '';
+    });
+
+    // Recuperar a senha
+    recoverPasswordBtn?.addEventListener('click', function() {
+      const email = recoveryEmailInput.value.trim();
+      
+      if (!email) {
+        alert('Por favor, insira um e-mail válido.');
+        return;
+      }
+
+      recoverPasswordBtn.textContent = "Verificando...";
+      recoverPasswordBtn.disabled = true;
+
+      fetch('https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          action: 'recover_password',
+          email: email
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          recoveryMessage.textContent = `Sua senha é: ${data.data.senha}`;
+        } else {
+          recoveryMessage.textContent = 'Usuário não encontrado ou dados inválidos.';
+        }
+      })
+      .catch(() => {
+        alert('Erro ao recuperar a senha');
+      })
+      .finally(() => {
+        recoverPasswordBtn.textContent = "Recuperar Senha";
+        recoverPasswordBtn.disabled = false;
+      });
+    });
+  });
 </script>
 </body>
 </html>
