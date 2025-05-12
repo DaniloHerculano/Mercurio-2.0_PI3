@@ -424,99 +424,84 @@
 <!------------- JAVASCRIPT ------------>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec";
 
-    async function carregarDadosUsuario(email) {
-      showLoader(true);
-      try {
-        const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
-        const result = await response.json();
-        
-        if (result.status === "success") {
-          exibirDadosUsuario(result.data);
-          carregarPedidosUsuario(email);
-          carregarEstoque();
-        } else {
-          alert("Erro ao carregar dados do usuário.");
-        }
-      } catch (error) {
-        console.error("Erro ao carregar dados:", error);
-        alert("Houve um erro ao tentar carregar os dados. Tente novamente mais tarde.");
-      } finally {
-        showLoader(false);
+  async function carregarDadosUsuario(email) {
+    showLoader(true);
+
+    try {
+      const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
+      const result = await response.json();
+
+      if (result.status === "success") {
+        exibirDadosUsuario(result.data);
+        carregarPedidosUsuario(email);
+        carregarEstoque();
+      } else {
+        alert("Erro ao carregar dados do usuário.");
       }
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+    } finally {
+      showLoader(false);
+    }
+  }
+
+  function exibirDadosUsuario(data) {
+    const userInfoDiv = document.getElementById('userInfo');
+    userInfoDiv.innerHTML = `
+      <p><strong>Nome:</strong> ${data.nome || 'Não informado'}</p>
+      <p><strong>Email:</strong> ${data.email || 'Não informado'}</p>
+      <p><strong>Telefone:</strong> ${data.telefone || 'Não informado'}</p>
+      <p><strong>Endereço:</strong> ${data.endereco || 'Não informado'}</p>
+    `;
+  }
+
+  async function carregarPedidosUsuario(email) {
+    const pedidosDiv = document.getElementById('meusPedidos');
+    pedidosDiv.innerHTML = "Carregando...";
+
+    const response = await fetch(`${SCRIPT_URL}?action=get_user_orders&email=${encodeURIComponent(email)}`);
+    const result = await response.json();
+
+    if (result.status === "success") {
+      pedidosDiv.innerHTML = result.pedidos.map(p => `<p>Pedido #${p.id}: ${p.itens} - ${p.status}</p>`).join('');
+    } else {
+      pedidosDiv.innerHTML = "Nenhum pedido encontrado.";
+    }
+  }
+
+  async function carregarEstoque() {
+    const estoqueDiv = document.getElementById('estoqueAtual');
+    const response = await fetch(`${SCRIPT_URL}?action=get_stock`);
+    const result = await response.json();
+
+    if (result.status === "success") {
+      estoqueDiv.innerHTML = `<p>Mesas: ${result.estoque.mesas}</p><p>Cadeiras: ${result.estoque.cadeiras}</p><p>Bancos: ${result.estoque.bancos}</p>`;
+    } else {
+      estoqueDiv.innerHTML = "Erro ao carregar estoque.";
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const email = localStorage.getItem('loggedInUser');
+    if (!email) {
+      window.location.href = "login.html";
+      return;
     }
 
-    function exibirDadosUsuario(data) {
-      const userInfoDiv = document.getElementById('userInfo');
-      userInfoDiv.innerHTML = `
-        <p><strong>Nome:</strong> ${data.nome || 'Não informado'}</p>
-        <p><strong>Email:</strong> ${data.email || 'Não informado'}</p>
-        <p><strong>Telefone:</strong> ${data.telefone || 'Não informado'}</p>
-        <p><strong>Endereço:</strong> ${data.endereco || 'Não informado'}</p>
-      `;
-    }
+    carregarDadosUsuario(email);
 
-    async function carregarPedidosUsuario(email) {
-      const pedidosDiv = document.getElementById('meusPedidos');
-      pedidosDiv.innerHTML = "Carregando...";
-
-      try {
-        const response = await fetch(`${SCRIPT_URL}?action=get_user_orders&email=${encodeURIComponent(email)}`);
-        const result = await response.json();
-
-        if (result.status === "success") {
-          pedidosDiv.innerHTML = result.pedidos.map(p => `<p>Pedido #${p.id}: ${p.itens} - ${p.status}</p>`).join('');
-        } else {
-          pedidosDiv.innerHTML = "Nenhum pedido encontrado.";
-        }
-      } catch (error) {
-        pedidosDiv.innerHTML = "Erro ao carregar os pedidos.";
-        console.error("Erro ao carregar pedidos:", error);
-      }
-    }
-
-    async function carregarEstoque() {
-      const estoqueDiv = document.getElementById('estoqueAtual');
-      try {
-        const response = await fetch(`${SCRIPT_URL}?action=get_stock`);
-        const result = await response.json();
-
-        if (result.status === "success") {
-          estoqueDiv.innerHTML = `
-            <p>Mesas: ${result.estoque.mesas}</p>
-            <p>Cadeiras: ${result.estoque.cadeiras}</p>
-            <p>Bancos: ${result.estoque.bancos}</p>
-          `;
-        } else {
-          estoqueDiv.innerHTML = "Erro ao carregar estoque.";
-        }
-      } catch (error) {
-        estoqueDiv.innerHTML = "Erro ao carregar estoque.";
-        console.error("Erro ao carregar estoque:", error);
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-      const email = localStorage.getItem('loggedInUser');
-      if (!email) {
-        window.location.href = "login.html";
-        return;
-      }
-
-      carregarDadosUsuario(email);
-
-      document.getElementById('logout').addEventListener('click', function() {
-        localStorage.removeItem('loggedInUser');
-        window.location.href = "login.html";
-      });
+    document.getElementById('logout').addEventListener('click', function() {
+      localStorage.removeItem('loggedInUser');
+      window.location.href = "login.html";
     });
+  });
 
-    function showLoader(show) {
-      const loader = document.getElementById('loading-overlay');
-      loader.style.display = show ? 'flex' : 'none';
-    }
+  function showLoader(show) {
+    const loader = document.getElementById('loading-overlay');
+    loader.style.display = show ? 'flex' : 'none';
+  }
 </script>
-
 </body>
 </html>
