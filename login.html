@@ -416,32 +416,11 @@
 <!------------- JAVASCRIPT ------------>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    const menuToggle = document.getElementById('menuToggle');
-    const mainNav = document.querySelector('.sf-menu');
     const loginButton = document.getElementById('login-button');
     const statusMessage = document.getElementById('status-message');
 
-    // Controle do Menu Mobile
-    if (window.innerWidth <= 768) {
-      mainNav.style.display = 'none';
-    }
-
-    menuToggle.addEventListener('click', function() {
-      mainNav.style.display = mainNav.style.display === 'none' ? 'flex' : 'none';
-    });
-
-    window.addEventListener('resize', function() {
-      if (window.innerWidth > 768) {
-        mainNav.style.display = 'flex';
-      } else {
-        mainNav.style.display = 'none';
-      }
-    });
-
-    // Controle do Formulário de Login
     document.getElementById('login-form').addEventListener('submit', function(event) {
       event.preventDefault();
-
       const emailOrUser = document.getElementById('login').value.trim();
       const senha = document.getElementById('password').value.trim();
       
@@ -451,12 +430,10 @@
         return;
       }
 
-      // Configura o botão e a mensagem
       loginButton.textContent = "Entrando...";
       loginButton.disabled = true;
       statusMessage.style.display = "none";
 
-      // Envia a requisição via Fetch API
       fetch('https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec', {
         method: 'POST',
         headers: {
@@ -471,8 +448,8 @@
       })
       .then(response => response.json())
       .then(data => {
-        console.log("Resposta da API:", data);
         if (data.status === 'success') {
+          localStorage.setItem("userData", JSON.stringify(data.data)); // Armazena os dados do usuário
           window.location.href = 'customer_area.html';
         } else {
           statusMessage.textContent = data.message || "Erro no login.";
@@ -482,8 +459,7 @@
         }
       })
       .catch(error => {
-        console.error("Erro na conexão:", error);
-        statusMessage.textContent = "Erro ao se conectar com o servidor. Tente novamente.";
+        statusMessage.textContent = "Erro ao se conectar com o servidor.";
         statusMessage.style.display = "block";
         loginButton.textContent = "Entrar";
         loginButton.disabled = false;
