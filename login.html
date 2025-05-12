@@ -375,7 +375,7 @@
       </div>
     </div>
   </div>
-
+  
   <!-- MODAL PARA RECUPERAÇÃO DE SENHA -->
   <div id="password-recovery-modal" class="modal">
     <div class="modal-content">
@@ -494,6 +494,43 @@
         loginButton.disabled = false;
       });
     });
+  });
+  // Exibir o modal de recuperação de senha
+  document.getElementById('forgot-password').addEventListener('click', function(event) {
+    event.preventDefault();
+    document.getElementById('password-recovery-modal').style.display = 'block';
+  });
+
+  // Fechar o modal de recuperação de senha
+  document.getElementById('close-modal').addEventListener('click', function() {
+    document.getElementById('password-recovery-modal').style.display = 'none';
+    document.getElementById('recovery-email').value = ''; // Limpa o campo de e-mail
+    document.getElementById('recovery-message').textContent = ''; // Limpa a mensagem de erro/sucesso
+  });
+
+  // Recuperar a senha via Google Apps Script
+  document.getElementById('recover-password').addEventListener('click', function() {
+    const email = document.getElementById('recovery-email').value.trim();
+    
+    if (!email) {
+      alert('Por favor, insira um e-mail válido.');
+      return;
+    }
+
+    const url = `https://script.google.com/macros/s/SEU_ID_DO_SCRIPT/exec?action=recover_password&email=${email}`;
+
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          document.getElementById('recovery-message').textContent = data.data.message; // Exibe a senha no modal
+        } else {
+          document.getElementById('recovery-message').textContent = 'Usuário não encontrado ou dados inválidos';
+        }
+      })
+      .catch(error => {
+        alert('Erro ao recuperar a senha');
+      });
   });
 </script>
 </body>
