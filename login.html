@@ -360,14 +360,12 @@
       <form id="login-form">
         <div class="form-group">
           <label for="login">E-mail ou Nome de Usuário</label>
-          <input type="text" id="login" name="login" class="form-control" placeholder="Digite seu e-mail ou nome de usuário" required>
+          <input type="text" id="login" name="login" placeholder="Digite seu e-mail ou nome de usuário" required>
         </div>
-        
         <div class="form-group">
-          <label for="senha">Senha</label>
-          <input type="password" id="senha" name="senha" class="form-control" placeholder="Digite sua senha" required>
+          <label for="password">Senha</label>
+          <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
         </div>
-        
         <button type="submit" class="btn" id="login-button">Entrar</button>
       </form>
       
@@ -420,6 +418,8 @@
   document.addEventListener('DOMContentLoaded', function() {
     const menuToggle = document.getElementById('menuToggle');
     const mainNav = document.querySelector('.sf-menu');
+    const loginButton = document.getElementById('login-button');
+    const statusMessage = document.getElementById('status-message');
 
     // Controle do Menu Mobile
     if (window.innerWidth <= 768) {
@@ -438,59 +438,55 @@
       }
     });
 
-    // Função de Login
-    $('#login-form').on('submit', function(e) {
-      e.preventDefault();
-      
-      const loginButton = $('#login-button');
-      const emailOrUser = $('#login').val().trim();
-      const senha = $('#password').val().trim();
-      const statusMessage = $('#status-message');
+    // Controle do Formulário de Login
+    document.getElementById('login-form').addEventListener('submit', function(event) {
+      event.preventDefault();
 
-      // Verifica se os campos estão preenchidos
+      const emailOrUser = document.getElementById('login').value.trim();
+      const senha = document.getElementById('password').value.trim();
+      
       if (!emailOrUser || !senha) {
-        statusMessage.text('Por favor, preencha todos os campos').show();
+        statusMessage.textContent = "Por favor, preencha todos os campos.";
+        statusMessage.style.display = "block";
         return;
       }
 
-      // Configura o botão e a mensagem de status
-      loginButton.text("Entrando...").prop('disabled', true);
-      statusMessage.hide().text('');
+      // Configura o botão e a mensagem
+      loginButton.textContent = "Entrando...";
+      loginButton.disabled = true;
+      statusMessage.style.display = "none";
 
-      // Envio da requisição AJAX
-      $.ajax({
-        url: 'https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec',
-        type: 'POST',
-        data: {
+      // Envia a requisição via Fetch API
+      fetch('https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
           action: 'login_user',
           email: emailOrUser,
           usuario: emailOrUser,
           senha: senha
-        },
-        success: function(response) {
-          console.log("Resposta da API:", response);
-          
-          try {
-            const data = JSON.parse(response);
-            if (data.status === 'success') {
-              window.location.href = 'customer_area.html';
-              return;
-            } else {
-              statusMessage.text(data.message || 'Erro no login.').show();
-            }
-          } catch (err) {
-            console.error("Erro ao processar a resposta:", err);
-            statusMessage.text('Erro inesperado. Tente novamente mais tarde.').show();
-          }
-        },
-        error: function(xhr, status, error) {
-          console.error("Erro na conexão com a API:", error);
-          statusMessage.text('Erro ao se conectar com o servidor. Tente novamente mais tarde.').show();
-        },
-        complete: function() {
-          // Sempre reabilita o botão e restaura o texto
-          loginButton.text("Entrar").prop('disabled', false);
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log("Resposta da API:", data);
+        if (data.status === 'success') {
+          window.location.href = 'customer_area.html';
+        } else {
+          statusMessage.textContent = data.message || "Erro no login.";
+          statusMessage.style.display = "block";
+          loginButton.textContent = "Entrar";
+          loginButton.disabled = false;
         }
+      })
+      .catch(error => {
+        console.error("Erro na conexão:", error);
+        statusMessage.textContent = "Erro ao se conectar com o servidor. Tente novamente.";
+        statusMessage.style.display = "block";
+        loginButton.textContent = "Entrar";
+        loginButton.disabled = false;
       });
     });
   });
