@@ -423,6 +423,35 @@
   </footer>
 <!------------- JAVASCRIPT ------------>
 <script>
+    // CONTROLE DO MENU MOBILE - VERSÃO GARANTIDA
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuToggle = document.getElementById('menuToggle');
+      const mainNav = document.querySelector('.sf-menu');
+      
+      // Verifica se é mobile no carregamento
+      if (window.innerWidth <= 768) {
+        mainNav.style.display = 'none';
+      }
+      
+      // Controle do clique no botão
+      menuToggle.addEventListener('click', function() {
+        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+      
+      // Atualiza ao redimensionar a tela
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+          mainNav.style.display = 'flex';
+        } else {
+          mainNav.style.display = 'none';
+        }
+      });
+    });
+  
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec";
 
     async function carregarDadosUsuario() {
@@ -457,6 +486,8 @@
             <p><strong>Nome:</strong> ${data.nome || 'Não informado'} ${data.sobrenome || ''}</p>
             <p><strong>Email:</strong> ${data.email || 'Não informado'}</p>
             <p><strong>Telefone:</strong> ${data.telefone || 'Não informado'}</p>
+            <p><strong>Idade:</strong> ${data.idade || 'Não informado'}</p>
+            <p><strong>Gênero:</strong> ${data.genero || 'Não informado'}</p>
             <p><strong>Endereço:</strong> ${data.endereco?.rua || 'Não informado'}, ${data.endereco?.numero || ''} 
             ${data.endereco?.bairro || ''}, ${data.endereco?.cidade || ''} - ${data.endereco?.estado || ''}, 
             ${data.endereco?.pais || ''} - CEP: ${data.endereco?.cep || ''}</p>
