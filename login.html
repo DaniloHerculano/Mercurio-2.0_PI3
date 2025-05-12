@@ -535,8 +535,8 @@
       })
       .then(data => {
         console.log("Dados recebidos:", data);
-        if (data.status === 'success') {
-          recoveryMessage.textContent = data.message || `Sua senha é: ${data.data.senha}`; // Exibe a mensagem diretamente
+        if (data.status === 'success' && data.data.senha) {
+          recoveryMessage.textContent = `Sua senha é: ${data.data.senha}`;
         } else {
           recoveryMessage.textContent = 'Usuário não encontrado ou dados inválidos.';
         }
