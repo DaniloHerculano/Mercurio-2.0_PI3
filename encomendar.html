@@ -700,7 +700,7 @@
 // FUNÇÃO PARA BUSCAR O ESTOQUE (BACKEND)
 async function obterEstoque() {
   try {
-    const response = await fetch('http://localhost:6543/api/estoque');
+    const response = await fetch('https://locacao-backend-mercurio.onrender.com/api/estoque');
     const estoque = await response.json();
     if (response.ok) {
       // Exibe o estoque na interface
@@ -723,7 +723,7 @@ let dados = {};
 // Carregar dados de estoque já no início
 async function carregarEstoque() {
   try {
-    const response = await fetch('http://localhost:6543/api/estoque');
+    const response = await fetch('https://locacao-backend-mercurio.onrender.com/api/estoque');
     dados = await response.json();
     
     if (response.ok) {
@@ -745,7 +745,7 @@ document.addEventListener('DOMContentLoaded', carregarEstoque);
   // FUNÇÃO DE ENVIO DOS DADOS DO PEDIDO PARA O BACKEND
 async function criarPedido(pedido) {
   try {
-    const response = await fetch('http://localhost:6543/api/pedidos', {
+    const response = await fetch('https://locacao-backend-mercurio.onrender.com/api/pedidos', {
       method: 'POST', 
       headers: {
         'Content-Type': 'application/json', 
@@ -774,7 +774,7 @@ async function criarPedido(pedido) {
       bancos: pedido.bancos,
     };
 
-    const response = await fetch('http://localhost:6543/api/estoque/atualizar', {
+    const response = await fetch('https://locacao-backend-mercurio.onrender.com/api/estoque/atualizar', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
