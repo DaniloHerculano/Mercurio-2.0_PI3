@@ -423,62 +423,63 @@
   </footer>
 <!------------- JAVASCRIPT ------------>
 <script>
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec";
 
-  document.addEventListener('DOMContentLoaded', function() {
-    const userData = JSON.parse(localStorage.getItem("userData"));
-    
-    if (!userData) {
-      window.location.href = "login.html";
-      return;
+    async function carregarDadosUsuario() {
+        showLoader(true);
+
+        try {
+            const userData = JSON.parse(localStorage.getItem("userData"));
+            if (!userData || !userData.email) {
+                alert("Erro ao carregar dados do usuário.");
+                window.location.href = "login.html";
+                return;
+            }
+
+            const response = await fetch(`${SCRIPT_URL}?action=getUserData&email=${encodeURIComponent(userData.email)}`);
+            const result = await response.json();
+
+            if (result.status === "success") {
+                exibirDadosUsuario(result.data);
+            } else {
+                alert("Erro ao carregar dados do usuário.");
+            }
+        } catch (error) {
+            console.error("Erro ao carregar dados:", error);
+        } finally {
+            showLoader(false);
+        }
     }
 
-    carregarDadosUsuario(userData.email);
+    function exibirDadosUsuario(data) {
+        const userInfoDiv = document.getElementById('userInfo');
+        userInfoDiv.innerHTML = `
+            <p><strong>Nome:</strong> ${data.nome || 'Não informado'} ${data.sobrenome || ''}</p>
+            <p><strong>Email:</strong> ${data.email || 'Não informado'}</p>
+            <p><strong>Telefone:</strong> ${data.telefone || 'Não informado'}</p>
+            <p><strong>Endereço:</strong> ${data.endereco?.rua || 'Não informado'}, ${data.endereco?.numero || ''} 
+            ${data.endereco?.bairro || ''}, ${data.endereco?.cidade || ''} - ${data.endereco?.estado || ''}, 
+            ${data.endereco?.pais || ''} - CEP: ${data.endereco?.cep || ''}</p>
+        `;
+    }
 
-    document.getElementById('logout').addEventListener('click', function() {
-      localStorage.removeItem("userData");
-      window.location.href = "login.html";
+    document.addEventListener('DOMContentLoaded', function() {
+        carregarDadosUsuario();
+
+        document.getElementById('logout').addEventListener('click', function() {
+            localStorage.removeItem('userData');
+            window.location.href = "login.html";
+        });
     });
-  });
 
-  async function carregarDadosUsuario(email) {
-    const userInfoDiv = document.getElementById('userInfo');
-    userInfoDiv.innerHTML = "Carregando dados...";
-
-    try {
-      console.log(`Solicitando dados do usuário para o email: ${email}`);
-
-      const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
-      const result = await response.json();
-      
-      console.log("Resposta da API:", result);
-
-      if (result.status === "success" && result.data) {
-        exibirDadosUsuario(result.data);
-      } else {
-        userInfoDiv.innerHTML = "Erro ao carregar dados do usuário. Verifique o console.";
-      }
-    } catch (error) {
-      console.error("Erro ao carregar dados:", error);
-      userInfoDiv.innerHTML = "Erro ao conectar ao servidor.";
+    function showLoader(show) {
+        const loader = document.getElementById('loading-overlay');
+        if (loader) {
+            loader.style.display = show ? 'flex' : 'none';
+        }
     }
-  }
 
-  function exibirDadosUsuario(data) {
-    const userInfoDiv = document.getElementById('userInfo');
-    userInfoDiv.innerHTML = `
-      <p><strong>Nome:</strong> ${data.nome || 'Não informado'}</p>
-      <p><strong>Email:</strong> ${data.email || 'Não informado'}</p>
-      <p><strong>Telefone:</strong> ${data.telefone || 'Não informado'}</p>
-      <p><strong>Endereço:</strong> ${data.rua || 'Não informado'}, 
-      ${data.numero || ''} ${data.complemento || ''}, 
-      ${data.bairro || ''}, ${data.cidade || ''}, 
-      ${data.estado || ''}, ${data.cep || ''}, 
-      ${data.pais || ''}</p>
-    `;
-  }
-
-  async function carregarPedidosUsuario(email) {
+    async function carregarPedidosUsuario(email) {
     const pedidosDiv = document.getElementById('meusPedidos');
     pedidosDiv.innerHTML = "Carregando...";
 
