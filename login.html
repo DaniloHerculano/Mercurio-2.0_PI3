@@ -423,60 +423,49 @@
     const statusMessage = document.getElementById('status-message');
     const menuToggle = document.getElementById('menuToggle');
     const mainNav = document.querySelector('.sf-menu');
-    
+
     // Controle do Menu Mobile
     if (menuToggle && mainNav) {
-      if (window.innerWidth <= 768) {
-        mainNav.style.display = 'none';
-      }
+      if (window.innerWidth <= 768) mainNav.style.display = 'none';
 
       menuToggle.addEventListener('click', function() {
-        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
-          mainNav.style.display = 'flex';
-        } else {
-          mainNav.style.display = 'none';
-        }
+        mainNav.style.display = (mainNav.style.display === 'none' || mainNav.style.display === '') ? 'flex' : 'none';
       });
 
       window.addEventListener('resize', function() {
-        if (window.innerWidth > 768) {
-          mainNav.style.display = 'flex';
-        } else {
-          mainNav.style.display = 'none';
-        }
+        mainNav.style.display = (window.innerWidth > 768) ? 'flex' : 'none';
       });
     }
 
     // Evento de Login
-    loginForm.addEventListener('submit', function(e) {
+    loginForm.addEventListener('submit', async function(e) {
       e.preventDefault();
       loginButton.textContent = "Entrando...";
       loginButton.disabled = true;
-      
+      statusMessage.style.display = 'none';
+
       const emailOrUser = document.getElementById('login').value.trim();
       const senha = document.getElementById('password').value.trim();
-      
+
       if (!emailOrUser || !senha) {
         showMessage("Por favor, preencha todos os campos.", "error");
         resetButton();
         return;
       }
 
-      // Envia a requisição para o Apps Script via AJAX
-      fetch('https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: new URLSearchParams({
-          action: 'login_user',
-          email: emailOrUser,
-          usuario: emailOrUser,
-          senha: senha
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
+      try {
+        const response = await fetch('https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            action: 'login_user',
+            email: emailOrUser,
+            usuario: emailOrUser,
+            senha: senha
+          })
+        });
+
+        const data = await response.json();
         if (data.status === 'success') {
           sessionStorage.setItem('user', JSON.stringify(data.data));
           window.location.href = 'customer_area.html';
@@ -484,11 +473,10 @@
           showMessage(data.message || 'Erro no login.', "error");
           resetButton();
         }
-      })
-      .catch(() => {
+      } catch (error) {
         showMessage('Erro ao se conectar com o servidor. Tente novamente mais tarde.', "error");
         resetButton();
-      });
+      }
     });
 
     // Função para mostrar mensagens de status
