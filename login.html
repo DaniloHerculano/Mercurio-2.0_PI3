@@ -453,9 +453,7 @@
 
       fetch('https://script.google.com/macros/s/AKfycbycp5mm76dIIKbnOzgyadAlwrqmxm5ez5M7XI0P0tKyepWv7Dqo127lhUgysRC9AnFW/exec', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: new URLSearchParams({
           action: 'login_user',
           email: emailOrUser,
@@ -466,7 +464,7 @@
       .then(response => response.json())
       .then(data => {
         if (data.status === 'success') {
-          localStorage.setItem("userData", JSON.stringify(data.data)); 
+          localStorage.setItem("userData", JSON.stringify(data.data));
           window.location.href = 'customer_area.html';
         } else {
           statusMessage.textContent = data.message || "Erro no login.";
@@ -496,17 +494,15 @@
       recoveryModal.style.display = 'block';
     });
 
-    // Fechar o modal
     closeModalBtn?.addEventListener('click', function() {
       recoveryModal.style.display = 'none';
       recoveryEmailInput.value = '';
       recoveryMessage.textContent = '';
     });
 
-    // Recuperar a senha
     recoverPasswordBtn?.addEventListener('click', function() {
       const email = recoveryEmailInput.value.trim();
-      
+
       if (!email) {
         alert('Por favor, insira um e-mail válido.');
         return;
@@ -514,35 +510,25 @@
 
       recoverPasswordBtn.textContent = "Verificando...";
       recoverPasswordBtn.disabled = true;
-      recoveryMessage.textContent = ''; // Limpar mensagem anterior
-    
+      recoveryMessage.textContent = '';
+
       fetch('https://script.google.com/macros/s/AKfycbycp5mm76dIIKbnOzgyadAlwrqmxm5ez5M7XI0P0tKyepWv7Dqo127lhUgysRC9AnFW/exec', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: new URLSearchParams({
           action: 'recover_password',
           email: email
         })
       })
-      .then(response => {
-        console.log("Resposta da API:", response);
-        if (!response.ok) {
-          throw new Error("Erro na resposta da API");
-        }
-        return response.json();
-      })
+      .then(response => response.json())
       .then(data => {
-        console.log("Dados recebidos:", data);
         if (data.status === 'success' && data.data.senha) {
           recoveryMessage.textContent = `Sua senha é: ${data.data.senha}`;
         } else {
           recoveryMessage.textContent = 'Usuário não encontrado ou dados inválidos.';
         }
       })
-      .catch((error) => {
-        console.error("Erro ao recuperar a senha:", error);
+      .catch(() => {
         recoveryMessage.textContent = 'Erro ao se conectar com o servidor.';
       })
       .finally(() => {
@@ -550,7 +536,6 @@
         recoverPasswordBtn.disabled = false;
       });
     });
-
   });
 </script>
 </body>
