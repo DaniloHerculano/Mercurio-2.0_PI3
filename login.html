@@ -503,7 +503,7 @@
       recoveryMessage.textContent = '';
     });
 
-    // Recuperar a senha
+   // Recuperar a senha
     recoverPasswordBtn?.addEventListener('click', function() {
       const email = recoveryEmailInput.value.trim();
       
@@ -511,10 +511,10 @@
         alert('Por favor, insira um e-mail válido.');
         return;
       }
-
+    
       recoverPasswordBtn.textContent = "Verificando...";
       recoverPasswordBtn.disabled = true;
-
+    
       fetch('https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec', {
         method: 'POST',
         headers: {
@@ -528,13 +528,13 @@
       .then(response => response.json())
       .then(data => {
         if (data.status === 'success') {
-          recoveryMessage.textContent = `Sua senha é: ${data.data.senha}`;
+          recoveryMessage.textContent = data.message; // Exibe a mensagem diretamente
         } else {
           recoveryMessage.textContent = 'Usuário não encontrado ou dados inválidos.';
         }
       })
       .catch(() => {
-        alert('Erro ao recuperar a senha');
+        recoveryMessage.textContent = 'Erro ao se conectar com o servidor.';
       })
       .finally(() => {
         recoverPasswordBtn.textContent = "Recuperar Senha";
