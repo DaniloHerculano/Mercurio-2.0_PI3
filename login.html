@@ -452,55 +452,57 @@
     
     // Função para manipulação do formulário de login
     $(document).ready(function() {
-    // Quando o formulário de login for enviado
+    // Garantir que o botão comece como "Entrar"
+    var loginButton = $('.btn');
+    loginButton.text("Entrar");
+    loginButton.prop("disabled", false);  // O botão não é desabilitado na inicialização
+  
+    // Ao submeter o formulário de login
     $('#login-form').on('submit', function(e) {
-      e.preventDefault(); // Impede o envio padrão do formulário
+      e.preventDefault(); // Impede o envio do formulário
   
       var emailOrUser = $('#login').val().trim();
       var senha = $('#senha').val().trim();
   
-      // Verifica se os campos não estão vazios
+      // Verificação se os campos estão preenchidos
       if (!emailOrUser || !senha) {
         alert('Por favor, preencha todos os campos');
         return;
       }
   
-      // Desabilita o botão e altera o texto para "Entrando..." após o clique
-      var loginButton = $('.btn');
+      // Mudando o botão para "Entrando..." e desabilitando ele
       loginButton.text("Entrando...");
-      loginButton.prop("disabled", true); // Desabilita o botão para evitar múltiplos cliques
+      loginButton.prop("disabled", true);
   
-      // Envia a requisição para o Apps Script via AJAX
+      // Enviar a requisição via AJAX
       $.ajax({
         url: 'https://script.google.com/macros/s/AKfycbzM7K9JxhHcjc_b5J1o2bkp7o5bXwzEdPjGR8XHDVZjmIKD7GRNJH_SdGqZTk4sYI2_/exec', // Substitua com sua URL do Apps Script
         type: 'POST',
         data: {
           action: 'login_user',
           email: emailOrUser,
-          usuario: emailOrUser,
+          usuario: emailOrUser,  // Enviando o campo "usuário" também para busca
           senha: senha
         },
         success: function(response) {
           var data = JSON.parse(response);
   
           if (data.status === 'success') {
-            // Login bem-sucedido, redireciona para a área do cliente
+            // Redireciona para a área do cliente após login bem-sucedido
             window.location.href = 'customer_area.html';
           } else {
-            // Exibe mensagem de erro
+            // Exibe a mensagem de erro e reabilita o botão
             alert(data.message || 'Erro no login');
   
-            // Reabilita o botão após erro
             loginButton.text("Entrar");
-            loginButton.prop("disabled", false); // Reabilita o botão após falha
+            loginButton.prop("disabled", false); // Reabilita o botão
           }
         },
         error: function(xhr, status, error) {
           alert('Erro ao se conectar com o servidor. Tente novamente mais tarde.');
   
-          // Reabilita o botão após erro de conexão
           loginButton.text("Entrar");
-          loginButton.prop("disabled", false); // Reabilita o botão após falha de conexão
+          loginButton.prop("disabled", false); // Reabilita o botão em caso de erro
         }
       });
     });
