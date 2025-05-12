@@ -342,20 +342,24 @@
   <div class="content">
     <div class="form-bubble">
       <h2>Login</h2>
-      <!-- No formulário de login -->
-        <form id="login-form">
-          <input type="hidden" name="action" value="login_user">
-          
-          <div class="form-group">
-            <label for="login">E-mail ou Nome de Usuário</label>
-            <input type="text" id="login" name="login" placeholder="Digite seu e-mail ou nome de usuário" required>
-          </div>
-          <div class="form-group">
-            <label for="password">Senha</label>
-            <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
-          </div>
-          <button type="button" class="btn" onclick="fazerLogin(event)">Entrar</button>
-        </form>
+      <!-- Formulário de login -->
+      <form id="login-form">
+        <input type="hidden" name="action" value="login_user">
+        
+        <div class="form-group">
+          <label for="login">E-mail ou Nome de Usuário</label>
+          <input type="text" id="login" name="login" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" name="senha" class="form-control" required>
+        </div>
+        
+        <button type="submit" class="btn">Entrar</button>
+      </form>
+  
+      <!-- Opções extras -->
       <div class="extra-options">
         <a href="#" id="forgot-password">Esqueci minha senha</a>
         <a href="register.html">Registrar-se</a>
@@ -402,7 +406,7 @@
   </footer>
 <!------------- JAVASCRIPT ------------>
 <script>
-      // CONTROLE DO MENU MOBILE - VERSÃO GARANTIDA
+    // CONTROLE DO MENU MOBILE - VERSÃO GARANTIDA
     document.addEventListener('DOMContentLoaded', function() {
       const menuToggle = document.getElementById('menuToggle');
       const mainNav = document.querySelector('.sf-menu');
@@ -430,68 +434,89 @@
         }
       });
     });
-  
-  // Função para enviar o login via JavaScript
-    function fazerLogin(event) {
-      event.preventDefault();
-      
-      // Verifica se o elemento loading-overlay existe
-      const loadingOverlay = document.getElementById('loading-overlay');
-      const loginButton = document.querySelector('.btn');
-      
-      if (loadingOverlay) {
-        loadingOverlay.style.display = 'flex';
-      }
-      
-      // Altera o texto do botão para "Entrando..." e o desabilita
-      loginButton.textContent = "Entrando...";
-      loginButton.disabled = true;
-  
-      // Coleta os dados do formulário
-      var email = document.getElementById('login').value.trim();
-      var senha = document.getElementById('password').value.trim();
     
-      // Envia os dados para o Apps Script
-      $.get('https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec', {
-        email: email,
-        senha: senha
-      }, function(resposta) {
-        // Esconde o loader se existir
-        if (loadingOverlay) {
-          loadingOverlay.style.display = 'none';
+    // Verifica se o elemento loading-overlay existe
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const loginButton = document.querySelector('.btn');
+    
+    // Verifica e exibe a sobrecarga de carregamento, se o elemento existir
+    if (loadingOverlay) {
+      loadingOverlay.style.display = 'flex';
+    }
+    
+    // Altera o texto do botão para "Entrando..." e o desabilita
+    if (loginButton) {
+      loginButton.textContent = "Entrando..."; // Muda o texto do botão
+      loginButton.disabled = true; // Desabilita o botão
+    }
+    
+    // Função para manipulação do formulário de login (exemplo de uso)
+    $(document).ready(function() {
+      // Quando o formulário de login for enviado
+      $('#login-form').on('submit', function(e) {
+        e.preventDefault(); // Impede o envio padrão do formulário
+    
+        var emailOrUser = $('#login').val().trim();
+        var senha = $('#senha').val().trim();
+    
+        // Verifica se os campos não estão vazios
+        if (!emailOrUser || !senha) {
+          alert('Por favor, preencha todos os campos');
+          return;
         }
-        
-        // Restaura o texto do botão e reativa
-        loginButton.textContent = "Entrar";
-        loginButton.disabled = false;
-  
-        if (typeof resposta === 'string') {
-          try {
-            resposta = JSON.parse(resposta);
-          } catch (e) {
-            alert("Erro: " + resposta);
-            return;
+    
+        // Altera o texto do botão para "Entrando..." e o desabilita
+        if (loginButton) {
+          loginButton.textContent = "Entrando...";
+          loginButton.disabled = true;
+        }
+    
+        // Envia a requisição para o Apps Script via AJAX
+        $.ajax({
+          url: 'https://script.google.com/macros/s/AKfycbzM7K9JxhHcjc_b5J1o2bkp7o5bXwzEdPjGR8XHDVZjmIKD7GRNJH_SdGqZTk4sYI2_/exec', // Substitua com sua URL do Apps Script
+          type: 'POST',
+          data: {
+            action: 'login_user',
+            email: emailOrUser,
+            usuario: emailOrUser,
+            senha: senha
+          },
+          success: function(response) {
+            var data = JSON.parse(response);
+            
+            if (data.status === 'success') {
+              // Login bem-sucedido, redireciona para a área do cliente
+              window.location.href = 'customer_area.html';
+            } else {
+              // Exibe mensagem de erro
+              alert(data.message || 'Erro no login');
+              
+              // Reabilita o botão após erro
+              if (loginButton) {
+                loginButton.textContent = "Entrar";
+                loginButton.disabled = false;
+              }
+            }
+          },
+          error: function(xhr, status, error) {
+            alert('Erro ao se conectar com o servidor. Tente novamente mais tarde.');
+            
+            // Reabilita o botão após erro de conexão
+            if (loginButton) {
+              loginButton.textContent = "Entrar";
+              loginButton.disabled = false;
+            }
           }
-        }
+        });
+      });
+    });
     
-        if (resposta.status === "sucesso") {
-          // Armazena os dados básicos no localStorage
-          localStorage.setItem('loggedInUser', resposta.email);
-          
-          // Redireciona para a área do cliente
-          window.location.href = 'customer_area.html';
-        } else {
-          alert("Erro: " + (resposta.message || "Usuário ou senha inválidos"));
-        }
-      }).fail(function() {
-        if (loadingOverlay) {
-          loadingOverlay.style.display = 'none';
-        }
-        // Restaura o texto do botão e reativa
-        loginButton.textContent = "Entrar";
-        loginButton.disabled = false;
-        
-        alert("Erro na comunicação com o servidor");
+    // Função para alternar o tema claro e escuro (opcional)
+    const themeToggle = document.getElementById('theme-toggle');
+    
+    if (themeToggle) {
+      themeToggle.addEventListener('click', function() {
+        document.body.classList.toggle('dark-theme');
       });
     }
   </script>
