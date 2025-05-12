@@ -484,10 +484,10 @@
         const userInfoDiv = document.getElementById('userInfo');
         userInfoDiv.innerHTML = `
             <p><strong>Nome:</strong> ${data.nome || 'Não informado'} ${data.sobrenome || ''}</p>
-            <p><strong>Email:</strong> ${data.email || 'Não informado'}</p>
-            <p><strong>Telefone:</strong> ${data.telefone || 'Não informado'}</p>
             <p><strong>Idade:</strong> ${data.idade || 'Não informado'}</p>
+            <p><strong>Telefone:</strong> ${data.telefone || 'Não informado'}</p>
             <p><strong>Gênero:</strong> ${data.genero || 'Não informado'}</p>
+            <p><strong>Email:</strong> ${data.email || 'Não informado'}</p>   
             <p><strong>Endereço:</strong> ${data.endereco?.rua || 'Não informado'}, ${data.endereco?.numero || ''} 
             ${data.endereco?.bairro || ''}, ${data.endereco?.cidade || ''} - ${data.endereco?.estado || ''}, 
             ${data.endereco?.pais || ''} - CEP: ${data.endereco?.cep || ''}</p>
