@@ -503,7 +503,7 @@
       recoveryMessage.textContent = '';
     });
 
-   // Recuperar a senha
+ // Recuperar a senha
     recoverPasswordBtn?.addEventListener('click', function() {
       const email = recoveryEmailInput.value.trim();
       
@@ -514,8 +514,9 @@
     
       recoverPasswordBtn.textContent = "Verificando...";
       recoverPasswordBtn.disabled = true;
+      recoveryMessage.textContent = ''; // Limpar mensagem anterior
     
-      fetch('https://script.google.com/macros/s/AKfycbycp5mm76dIIKbnOzgyadAlwrqmxm5ez5M7XI0P0tKyepWv7Dqo127lhUgysRC9AnFW/exec', {
+      fetch('https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -525,15 +526,23 @@
           email: email
         })
       })
-      .then(response => response.json())
+      .then(response => {
+        console.log("Resposta da API:", response);
+        if (!response.ok) {
+          throw new Error("Erro na resposta da API");
+        }
+        return response.json();
+      })
       .then(data => {
+        console.log("Dados recebidos:", data);
         if (data.status === 'success') {
           recoveryMessage.textContent = data.message; // Exibe a mensagem diretamente
         } else {
           recoveryMessage.textContent = 'Usuário não encontrado ou dados inválidos.';
         }
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error("Erro ao recuperar a senha:", error);
         recoveryMessage.textContent = 'Erro ao se conectar com o servidor.';
       })
       .finally(() => {
@@ -541,6 +550,7 @@
         recoverPasswordBtn.disabled = false;
       });
     });
+
   });
 </script>
 </body>
