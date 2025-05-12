@@ -354,33 +354,27 @@
   <!-- CONTEÚDO (LOGIN) -->
   <div class="content">
     <div class="form-bubble">
-    <h2>Login</h2>
-    <div id="status-message" class="status-message" style="display: none;"></div>
-    
-    <form id="login-form">
-      <div class="form-group">
-        <label for="login">E-mail ou Nome de Usuário</label>
-        <input type="text" id="login" name="login" placeholder="Digite seu e-mail ou nome de usuário" required>
+      <h2>Login</h2>
+      <div id="status-message" class="status-message" style="display: none;"></div>
+      
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login">E-mail ou Nome de Usuário</label>
+          <input type="text" id="login" name="login" class="form-control" placeholder="Digite seu e-mail ou nome de usuário" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" name="senha" class="form-control" placeholder="Digite sua senha" required>
+        </div>
+        
+        <button type="submit" class="btn" id="login-button">Entrar</button>
+      </form>
+      
+      <div class="extra-options">
+        <a href="#" id="forgot-password">Esqueci minha senha</a>
+        <a href="register.html">Registrar-se</a>
       </div>
-      <div class="form-group">
-        <label for="password">Senha</label>
-        <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
-      </div>
-      <button type="submit" class="btn" id="login-button">Entrar</button>
-    </form>
-    
-    <div class="extra-options">
-      <a href="#" id="forgot-password">Esqueci minha senha</a>
-      <a href="register.html">Registrar-se</a>
-    </div>
-  </div>
-  </div>
-
-  <!-- Processamento  -->
-  <div id="loading-overlay">
-    <div style="background: white; padding: 20px; border-radius: 5px; text-align: center;">
-      <img src="https://i.gifer.com/ZZ5H.gif" alt="Carregando" style="width: 50px;">
-      <p>Processando seu login...</p>
     </div>
   </div>
 
@@ -423,92 +417,78 @@
   </footer>
 <!------------- JAVASCRIPT ------------>
 <script>
+  document.addEventListener('DOMContentLoaded', function() {
     // CONTROLE DO MENU MOBILE - VERSÃO GARANTIDA
-    document.addEventListener('DOMContentLoaded', function() {
-      const menuToggle = document.getElementById('menuToggle');
-      const mainNav = document.querySelector('.sf-menu');
-      
-      // Verifica se é mobile no carregamento
-      if (window.innerWidth <= 768) {
-        mainNav.style.display = 'none';
-      }
-      
-      // Controle do clique no botão
-      menuToggle.addEventListener('click', function() {
-        if (mainNav.style.display === 'none' || mainNav.style.display === '') {
-          mainNav.style.display = 'flex';
-        } else {
-          mainNav.style.display = 'none';
-        }
-      });
-      
-      // Atualiza ao redimensionar a tela
-      window.addEventListener('resize', function() {
-        if (window.innerWidth > 768) {
-          mainNav.style.display = 'flex';
-        } else {
-          mainNav.style.display = 'none';
-        }
-      });
-    });
+    const menuToggle = document.getElementById('menuToggle');
+    const mainNav = document.querySelector('.sf-menu');
     
-    document.addEventListener('DOMContentLoaded', function() {
-    const loginForm = document.getElementById('login-form');
-    const statusMessage = document.getElementById('status-message');
-    const loadingOverlay = document.getElementById('loading-overlay');
-    const loginButton = document.getElementById('login-button');
-  
-    loginForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const loginInput = document.getElementById('login').value.trim();
-      const passwordInput = document.getElementById('password').value.trim();
-      
-      // Validação básica
-      if (!loginInput || !passwordInput) {
-        showStatus('Por favor, preencha todos os campos', 'error');
-        return;
-      }
-      
-      // Mostrar loading
-      loadingOverlay.style.display = 'flex';
-      loginButton.disabled = true;
-      statusMessage.style.display = 'none';
-      
-      // Fazer requisição
-      fetch('https://script.google.com/macros/s/AKfycbzYAEyYnbuM6zHjc-6p0yjy8PfPCILTa4j34ceVr6typ2MvSe7h3LDeFjsYeFaNNT8K/exec', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `usuario=${encodeURIComponent(loginInput)}&senha=${encodeURIComponent(passwordInput)}`
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === "success") {
-          // Login bem-sucedido
-          localStorage.setItem('loggedInUser', JSON.stringify(data.data));
-          window.location.href = 'customer_area.html';
-        } else {
-          showStatus(data.message || 'Credenciais inválidas', 'error');
+    if (window.innerWidth <= 768) {
+      mainNav.style.display = 'none';
+    }
+
+    menuToggle?.addEventListener('click', function() {
+      mainNav.style.display = (mainNav.style.display === 'none' || mainNav.style.display === '') ? 'flex' : 'none';
+    });
+
+    window.addEventListener('resize', function() {
+      mainNav.style.display = window.innerWidth > 768 ? 'flex' : 'none';
+    });
+
+    // Manipulação do formulário de login
+    $(document).ready(function() {
+      $('#login-form').on('submit', function(e) {
+        e.preventDefault(); // Impede o envio padrão do formulário
+
+        const emailOrUser = $('#login').val().trim();
+        const senha = $('#senha').val().trim();
+        const loginButton = document.querySelector('.btn');
+
+        // Verifica se os campos não estão vazios
+        if (!emailOrUser || !senha) {
+          alert('Por favor, preencha todos os campos');
+          return;
         }
-      })
-      .catch(error => {
-        showStatus('Erro ao conectar com o servidor', 'error');
-        console.error('Erro:', error);
-      })
-      .finally(() => {
-        loadingOverlay.style.display = 'none';
-        loginButton.disabled = false;
+
+        // Altera o texto do botão para "Entrando..." e o desabilita
+        if (loginButton) {
+          loginButton.textContent = "Entrando...";
+          loginButton.disabled = true;
+        }
+
+        // Envia a requisição para o Apps Script via AJAX
+        $.ajax({
+          url: 'https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec',
+          type: 'POST',
+          data: {
+            action: 'login_user',
+            email: emailOrUser,
+            usuario: emailOrUser,
+            senha: senha
+          },
+          success: function(response) {
+            var data = typeof response === "string" ? JSON.parse(response) : response;
+            
+            if (data.status === 'success') {
+              window.location.href = 'customer_area.html';
+            } else {
+              alert(data.message || 'Erro no login');
+              if (loginButton) {
+                loginButton.textContent = "Entrar";
+                loginButton.disabled = false;
+              }
+            }
+          },
+          error: function(xhr, status, error) {
+            alert('Erro ao se conectar com o servidor. Tente novamente mais tarde.');
+            if (loginButton) {
+              loginButton.textContent = "Entrar";
+              loginButton.disabled = false;
+            }
+          }
+        });
       });
     });
-  
-    function showStatus(message, type) {
-      statusMessage.textContent = message;
-      statusMessage.className = `status-message status-${type}`;
-      statusMessage.style.display = 'block';
-    }
   });
-  </script>
+</script>
 </body>
 </html>
