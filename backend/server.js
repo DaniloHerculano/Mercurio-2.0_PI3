@@ -61,3 +61,10 @@ const PORT = 6543;
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
+
+const corsOptions = {
+  origin: 'https://mercuriolocacoes.netlify.app',
+  methods: 'GET,POST',
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
