@@ -419,11 +419,16 @@
     const loginButton = document.getElementById('login-button');
     const statusMessage = document.getElementById('status-message');
 
+    // Verifica se o usuário já está logado e redireciona para a área do cliente
+    if (localStorage.getItem("userData")) {
+      window.location.href = 'customer_area.html';
+    }
+
     document.getElementById('login-form').addEventListener('submit', function(event) {
       event.preventDefault();
       const emailOrUser = document.getElementById('login').value.trim();
       const senha = document.getElementById('password').value.trim();
-      
+
       if (!emailOrUser || !senha) {
         statusMessage.textContent = "Por favor, preencha todos os campos.";
         statusMessage.style.display = "block";
@@ -449,8 +454,9 @@
       .then(response => response.json())
       .then(data => {
         if (data.status === 'success') {
-          localStorage.setItem("userData", JSON.stringify(data.data)); // Armazena os dados do usuário
-          window.location.href = 'customer_area.html';
+          // Armazena os dados do usuário no localStorage
+          localStorage.setItem("userData", JSON.stringify(data.data)); 
+          window.location.href = 'customer_area.html'; // Redireciona para a área do cliente
         } else {
           statusMessage.textContent = data.message || "Erro no login.";
           statusMessage.style.display = "block";
