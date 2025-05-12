@@ -727,9 +727,9 @@ async function carregarEstoque() {
     dados = await response.json();
     
     if (response.ok) {
-      document.getElementById('estoqueMesas').innerText = `Mesas: ${dados.estoqueMesas}`;
-      document.getElementById('estoqueCadeiras').innerText = `Cadeiras: ${dados.estoqueCadeiras}`;
-      document.getElementById('estoqueBancos').innerText = `Bancos: ${dados.estoqueBancos}`;
+    document.getElementById('estoqueMesas').innerHTML = `Mesas: ${dados.estoquemesas}`;
+    document.getElementById('estoqueCadeiras').innerHTML = `Cadeiras: ${dados.estoquecadeiras}`;
+    document.getElementById('estoqueBancos').innerHTML = `Bancos: ${dados.estoquebancos}`;
     } else {
       alert('Erro ao obter estoque');
     }
