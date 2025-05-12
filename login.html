@@ -415,17 +415,15 @@
   </footer>
 <!------------- JAVASCRIPT ------------>
 <script>
-    // CONTROLE DO MENU MOBILE - VERSÃO GARANTIDA
     document.addEventListener('DOMContentLoaded', function() {
+      // Controle do menu mobile - já implementado corretamente
       const menuToggle = document.getElementById('menuToggle');
       const mainNav = document.querySelector('.sf-menu');
       
-      // Verifica se é mobile no carregamento
       if (window.innerWidth <= 768) {
         mainNav.style.display = 'none';
       }
       
-      // Controle do clique no botão
       menuToggle.addEventListener('click', function() {
         if (mainNav.style.display === 'none' || mainNav.style.display === '') {
           mainNav.style.display = 'flex';
@@ -433,8 +431,7 @@
           mainNav.style.display = 'none';
         }
       });
-      
-      // Atualiza ao redimensionar a tela
+    
       window.addEventListener('resize', function() {
         if (window.innerWidth > 768) {
           mainNav.style.display = 'flex';
@@ -442,96 +439,97 @@
           mainNav.style.display = 'none';
         }
       });
-    });
-  
-  document.addEventListener('DOMContentLoaded', function() {
-    const loginButton = document.getElementById('login-button');
-    const statusMessage = document.getElementById('status-message');
-
-    document.getElementById('login-form').addEventListener('submit', function(event) {
-      event.preventDefault();
-      const emailOrUser = document.getElementById('login').value.trim();
-      const senha = document.getElementById('password').value.trim();
-
-      if (!emailOrUser || !senha) {
-        statusMessage.textContent = "Por favor, preencha todos os campos.";
-        statusMessage.style.display = "block";
-        return;
-      }
-
-      loginButton.textContent = "Entrando...";
-      loginButton.disabled = true;
-      statusMessage.style.display = "none";
-
-      fetch('https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: new URLSearchParams({
-          action: 'login_user',
-          email: emailOrUser,
-          usuario: emailOrUser,
-          senha: senha
+    
+      // Função de login
+      const loginButton = document.getElementById('login-button');
+      const statusMessage = document.getElementById('status-message');
+    
+      document.getElementById('login-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const emailOrUser = document.getElementById('login').value.trim();
+        const senha = document.getElementById('password').value.trim();
+    
+        if (!emailOrUser || !senha) {
+          statusMessage.textContent = "Por favor, preencha todos os campos.";
+          statusMessage.style.display = "block";
+          return;
+        }
+    
+        loginButton.textContent = "Entrando...";
+        loginButton.disabled = true;
+        statusMessage.style.display = "none";
+    
+        fetch('https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: new URLSearchParams({
+            action: 'login_user',
+            email: emailOrUser,
+            usuario: emailOrUser,  // Use apenas um campo se email e usuário forem os mesmos
+            senha: senha
+          })
         })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === 'success') {
-          localStorage.setItem("userData", JSON.stringify(data.data)); 
-          window.location.href = 'customer_area.html';
-        } else {
-          statusMessage.textContent = data.message || "Erro no login.";
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            localStorage.setItem("userData", JSON.stringify(data.data)); 
+            window.location.href = 'customer_area.html';
+          } else {
+            statusMessage.textContent = data.message || "Erro no login.";
+            statusMessage.style.display = "block";
+            loginButton.textContent = "Entrar";
+            loginButton.disabled = false;
+          }
+        })
+        .catch(error => {
+          statusMessage.textContent = "Erro ao se conectar com o servidor.";
           statusMessage.style.display = "block";
           loginButton.textContent = "Entrar";
           loginButton.disabled = false;
+        });
+      });
+    
+      // Exibir o modal de recuperação de senha
+      document.getElementById('forgot-password').addEventListener('click', function(event) {
+        event.preventDefault();
+        document.getElementById('password-recovery-modal').style.display = 'block';
+      });
+    
+      // Fechar o modal de recuperação de senha
+      document.getElementById('close-modal').addEventListener('click', function() {
+        document.getElementById('password-recovery-modal').style.display = 'none';
+        document.getElementById('recovery-email').value = ''; // Limpa o campo de e-mail
+        document.getElementById('recovery-message').textContent = ''; // Limpa a mensagem de erro/sucesso
+      });
+    
+      // Recuperar a senha via Google Apps Script
+      document.getElementById('recover-password').addEventListener('click', function() {
+        const email = document.getElementById('recovery-email').value.trim();
+    
+        // Validação básica de e-mail
+        if (!email || !/\S+@\S+\.\S+/.test(email)) {
+          alert('Por favor, insira um e-mail válido.');
+          return;
         }
-      })
-      .catch(error => {
-        statusMessage.textContent = "Erro ao se conectar com o servidor.";
-        statusMessage.style.display = "block";
-        loginButton.textContent = "Entrar";
-        loginButton.disabled = false;
+    
+        const url = `https://script.google.com/macros/s/SEU_ID_DO_SCRIPT/exec?action=recover_password&email=${email}`;
+    
+        fetch(url)
+          .then(response => response.json())
+          .then(data => {
+            if (data.status === 'success') {
+              document.getElementById('recovery-message').textContent = data.data.message; // Exibe a senha no modal
+            } else {
+              document.getElementById('recovery-message').textContent = 'Usuário não encontrado ou dados inválidos';
+            }
+          })
+          .catch(error => {
+            alert('Erro ao recuperar a senha');
+          });
       });
     });
-  });
-  // Exibir o modal de recuperação de senha
-  document.getElementById('forgot-password').addEventListener('click', function(event) {
-    event.preventDefault();
-    document.getElementById('password-recovery-modal').style.display = 'block';
-  });
-
-  // Fechar o modal de recuperação de senha
-  document.getElementById('close-modal').addEventListener('click', function() {
-    document.getElementById('password-recovery-modal').style.display = 'none';
-    document.getElementById('recovery-email').value = ''; // Limpa o campo de e-mail
-    document.getElementById('recovery-message').textContent = ''; // Limpa a mensagem de erro/sucesso
-  });
-
-  // Recuperar a senha via Google Apps Script
-  document.getElementById('recover-password').addEventListener('click', function() {
-    const email = document.getElementById('recovery-email').value.trim();
-    
-    if (!email) {
-      alert('Por favor, insira um e-mail válido.');
-      return;
-    }
-
-    const url = `https://script.google.com/macros/s/SEU_ID_DO_SCRIPT/exec?action=recover_password&email=${email}`;
-
-    fetch(url)
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === 'success') {
-          document.getElementById('recovery-message').textContent = data.data.message; // Exibe a senha no modal
-        } else {
-          document.getElementById('recovery-message').textContent = 'Usuário não encontrado ou dados inválidos';
-        }
-      })
-      .catch(error => {
-        alert('Erro ao recuperar a senha');
-      });
-  });
 </script>
 </body>
 </html>
