@@ -428,11 +428,10 @@
 
     async function carregarDadosUsuario(email) {
       showLoader(true);
-
       try {
         const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
         const result = await response.json();
-
+        
         if (result.status === "success") {
           exibirDadosUsuario(result.data);
           carregarPedidosUsuario(email);
@@ -442,6 +441,7 @@
         }
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
+        alert("Houve um erro ao tentar carregar os dados. Tente novamente mais tarde.");
       } finally {
         showLoader(false);
       }
@@ -461,25 +461,39 @@
       const pedidosDiv = document.getElementById('meusPedidos');
       pedidosDiv.innerHTML = "Carregando...";
 
-      const response = await fetch(`${SCRIPT_URL}?action=get_user_orders&email=${encodeURIComponent(email)}`);
-      const result = await response.json();
+      try {
+        const response = await fetch(`${SCRIPT_URL}?action=get_user_orders&email=${encodeURIComponent(email)}`);
+        const result = await response.json();
 
-      if (result.status === "success") {
-        pedidosDiv.innerHTML = result.pedidos.map(p => `<p>Pedido #${p.id}: ${p.itens} - ${p.status}</p>`).join('');
-      } else {
-        pedidosDiv.innerHTML = "Nenhum pedido encontrado.";
+        if (result.status === "success") {
+          pedidosDiv.innerHTML = result.pedidos.map(p => `<p>Pedido #${p.id}: ${p.itens} - ${p.status}</p>`).join('');
+        } else {
+          pedidosDiv.innerHTML = "Nenhum pedido encontrado.";
+        }
+      } catch (error) {
+        pedidosDiv.innerHTML = "Erro ao carregar os pedidos.";
+        console.error("Erro ao carregar pedidos:", error);
       }
     }
 
     async function carregarEstoque() {
       const estoqueDiv = document.getElementById('estoqueAtual');
-      const response = await fetch(`${SCRIPT_URL}?action=get_stock`);
-      const result = await response.json();
+      try {
+        const response = await fetch(`${SCRIPT_URL}?action=get_stock`);
+        const result = await response.json();
 
-      if (result.status === "success") {
-        estoqueDiv.innerHTML = `<p>Mesas: ${result.estoque.mesas}</p><p>Cadeiras: ${result.estoque.cadeiras}</p><p>Bancos: ${result.estoque.bancos}</p>`;
-      } else {
+        if (result.status === "success") {
+          estoqueDiv.innerHTML = `
+            <p>Mesas: ${result.estoque.mesas}</p>
+            <p>Cadeiras: ${result.estoque.cadeiras}</p>
+            <p>Bancos: ${result.estoque.bancos}</p>
+          `;
+        } else {
+          estoqueDiv.innerHTML = "Erro ao carregar estoque.";
+        }
+      } catch (error) {
         estoqueDiv.innerHTML = "Erro ao carregar estoque.";
+        console.error("Erro ao carregar estoque:", error);
       }
     }
 
@@ -502,6 +516,7 @@
       const loader = document.getElementById('loading-overlay');
       loader.style.display = show ? 'flex' : 'none';
     }
-  </script>
+</script>
+
 </body>
 </html>
