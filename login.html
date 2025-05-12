@@ -418,86 +418,82 @@
 <!------------- JAVASCRIPT ------------>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    const loginForm = document.getElementById('login-form');
-    const loginButton = document.getElementById('login-button');
-    const statusMessage = document.getElementById('status-message');
     const menuToggle = document.getElementById('menuToggle');
     const mainNav = document.querySelector('.sf-menu');
 
     // Controle do Menu Mobile
-    if (menuToggle && mainNav) {
-      if (window.innerWidth <= 768) mainNav.style.display = 'none';
-
-      menuToggle.addEventListener('click', function() {
-        mainNav.style.display = (mainNav.style.display === 'none' || mainNav.style.display === '') ? 'flex' : 'none';
-      });
-
-      window.addEventListener('resize', function() {
-        mainNav.style.display = (window.innerWidth > 768) ? 'flex' : 'none';
-      });
+    if (window.innerWidth <= 768) {
+      mainNav.style.display = 'none';
     }
 
-    // Evento de Login
-    loginForm.addEventListener('submit', async function(e) {
-      e.preventDefault();
-      loginButton.textContent = "Entrando...";
-      loginButton.disabled = true;
-      statusMessage.style.display = 'none';
+    menuToggle.addEventListener('click', function() {
+      mainNav.style.display = mainNav.style.display === 'none' ? 'flex' : 'none';
+    });
 
-      const emailOrUser = document.getElementById('login').value.trim();
-      const senha = document.getElementById('password').value.trim();
-
-      if (!emailOrUser || !senha) {
-        showMessage("Por favor, preencha todos os campos.", "error");
-        resetButton();
-        return;
-      }
-
-      try {
-        const response = await fetch('https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            action: 'login_user',
-            email: emailOrUser,
-            usuario: emailOrUser,
-            senha: senha
-          })
-        });
-
-        const data = await response.json();
-        if (data.status === 'success') {
-          sessionStorage.setItem('user', JSON.stringify(data.data));
-          window.location.href = 'customer_area.html';
-        } else {
-          showMessage(data.message || 'Erro no login.', "error");
-          resetButton();
-        }
-      } catch (error) {
-        showMessage('Erro ao se conectar com o servidor. Tente novamente mais tarde.', "error");
-        resetButton();
+    window.addEventListener('resize', function() {
+      if (window.innerWidth > 768) {
+        mainNav.style.display = 'flex';
+      } else {
+        mainNav.style.display = 'none';
       }
     });
 
-    // Função para mostrar mensagens de status
-    function showMessage(message, type) {
-      statusMessage.textContent = message;
-      statusMessage.style.display = 'block';
-      statusMessage.style.color = (type === "error") ? "red" : "green";
-    }
+    // Função de Login
+    $('#login-form').on('submit', function(e) {
+      e.preventDefault();
+      
+      const loginButton = $('#login-button');
+      const emailOrUser = $('#login').val().trim();
+      const senha = $('#password').val().trim();
+      const statusMessage = $('#status-message');
 
-    // Função para resetar o botão
-    function resetButton() {
-      loginButton.textContent = "Entrar";
-      loginButton.disabled = false;
-    }
+      // Verifica se os campos estão preenchidos
+      if (!emailOrUser || !senha) {
+        statusMessage.text('Por favor, preencha todos os campos').show();
+        return;
+      }
+
+      // Configura o botão e a mensagem de status
+      loginButton.text("Entrando...").prop('disabled', true);
+      statusMessage.hide().text('');
+
+      // Envio da requisição AJAX
+      $.ajax({
+        url: 'https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec',
+        type: 'POST',
+        data: {
+          action: 'login_user',
+          email: emailOrUser,
+          usuario: emailOrUser,
+          senha: senha
+        },
+        success: function(response) {
+          console.log("Resposta da API:", response);
+          
+          try {
+            const data = JSON.parse(response);
+            if (data.status === 'success') {
+              window.location.href = 'customer_area.html';
+              return;
+            } else {
+              statusMessage.text(data.message || 'Erro no login.').show();
+            }
+          } catch (err) {
+            console.error("Erro ao processar a resposta:", err);
+            statusMessage.text('Erro inesperado. Tente novamente mais tarde.').show();
+          }
+        },
+        error: function(xhr, status, error) {
+          console.error("Erro na conexão com a API:", error);
+          statusMessage.text('Erro ao se conectar com o servidor. Tente novamente mais tarde.').show();
+        },
+        complete: function() {
+          // Sempre reabilita o botão e restaura o texto
+          loginButton.text("Entrar").prop('disabled', false);
+        }
+      });
+    });
   });
-
-  // Função de logout (a ser chamada ao clicar em "Sair")
-  function logout() {
-    sessionStorage.removeItem('user');
-    window.location.href = 'login.html';
-  }
 </script>
 </body>
 </html>
