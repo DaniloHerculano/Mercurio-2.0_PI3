@@ -465,15 +465,14 @@
           return;
         }
     
-        // Altera o texto do botão para "Entrando..." e o desabilita
-        if (loginButton) {
-          loginButton.textContent = "Entrando...";
-          loginButton.disabled = true;
-        }
+        // Desabilita o botão e altera o texto para "Entrando..."
+        var loginButton = $('.btn');
+        loginButton.text("Entrando...");
+        loginButton.prop("disabled", true);
     
         // Envia a requisição para o Apps Script via AJAX
         $.ajax({
-          url: 'https://script.google.com/macros/s/AKfycbyBwqkg0HLtDs1dhjuwx_Kq54QRzfQMQDW6lfy-QPLSGb0GWSOzx4CH0h6-GifwkQM/exec', // Substitua com sua URL do Apps Script
+          url: 'https://script.google.com/macros/s/AKfycbzM7K9JxhHcjc_b5J1o2bkp7o5bXwzEdPjGR8XHDVZjmIKD7GRNJH_SdGqZTk4sYI2_/exec', // Substitua com sua URL do Apps Script
           type: 'POST',
           data: {
             action: 'login_user',
@@ -483,29 +482,25 @@
           },
           success: function(response) {
             var data = JSON.parse(response);
-            
+    
             if (data.status === 'success') {
               // Login bem-sucedido, redireciona para a área do cliente
               window.location.href = 'customer_area.html';
             } else {
               // Exibe mensagem de erro
               alert(data.message || 'Erro no login');
-              
+    
               // Reabilita o botão após erro
-              if (loginButton) {
-                loginButton.textContent = "Entrar";
-                loginButton.disabled = false;
-              }
+              loginButton.text("Entrar");
+              loginButton.prop("disabled", false);
             }
           },
           error: function(xhr, status, error) {
             alert('Erro ao se conectar com o servidor. Tente novamente mais tarde.');
-            
+    
             // Reabilita o botão após erro de conexão
-            if (loginButton) {
-              loginButton.textContent = "Entrar";
-              loginButton.disabled = false;
-            }
+            loginButton.text("Entrar");
+            loginButton.prop("disabled", false);
           }
         });
       });
