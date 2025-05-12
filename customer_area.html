@@ -446,18 +446,21 @@
     userInfoDiv.innerHTML = "Carregando dados...";
 
     try {
+      console.log(`Solicitando dados do usuário para o email: ${email}`);
+
       const response = await fetch(`${SCRIPT_URL}?action=get_user_data&email=${encodeURIComponent(email)}`);
       const result = await response.json();
+      
+      console.log("Resposta da API:", result);
 
-      if (result.status === "success") {
+      if (result.status === "success" && result.data) {
         exibirDadosUsuario(result.data);
-        carregarPedidosUsuario(email);
-        carregarEstoque();
       } else {
-        userInfoDiv.innerHTML = "Erro ao carregar dados do usuário.";
+        userInfoDiv.innerHTML = "Erro ao carregar dados do usuário. Verifique o console.";
       }
     } catch (error) {
-      userInfoDiv.innerHTML = "Erro ao carregar dados do usuário.";
+      console.error("Erro ao carregar dados:", error);
+      userInfoDiv.innerHTML = "Erro ao conectar ao servidor.";
     }
   }
 
@@ -467,7 +470,11 @@
       <p><strong>Nome:</strong> ${data.nome || 'Não informado'}</p>
       <p><strong>Email:</strong> ${data.email || 'Não informado'}</p>
       <p><strong>Telefone:</strong> ${data.telefone || 'Não informado'}</p>
-      <p><strong>Endereço:</strong> ${data.rua || 'Não informado'}, ${data.numero || ''} ${data.complemento || ''}, ${data.bairro || ''}, ${data.cidade || ''}, ${data.estado || ''}, ${data.cep || ''}, ${data.pais || ''}</p>
+      <p><strong>Endereço:</strong> ${data.rua || 'Não informado'}, 
+      ${data.numero || ''} ${data.complemento || ''}, 
+      ${data.bairro || ''}, ${data.cidade || ''}, 
+      ${data.estado || ''}, ${data.cep || ''}, 
+      ${data.pais || ''}</p>
     `;
   }
 
