@@ -450,61 +450,61 @@
       loginButton.disabled = true; // Desabilita o botão
     }
     
-    // Função para manipulação do formulário de login (exemplo de uso)
+    // Função para manipulação do formulário de login
     $(document).ready(function() {
-      // Quando o formulário de login for enviado
-      $('#login-form').on('submit', function(e) {
-        e.preventDefault(); // Impede o envio padrão do formulário
-    
-        var emailOrUser = $('#login').val().trim();
-        var senha = $('#senha').val().trim();
-    
-        // Verifica se os campos não estão vazios
-        if (!emailOrUser || !senha) {
-          alert('Por favor, preencha todos os campos');
-          return;
-        }
-    
-        // Desabilita o botão e altera o texto para "Entrando..."
-        var loginButton = $('.btn');
-        loginButton.text("Entrando...");
-        loginButton.prop("disabled", true);
-    
-        // Envia a requisição para o Apps Script via AJAX
-        $.ajax({
-          url: 'https://script.google.com/macros/s/AKfycbzM7K9JxhHcjc_b5J1o2bkp7o5bXwzEdPjGR8XHDVZjmIKD7GRNJH_SdGqZTk4sYI2_/exec', // Substitua com sua URL do Apps Script
-          type: 'POST',
-          data: {
-            action: 'login_user',
-            email: emailOrUser,
-            usuario: emailOrUser,
-            senha: senha
-          },
-          success: function(response) {
-            var data = JSON.parse(response);
-    
-            if (data.status === 'success') {
-              // Login bem-sucedido, redireciona para a área do cliente
-              window.location.href = 'customer_area.html';
-            } else {
-              // Exibe mensagem de erro
-              alert(data.message || 'Erro no login');
-    
-              // Reabilita o botão após erro
-              loginButton.text("Entrar");
-              loginButton.prop("disabled", false);
-            }
-          },
-          error: function(xhr, status, error) {
-            alert('Erro ao se conectar com o servidor. Tente novamente mais tarde.');
-    
-            // Reabilita o botão após erro de conexão
+    // Quando o formulário de login for enviado
+    $('#login-form').on('submit', function(e) {
+      e.preventDefault(); // Impede o envio padrão do formulário
+  
+      var emailOrUser = $('#login').val().trim();
+      var senha = $('#senha').val().trim();
+  
+      // Verifica se os campos não estão vazios
+      if (!emailOrUser || !senha) {
+        alert('Por favor, preencha todos os campos');
+        return;
+      }
+  
+      // Desabilita o botão e altera o texto para "Entrando..." após o clique
+      var loginButton = $('.btn');
+      loginButton.text("Entrando...");
+      loginButton.prop("disabled", true); // Desabilita o botão para evitar múltiplos cliques
+  
+      // Envia a requisição para o Apps Script via AJAX
+      $.ajax({
+        url: 'https://script.google.com/macros/s/AKfycbzM7K9JxhHcjc_b5J1o2bkp7o5bXwzEdPjGR8XHDVZjmIKD7GRNJH_SdGqZTk4sYI2_/exec', // Substitua com sua URL do Apps Script
+        type: 'POST',
+        data: {
+          action: 'login_user',
+          email: emailOrUser,
+          usuario: emailOrUser,
+          senha: senha
+        },
+        success: function(response) {
+          var data = JSON.parse(response);
+  
+          if (data.status === 'success') {
+            // Login bem-sucedido, redireciona para a área do cliente
+            window.location.href = 'customer_area.html';
+          } else {
+            // Exibe mensagem de erro
+            alert(data.message || 'Erro no login');
+  
+            // Reabilita o botão após erro
             loginButton.text("Entrar");
-            loginButton.prop("disabled", false);
+            loginButton.prop("disabled", false); // Reabilita o botão após falha
           }
-        });
+        },
+        error: function(xhr, status, error) {
+          alert('Erro ao se conectar com o servidor. Tente novamente mais tarde.');
+  
+          // Reabilita o botão após erro de conexão
+          loginButton.text("Entrar");
+          loginButton.prop("disabled", false); // Reabilita o botão após falha de conexão
+        }
       });
     });
+  });
     
     // Função para alternar o tema claro e escuro (opcional)
     const themeToggle = document.getElementById('theme-toggle');
