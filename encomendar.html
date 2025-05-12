@@ -855,9 +855,15 @@ async function criarPedido(pedido) {
       enderecoEntrega = 'Av. Independência, 5110 - Barra Funda, Vinhedo - SP, 13280-000 (Retirada na loja)';
     }
 
-    await atualizarEstoque("mesas", mesas);
+   /* await atualizarEstoque("mesas", mesas);
     await atualizarEstoque("cadeiras", cadeiras);
-    await atualizarEstoque("bancos", bancos);
+    await atualizarEstoque("bancos", bancos); */
+
+        await atualizarEstoque({
+      mesas: mesas,
+      cadeiras: cadeiras,
+      bancos: bancos
+    });
 
     const startDate = $("#datepickerstart").datepicker("getDate");
     const endDate = $("#datepickerend").datepicker("getDate");
