@@ -433,6 +433,9 @@
   const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`; 
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzfDbfbHbkR-nYYT-biWN0XOH1dTYGh28Ge8BhSfKXgxZFNqTnqUtrpe6yqaA_GBwY/exec";
    */
+
+  //INICIANDO DADOS
+   let dados = {};
   // CONTROLE DO MENU MOBILE
   document.addEventListener('DOMContentLoaded', function() {
     const menuToggle = document.getElementById('menuToggle');
@@ -718,9 +721,6 @@ async function obterEstoque() {
 
 //CARREGAMENTO DE DADOS NO INÍCIO
 
-let dados = {};
-
-// Carregar dados de estoque já no início
 async function carregarEstoque() {
   try {
     const response = await fetch('https://locacao-backend-mercurio.onrender.com/api/estoque');
