@@ -284,17 +284,9 @@
         font-size: 1.3em;
       }
     }
-    /* QR Code Styling */
-    .qr-section {
-      text-align: center;
-      margin-top: 20px;
-    }
-
-    .qr-section img {
-      max-width: 200px;
-      border: 2px solid #f0a500;
-      border-radius: 10px;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .qr-code { margin-top: 20px; text-align: center; }
   </style>
 </head>
 <body>
@@ -342,6 +334,8 @@
             <dd>E-mail: <a href="mailto:mercuriolocacoes@gmail.com" class="color1">mercuriolocacoes@gmail.com</a></dd>
           </dl>
         </address>
+        <div class="qr-code">
+          <img src="https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=https://mercuriolocacoes.netlify.app/" alt="QR Code para Mercúrio">
       </div>
       
       <div class="grid_6 prefix_1">
@@ -401,11 +395,6 @@
         <a href="https://www.facebook.com/" class="fa fa-facebook"></a>
         <a href="https://www.instagram.com/" class="fa fa-instagram"></a>
         <a href="https://twitter.com/" class="fa fa-twitter"></a>
-      </div>
-
-      div class="qr-section">
-        <h3>Nosso QR Code</h3>
-        <img src="images/qrcode.png" alt="QR Code do WhatsApp">
       </div>
       
       <div>
