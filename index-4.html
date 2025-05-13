@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <title>Contatos - Mercúrio Locações</title>
+  <title>Contatos - Mercúrio</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -237,10 +237,9 @@
     }
     
     @media (max-width: 768px) {
-    .contato-info {
-      flex-direction: column;
-      align-items: flex-start;
-    }
+      .menu-toggle {
+        display: block;
+      }
       
       .sf-menu {
         display: none;
@@ -285,30 +284,16 @@
         font-size: 1.3em;
       }
     }
+    /* QR Code Styling */
+    .qr-section {
+      text-align: center;
+      margin-top: 20px;
+    }
 
-    .contato-qrcode {
-      display: flex;
-      align-items: flex-start;
-      gap: 20px;
-    }
-    
-    .contato-info {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 20px;
-    }
-    
-    .qr-code img {
-      max-width: 150px;
-      max-height: 150px;
-      object-fit: contain;
-    }
-    
-      .qr-code img {
-        max-width: 100px;
-        max-height: 100px;
-      }
+    .qr-section img {
+      max-width: 200px;
+      border: 2px solid #f0a500;
+      border-radius: 10px;
     }
   </style>
 </head>
@@ -346,22 +331,17 @@
         </div>
       </div>
       
-      <div class="grid_5 contato-qrcode">
+      <div class="grid_5">
         <h3>Informações de Contato</h3>
         <div class="text1 color2">Fique à vontade para deixar seus comentários — Sua opinião é muito importante para nós.</div>
-        <div class="contato-info">
-          <address>
-            <dl>
-              <dt>Mercúrio LTDA</dt>
-              <dd><span>Telefone:</span> 19 99999-5555</dd>
-              <dd><span>WhatsApp:</span> 19 99999-5555</dd>
-              <dd>E-mail: <a href="mailto:mercuriolocacoes@gmail.com" class="color1">mercuriolocacoes@gmail.com</a></dd>
-            </dl>
-          </address>
-          <div class="qr-code">
-            <img src="images/QR_contatos.jpeg" alt="QR Code de Contato" />
-          </div>
-        </div>
+        <address>
+          <dl>
+            <dt>Mercúrio LTDA</dt>
+            <dd><span>Telefone:</span> 19 99999-5555</dd>
+            <dd><span>WhatsApp:</span> 19 99999-5555</dd>
+            <dd>E-mail: <a href="mailto:mercuriolocacoes@gmail.com" class="color1">mercuriolocacoes@gmail.com</a></dd>
+          </dl>
+        </address>
       </div>
       
       <div class="grid_6 prefix_1">
@@ -421,6 +401,11 @@
         <a href="https://www.facebook.com/" class="fa fa-facebook"></a>
         <a href="https://www.instagram.com/" class="fa fa-instagram"></a>
         <a href="https://twitter.com/" class="fa fa-twitter"></a>
+      </div>
+
+      div class="qr-section">
+        <h3>Nosso QR Code</h3>
+        <img src="images/qrcode.png" alt="QR Code do WhatsApp">
       </div>
       
       <div>
