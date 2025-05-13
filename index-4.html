@@ -237,9 +237,10 @@
     }
     
     @media (max-width: 768px) {
-      .menu-toggle {
-        display: block;
-      }
+    .contato-info {
+      flex-direction: column;
+      align-items: flex-start;
+    }
       
       .sf-menu {
         display: none;
@@ -282,6 +283,31 @@
     @media (max-width: 480px) {
       .titulo-principal {
         font-size: 1.3em;
+      }
+    }
+
+    .contato-qrcode {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+    }
+    
+    .contato-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .qr-code img {
+      max-width: 150px;
+      max-height: 150px;
+      object-fit: contain;
+    }
+    
+      .qr-code img {
+        max-width: 100px;
+        max-height: 100px;
       }
     }
   </style>
