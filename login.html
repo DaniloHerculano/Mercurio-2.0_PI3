@@ -451,7 +451,7 @@
       loginButton.disabled = true;
       statusMessage.style.display = "none";
 
-      fetch('https://script.google.com/macros/s/AKfycbycp5mm76dIIKbnOzgyadAlwrqmxm5ez5M7XI0P0tKyepWv7Dqo127lhUgysRC9AnFW/exec', {
+      fetch('https://script.google.com/macros/s/AKfycbyRnNKPuEIKv1_DzTsWObQJ5eZFHcyIbyAHUJzeAiiugkId3knlhqISwhw-j3s67MyB/exec', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: new URLSearchParams({action: 'login_user', email: emailOrUser, usuario: emailOrUser, senha: senha})
@@ -506,7 +506,7 @@
       recoverPasswordBtn.disabled = true;
       recoveryMessage.textContent = '';
 
-      fetch('https://script.google.com/macros/s/AKfycbycp5mm76dIIKbnOzgyadAlwrqmxm5ez5M7XI0P0tKyepWv7Dqo127lhUgysRC9AnFW/exec', {
+      fetch('https://script.google.com/macros/s/AKfycbyRnNKPuEIKv1_DzTsWObQJ5eZFHcyIbyAHUJzeAiiugkId3knlhqISwhw-j3s67MyB/exec', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: new URLSearchParams({action: 'recover_password', email: email})
