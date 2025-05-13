@@ -423,7 +423,7 @@
   </footer>
 <!------------- JAVASCRIPT ------------>
 <script>
-    // CONTROLE DO MENU MOBILE - VERSÃO GARANTIDA
+    // CONTROLE DO MENU MOBILE - VERSÃO GARANTIDA POR MIM (DANILO)... HEHE
     document.addEventListener('DOMContentLoaded', function() {
       const menuToggle = document.getElementById('menuToggle');
       const mainNav = document.querySelector('.sf-menu');
@@ -452,7 +452,7 @@
       });
     });
   
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwjA9FP2qGsuayvCxcuFRAxzkVm0666SFL26ol9hIlugfbOsNBMe1a78D37PphCQ4SQ/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzUY1Z06z0PLDWuHiEnhqv9gP4bPSGND2BmaKbr6xEAFECztYQ3SDMQgph-oJoydkoF/exec";
 
     async function carregarDadosUsuario() {
         showLoader(true);
@@ -503,6 +503,26 @@
         });
     });
 
+      async function carregarEstoque() {
+        const estoqueDiv = document.getElementById('estoqueAtual');
+        estoqueDiv.innerHTML = "Carregando...";
+
+        try {
+            const response = await fetch(`${SCRIPT_URL}?action=get_stock`);
+            const result = await response.json();
+
+            if (result.status === "success") {
+                estoqueDiv.innerHTML = Object.entries(result.estoque).map(([item, quantidade]) => 
+                    `<p><strong>${item.charAt(0).toUpperCase() + item.slice(1)}:</strong> ${quantidade}</p>`
+                ).join('');
+            } else {
+                estoqueDiv.innerHTML = "Erro ao carregar estoque.";
+            }
+        } catch (error) {
+            estoqueDiv.innerHTML = "Erro ao carregar estoque.";
+        }
+    }
+
     function showLoader(show) {
         const loader = document.getElementById('loading-overlay');
         if (loader) {
@@ -530,27 +550,6 @@
     }
   }
 
-  async function carregarEstoque() {
-    const estoqueDiv = document.getElementById('estoqueAtual');
-    estoqueDiv.innerHTML = "Carregando...";
-
-    try {
-      const response = await fetch(`${SCRIPT_URL}?action=get_stock`);
-      const result = await response.json();
-
-      if (result.status === "success") {
-        estoqueDiv.innerHTML = `
-          <p><strong>Mesas:</strong> ${result.estoque.mesas}</p>
-          <p><strong>Cadeiras:</strong> ${result.estoque.cadeiras}</p>
-          <p><strong>Bancos:</strong> ${result.estoque.bancos}</p>
-        `;
-      } else {
-        estoqueDiv.innerHTML = "Erro ao carregar estoque.";
-      }
-    } catch (error) {
-      estoqueDiv.innerHTML = "Erro ao carregar estoque.";
-    }
-  }
 </script>
 </body>
 </html>
