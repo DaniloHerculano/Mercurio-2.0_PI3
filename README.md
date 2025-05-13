@@ -74,6 +74,7 @@ Atualizações em index-4.html:
 
 13/05/2025 – Autor: Danilo Herculano
 - Implementada funcionalidade de recuperação de senha no login.html, permitindo que o usuário informe seu e-mail para validação. Caso o e-mail seja encontrado, a senha correspondente é retornada.
+- Adicionado um QR Code na página index-4.html (Contatos), permitindo acesso rápido e direto ao site.
 
 Pendências e Correções Futuras
 - Ver aba "Issues" - https://github.com/DaniloHerculano/Mercurio-2.0_PI3/issues
