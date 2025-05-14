@@ -791,7 +791,7 @@ async function criarPedido(pedido) {
     console.error('Erro ao enviar dados para atualizar o estoque:', error);
   }
 }
-   window.onload = await carregarEstoque;
+   window.onload = carregarEstoque;
 
   // FUNÇÃO DE FINALIZAÇÃO DO PEDIDO
   async function fim() {
