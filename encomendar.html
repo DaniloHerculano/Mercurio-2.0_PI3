@@ -821,7 +821,7 @@ async function criarPedido(pedido) {
     const cadeiras = parseInt(document.getElementById("quantidadecadeiras").value);
     const mesas = parseInt(document.getElementById("quantidademesas").value);
     
-    if (bancos > dados.estoque.bancos || cadeiras > dados.estoque.cadeiras || mesas > dados.estoque.mesas) {
+    if (bancos > dados.estoquebancos || cadeiras > dados.estoquecadeiras || mesas > dados.estoquemesas) {
       alert("Quantidade solicitada maior que o estoque disponível");
       return;
     }
