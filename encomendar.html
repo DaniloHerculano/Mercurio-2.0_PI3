@@ -422,8 +422,21 @@
   </footer>
 
  <script>
-//INICIANDO DADOS
-   let dados = {};
+<script>
+ /* Dados globais
+  let dados = {
+    estoque: { mesas: 50, cadeiras: 100, bancos: 30 },
+    pedidos: []
+  };
+
+  // Configurações da Planilha Google
+  const SHEET_ID = "1QKnR6pWhemrdT5csvGpsy-pLxq0qQuKjniY7yvH3d48";
+  const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`; 
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzfDbfbHbkR-nYYT-biWN0XOH1dTYGh28Ge8BhSfKXgxZFNqTnqUtrpe6yqaA_GBwY/exec";
+   */
+
+  //INICIANDO DADOS
+   let dados = null;
   // CONTROLE DO MENU MOBILE
   document.addEventListener('DOMContentLoaded', function() {
     const menuToggle = document.getElementById('menuToggle');
@@ -635,6 +648,58 @@
     document.getElementById("totalpedido").innerHTML = (totalSemFrete + frete).toFixed(2);
   }
 
+ /* // FUNÇÕES PARA INTEGRAÇÃO COM GOOGLE SHEETS
+  async function carregarEstoque() {
+    try {
+      const response = await fetch(SHEET_URL);
+      const text = await response.text();
+      const json = JSON.parse(text.substr(47).slice(0, -2));
+      
+      console.log("Dados da planilha:", json.table.rows);
+      
+      dados.estoque = {
+        mesas: json.table.rows[0].c[3].v,
+        cadeiras: json.table.rows[1].c[3].v,
+        bancos: json.table.rows[2].c[3].v
+      };
+      
+      exibirEstoque();
+    } catch (error) {
+      console.error("Erro ao carregar estoque:", error);
+      dados.estoque = { mesas: 50, cadeiras: 100, bancos: 30 };
+      exibirEstoque();
+    }
+  }
+
+  function exibirEstoque() {
+    document.getElementById('estoqueMesas').innerText = `Mesas: ${dados.estoque.mesas}`;
+    document.getElementById('estoqueCadeiras').innerText = `Cadeiras: ${dados.estoque.cadeiras}`;
+    document.getElementById('estoqueBancos').innerText = `Bancos: ${dados.estoque.bancos}`;
+  }
+
+  async function atualizarEstoque(item, quantidade) {
+    try {
+      await fetch(`${SCRIPT_URL}?item=${item}&quantidade=${quantidade}`, {
+        method: 'POST',
+        mode: 'no-cors'
+      });
+      
+      // Atualização otimista (antes da confirmação)
+      if (item === 'mesas') dados.estoque.mesas -= quantidade;
+      if (item === 'cadeiras') dados.estoque.cadeiras -= quantidade;
+      if (item === 'bancos') dados.estoque.bancos -= quantidade;
+      
+      exibirEstoque();
+      
+      // Recarrega após 2 segundos
+      setTimeout(carregarEstoque, 2000);
+    } catch (error) {
+      console.error("Erro ao atualizar estoque:", error);
+    }
+  }
+   
+
+
 // FUNÇÃO PARA BUSCAR O ESTOQUE (BACKEND)
 async function obterEstoque() {
   try {
@@ -652,7 +717,7 @@ async function obterEstoque() {
     console.error('Erro ao buscar estoque:', error);
     alert('Erro ao conectar com o backend');
   }
-}
+} */
 
 //CARREGAMENTO DE DADOS NO INÍCIO
 
@@ -796,6 +861,10 @@ async function criarPedido(pedido) {
       enderecoEntrega = 'Av. Independência, 5110 - Barra Funda, Vinhedo - SP, 13280-000 (Retirada na loja)';
     }
 
+   /* await atualizarEstoque("mesas", mesas);
+    await atualizarEstoque("cadeiras", cadeiras);
+    await atualizarEstoque("bancos", bancos); */
+
         await atualizarEstoque({
       mesas: mesas,
       cadeiras: cadeiras,
@@ -822,7 +891,6 @@ async function criarPedido(pedido) {
     document.getElementById("fade").style.display = "block";
     document.getElementById("modal").style.display = "block";
   }
-
   </script>
 </body>
 </html>
