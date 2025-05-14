@@ -41,24 +41,6 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db-pg');
 
-// FUNÇÃO QUE VAI SUBTRAIR
-async function atualizarEstoque(bancos, cadeiras, mesas) {
-  try {
-    await pool.query(`
-      UPDATE estoque
-      SET
-        quantidadebancos = quantidadebancos - $1,
-        quantidadecadeiras = quantidadecadeiras - $2,
-        quantidademesas = quantidademesas - $3
-      WHERE id = 1 -- ou ajuste conforme sua tabela
-    `, [bancos, cadeiras, mesas]);
-  } catch (error) {
-    console.error('Erro ao atualizar estoque:', error);
-    throw error; 
-  }
-}
-
-// PARTE DE CRIAÇÃO DO PEDIDO
 router.post('/', async (req, res) => {
   try {
     const {
@@ -67,7 +49,7 @@ router.post('/', async (req, res) => {
       total, status, dataPedido, dias
     } = req.body;
 
-    // 1. Criar o pedido no banco
+    // 1. Criação do pedido
     const result = await pool.query(`
       INSERT INTO pedidos 
       (datepickerstart, datepickerend, modelo, quantidadebancos, quantidadecadeiras, quantidademesas,
@@ -83,8 +65,15 @@ router.post('/', async (req, res) => {
 
     const pedidoId = result.rows[0].id;
 
-    // 2. Subtrair os itens do estoque
-    await atualizarEstoque(bancos, cadeiras, mesas);
+    // 2. Subtrai do estoque
+    await pool.query(`
+      UPDATE estoque
+      SET 
+        estoquebancos = estoquebancos - $1,
+        estoquecadeiras = estoquecadeiras - $2,
+        estoquemesas = estoquemesas - $3
+      WHERE id = 1
+    `, [bancos, cadeiras, mesas]);
 
     res.status(201).json({ success: true, pedidoId });
   } catch (error) {
