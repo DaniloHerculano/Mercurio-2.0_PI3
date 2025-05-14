@@ -724,6 +724,8 @@ async function carregarEstoque() {
   try {
     const response = await fetch('https://locacao-backend-mercurio.onrender.com/api/estoque');
     dados = await response.json();
+    console.log ("dados:");
+    console.log (dados);
     
     if (response.ok) {
     document.getElementById('estoqueMesas').innerHTML = `Mesas: ${dados.estoquemesas}`;
@@ -798,6 +800,8 @@ async function criarPedido(pedido) {
     const requiredFields = ['datepickerstart', 'datepickerend', 'quantidadebancos', 'quantidadecadeiras', 'quantidademesas'];
     for (const fieldId of requiredFields) {
       const field = document.getElementById(fieldId);
+    console.log ("dados fim:");
+    console.log (dados);
         if (!dados || !dados.estoque) {
     alert('Estoque não carregado ainda. Tente novamente.');
     return;
