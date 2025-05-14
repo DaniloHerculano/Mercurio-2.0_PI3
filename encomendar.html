@@ -802,7 +802,7 @@ async function criarPedido(pedido) {
       const field = document.getElementById(fieldId);
     console.log ("dados fim:");
     console.log (dados);
-        if (!dados || !dados.estoque) {
+        if (!dados) {
     alert('Estoque não carregado ainda. Tente novamente.');
     return;
   }
