@@ -765,7 +765,7 @@ async function criarPedido(pedido) {
     alert('Erro ao enviar pedido');
   }
 }
-  // FUNÇÃO DE ATUALIZAR O ESTOQUE
+/*  // FUNÇÃO DE ATUALIZAR O ESTOQUE
 
   async function atualizarEstoque(pedido) {
   try {
@@ -792,11 +792,11 @@ async function criarPedido(pedido) {
   } catch (error) {
     console.error('Erro ao enviar dados para atualizar o estoque:', error);
   }
-}
+} */
    window.onload = carregarEstoque;
 
-  // FUNÇÃO DE FINALIZAÇÃO DO PEDIDO
- async function fim() {
+// FUNÇÃO DE FINALIZAÇÃO DO PEDIDO
+async function fim() {
   const requiredFields = ['datepickerstart', 'datepickerend', 'quantidadebancos', 'quantidadecadeiras', 'quantidademesas'];
   for (const fieldId of requiredFields) {
     const field = document.getElementById(fieldId);
@@ -832,7 +832,6 @@ async function criarPedido(pedido) {
 
   if (isEntrega) {
     const usarEnderecoCadastrado = document.getElementById('endereco_cadastrado').checked;
-
     if (usarEnderecoCadastrado) {
       const loggedInUserEmail = localStorage.getItem('loggedInUser');
       const userData = JSON.parse(localStorage.getItem(loggedInUserEmail));
@@ -843,12 +842,10 @@ async function criarPedido(pedido) {
       const novoNumero = document.getElementById('novo-numero').value;
       const novoCidade = document.getElementById('novo-cidade').value;
       const novoEstado = document.getElementById('novo-estado').value;
-
       if (!novoCep || !novoRua || !novoNumero || !novoCidade || !novoEstado) {
         alert('Por favor, preencha todos os campos do endereço');
         return;
       }
-
       enderecoEntrega = `${novoRua}, ${novoNumero}${document.getElementById('novo-complemento').value ? ' - ' + document.getElementById('novo-complemento').value : ''} - ${document.getElementById('novo-bairro').value}, ${novoCidade} - ${novoEstado}, CEP: ${novoCep}`;
     }
   } else {
@@ -865,7 +862,7 @@ async function criarPedido(pedido) {
   const frete = parseFloat(document.getElementById("valor_frete").innerHTML);
   const total = parseFloat(document.getElementById("totalpedido").innerHTML);
 
-  const dataPedido = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+  const dataPedido = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
   const dataInicio = startDate.toISOString().split('T')[0];
   const dataRetorno = endDate.toISOString().split('T')[0];
 
@@ -897,8 +894,6 @@ async function criarPedido(pedido) {
     const result = await response.json();
 
     if (result.success) {
-      await atualizarEstoque({ mesas, cadeiras, bancos });
-
       document.getElementById("corpo").innerHTML = `
         <h4 style="color: #1b6222;">Pedido realizado com sucesso!</h4>
         <p><strong>Itens alugados:</strong></p>
