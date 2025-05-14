@@ -436,7 +436,7 @@
    */
 
   //INICIANDO DADOS
-   let dados = null;
+   let dados = {};
   // CONTROLE DO MENU MOBILE
   document.addEventListener('DOMContentLoaded', function() {
     const menuToggle = document.getElementById('menuToggle');
@@ -696,7 +696,7 @@
     } catch (error) {
       console.error("Erro ao atualizar estoque:", error);
     }
-  }
+  } */
    
 
 
@@ -717,9 +717,9 @@ async function obterEstoque() {
     console.error('Erro ao buscar estoque:', error);
     alert('Erro ao conectar com o backend');
   }
-} */
+} 
 
-//CARREGAMENTO DE DADOS NO INÍCIO
+/*//CARREGAMENTO DE DADOS NO INÍCIO
 
 async function carregarEstoque() {
   try {
@@ -737,7 +737,7 @@ async function carregarEstoque() {
     console.error('Erro ao buscar estoque:', error);
     alert('Erro ao conectar com o backend');
   }
-}
+} */
 
 // Chamar carregarEstoque antes de usar dados em outras funções
 document.addEventListener('DOMContentLoaded', carregarEstoque);
