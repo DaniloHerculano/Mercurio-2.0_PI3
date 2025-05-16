@@ -49,6 +49,9 @@ router.post('/', async (req, res) => {
       total, status, dataPedido, dias
     } = req.body;
 
+    console.log('Recebido pedido:');
+    console.log({ bancos, cadeiras, mesas });
+
     // 1. Criação do pedido
     const result = await pool.query(`
       INSERT INTO pedidos 
@@ -65,22 +68,29 @@ router.post('/', async (req, res) => {
 
     const pedidoId = result.rows[0].id;
 
-    console.log("Valores recebidos para subtrair do estoque:", bancos, cadeiras, mesas);
-    
     // 2. Subtrai do estoque
-    try {
-  console.log("Subtraindo do estoque:", bancos, cadeiras, mesas);
-  await pool.query(`
-    UPDATE estoque
-    SET 
-      estoquebancos = estoquebancos - $1,
-      estoquecadeiras = estoquecadeiras - $2,
-      estoquemesas = estoquemesas - $3
-    WHERE id = 1
-  `, [bancos, cadeiras, mesas]);
-  console.log("Subtração do estoque concluída.");
-} catch (err) {
-  console.error("Erro ao subtrair estoque:", err);
-}
+    const updateEstoque = await pool.query(`
+      UPDATE estoque
+      SET 
+        estoquebancos = estoquebancos - $1,
+        estoquecadeiras = estoquecadeiras - $2,
+        estoquemesas = estoquemesas - $3
+      WHERE id = 1
+      RETURNING *
+    `, [bancos, cadeiras, mesas]);
+
+    if (updateEstoque.rowCount === 0) {
+      console.error('Erro: Nenhuma linha de estoque foi atualizada.');
+    } else {
+      console.log('Estoque atualizado:', updateEstoque.rows[0]);
+    }
+
+    res.status(201).json({ success: true, pedidoId });
+
+  } catch (error) {
+    console.error('Erro ao criar pedido:', error);
+    res.status(500).json({ success: false, message: 'Erro no servidor ao criar pedido' });
+  }
+});
 
 module.exports = router;
