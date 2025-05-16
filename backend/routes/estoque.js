@@ -103,11 +103,12 @@ router.post('/atualizar', async (req, res) => {
     const { mesas, cadeiras, bancos } = req.body;
 
     await pool.query(
-      `UPDATE estoque 
-       SET estoqueMesas = estoqueMesas - $1,
-           estoqueCadeiras = estoqueCadeiras - $2,
-           estoqueBancos = estoqueBancos - $3
-       WHERE id = 1`,
+      `UPDATE estoque
+    SET 
+      estoquebancos = estoquebancos - $1,
+      estoquecadeiras = estoquecadeiras - $2,
+      estoquemesas = estoquemesas - $3
+    WHERE id = 1`,
       [mesas, cadeiras, bancos]
     );
 
