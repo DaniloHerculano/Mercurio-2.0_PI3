@@ -69,13 +69,13 @@ router.post('/', async (req, res) => {
     
     // 2. Subtrai do estoque
     await pool.query(`
-      UPDATE estoque
-      SET 
-        estoquebancos = estoquebancos - $1,
-        estoquecadeiras = estoquecadeiras - $2,
-        estoquemesas = estoquemesas - $3
-      WHERE id = ?
-    `, [bancos, cadeiras, mesas]);
+  UPDATE estoque
+  SET 
+    "estoqueBancos" = "estoqueBancos" - $1,
+    "estoqueCadeiras" = "estoqueCadeiras" - $2,
+    "estoqueMesas" = "estoqueMesas" - $3
+  WHERE id = 1
+`, [bancos, cadeiras, mesas]);
 
     res.status(201).json({ success: true, pedidoId });
   } catch (error) {
