@@ -376,8 +376,28 @@
 
         <!-- Seção para Estoque Atual -->
         <div style="margin-top: 30px;">
-          <h3>Estoque Atual</h3>
-          <div id="estoqueAtual"></div>
+          <h3>Estoque Disponível</h3>
+          
+          <div id="estoqueConforto" style="margin-bottom: 15px; padding: 10px; background-color: #f0f8ff; border-radius: 5px;">
+            <h5>CONFORTO</h5>
+            <p>Mesas: <span id="estoqueMesasConforto">0</span></p>
+            <p>Cadeiras: <span id="estoqueCadeirasConforto">0</span></p>
+            <p>Bancos: <span id="estoqueBancosConforto">0</span></p>
+          </div>
+          
+          <div id="estoqueMedio" style="margin-bottom: 15px; padding: 10px; background-color: #fff0f5; border-radius: 5px;">
+            <h5>MÉDIO</h5>
+            <p>Mesas: <span id="estoqueMesasMedio">0</span></p>
+            <p>Cadeiras: <span id="estoqueCadeirasMedio">0</span></p>
+            <p>Bancos: <span id="estoqueBancosMedio">0</span></p>
+          </div>
+          
+          <div id="estoqueExecutivo" style="margin-bottom: 15px; padding: 10px; background-color: #f0fff0; border-radius: 5px;">
+            <h5>EXECUTIVO</h5>
+            <p>Mesas: <span id="estoqueMesasExecutivo">0</span></p>
+            <p>Cadeiras: <span id="estoqueCadeirasExecutivo">0</span></p>
+            <p>Bancos: <span id="estoqueBancosExecutivo">0</span></p>
+          </div>
         </div>
 
         <!-- Seção para Pedidos Realizados -->
@@ -452,7 +472,14 @@
       });
     });
   
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzi0x2t38VluE9HJ40H3B86FhRKxI7Sdkk3QXPZfj6upYt3WF91PRAEb3_zurMPGOM/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwkolHsU4lbAIF0GfjX4LE6JwcxAeJUl_4dRB1gcB9DzJMXMnJELYjx5Cs09Dtgl5e/exec";
+    
+    // Variável global para armazenar os dados do estoque
+    const dadosEstoque = {
+      conforto: { mesas: 0, cadeiras: 0, bancos: 0 },
+      medio: { mesas: 0, cadeiras: 0, bancos: 0 },
+      executivo: { mesas: 0, cadeiras: 0, bancos: 0 }
+    };
 
     async function carregarDadosUsuario() {
         showLoader(true);
@@ -504,34 +531,88 @@
     });
 
     async function carregarEstoque() {
-         const estoqueDiv = document.getElementById('estoqueAtual');
-         estoqueDiv.innerHTML = "Carregando...";
-    
-         try {
-             const response = await fetch(`${SCRIPT_URL}?action=get_stock`);
-             const result = await response.json();
-    
-             if (result.status === "success" && result.data) {
-                  estoqueDiv.innerHTML = Object.entries(result.data).map(([item, quantidade]) => 
-                      `<p><strong>${item.charAt(0).toUpperCase() + item.slice(1)}:</strong> ${quantidade}</p>`
-                  ).join('');
-              } else {
-                  estoqueDiv.innerHTML = "Erro ao carregar estoque.";
-              }
-         } catch (error) {
-             estoqueDiv.innerHTML = "Erro ao carregar estoque.";
-         }
-     }
+      try {
+        console.log("Iniciando carregamento do estoque...");
+        
+        const response = await fetch(`${SCRIPT_URL}?action=get_stock&t=${Date.now()}`);
+        
+        if (!response.ok) {
+          throw new Error(`Erro HTTP: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log("Dados recebidos:", result);
+        
+        // Verificação flexível da estrutura de dados
+        if (result.status === "success" && result.data) {
+          // Se vier no formato antigo (sem estoque por tipo)
+          if (result.data.mesas !== undefined) {
+            // Distribui os mesmos valores para todos os tipos (como fallback)
+            ['conforto', 'medio', 'executivo'].forEach(tipo => {
+              dadosEstoque[tipo] = {
+                mesas: result.data.mesas,
+                cadeiras: result.data.cadeiras,
+                bancos: result.data.bancos
+              };
+            });
+          } 
+          // Se vier no formato novo (com estoque por tipo)
+          else if (result.data.estoque) {
+            Object.assign(dadosEstoque, result.data.estoque);
+          } else {
+            throw new Error("Formato de dados não reconhecido");
+          }
+          
+          // Atualiza a interface
+          atualizarUIEstoque();
+        } else {
+          throw new Error(result.message || "Resposta sem status de sucesso");
+        }
+      } catch (error) {
+        console.error("Falha ao carregar estoque:", error);
+        mostrarErroEstoque(`Falha ao carregar estoque: ${error.message}`);
+      }
+    }
     
     document.addEventListener('DOMContentLoaded', function() {
-         carregarDadosUsuario();
-         carregarEstoque();  // Agora vai chamar corretamente
-         document.getElementById('logout').addEventListener('click', function() {
-             localStorage.removeItem('userData');
-             window.location.href = "login.html";
-         });
-     });
+      carregarDadosUsuario();
+      carregarEstoque(); // Adiciona esta linha para carregar o estoque
+      
+      document.getElementById('logout').addEventListener('click', function() {
+        localStorage.removeItem('userData');
+        window.location.href = "login.html";
+      });
+    });
+    
+    function atualizarUIEstoque() {
+      // Atualiza cada tipo de estoque
+      ['conforto', 'medio', 'executivo'].forEach(tipo => {
+        const tipoCapitalizado = tipo.charAt(0).toUpperCase() + tipo.slice(1);
+        const estoque = dadosEstoque[tipo];
+        
+        document.getElementById(`estoqueMesas${tipoCapitalizado}`).textContent = estoque.mesas;
+        document.getElementById(`estoqueCadeiras${tipoCapitalizado}`).textContent = estoque.cadeiras;
+        document.getElementById(`estoqueBancos${tipoCapitalizado}`).textContent = estoque.bancos;
+      });
+    }
 
+    function mostrarErroEstoque(mensagem) {
+      // Mostra erro em todos os containers de estoque
+      ['Conforto', 'Medio', 'Executivo'].forEach(tipo => {
+        const container = document.getElementById(`estoque${tipo}`);
+        if (container) {
+          container.innerHTML += `
+            <div style="color: red; margin-top: 10px;">
+              ⚠️ ${mensagem}
+              <button onclick="carregarEstoque()" 
+                      style="background: none; border: none; color: blue; cursor: pointer;">
+                Tentar novamente
+              </button>
+            </div>
+          `;
+        }
+      });
+    }
 
     function showLoader(show) {
         const loader = document.getElementById('loading-overlay');
