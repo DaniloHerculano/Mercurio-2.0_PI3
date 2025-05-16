@@ -101,16 +101,19 @@ router.get('/', async (req, res) => {
 router.post('/atualizar', async (req, res) => {
   try {
     const { mesas, cadeiras, bancos } = req.body;
+
     await pool.query(
-      'UPDATE estoque SET estoqueMesas = $1, estoqueCadeiras = $2, estoqueBancos = $3 WHERE id = 1',
+      `UPDATE estoque 
+       SET estoqueMesas = estoqueMesas - $1,
+           estoqueCadeiras = estoqueCadeiras - $2,
+           estoqueBancos = estoqueBancos - $3
+       WHERE id = 1`,
       [mesas, cadeiras, bancos]
     );
+
     res.json({ success: true });
   } catch (error) {
     console.error('Erro ao atualizar estoque:', error);
     res.status(500).json({ success: false, message: 'Erro ao atualizar estoque' });
   }
 });
-
-module.exports = router;
-
