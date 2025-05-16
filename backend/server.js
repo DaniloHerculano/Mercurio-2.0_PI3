@@ -57,11 +57,15 @@ const corsOptions = {
   methods: 'GET,POST',
   optionsSuccessStatus: 200
 };
-app.use(cors(corsOptions));
+const corsOptions = {
+  origin: 'https://mercuriolocacoes.netlify.app',
+  methods: 'GET,POST',
+  optionsSuccessStatus: 200
+};
 
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
-// ROTAS
 app.use('/api/pedidos', pedidoRoutes);
 app.use('/api/estoque', estoqueRoutes);
 
