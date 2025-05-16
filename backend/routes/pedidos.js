@@ -65,6 +65,8 @@ router.post('/', async (req, res) => {
 
     const pedidoId = result.rows[0].id;
 
+    console.log('Subtraindo do estoque:', bancos, cadeiras, mesas);
+    
     // 2. Subtrai do estoque
     await pool.query(`
       UPDATE estoque
@@ -72,7 +74,7 @@ router.post('/', async (req, res) => {
         estoquebancos = estoquebancos - $1,
         estoquecadeiras = estoquecadeiras - $2,
         estoquemesas = estoquemesas - $3
-      WHERE id = 1
+      WHERE id = ?
     `, [bancos, cadeiras, mesas]);
 
     res.status(201).json({ success: true, pedidoId });
