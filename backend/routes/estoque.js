@@ -118,3 +118,5 @@ router.post('/atualizar', async (req, res) => {
     res.status(500).json({ success: false, message: 'Erro ao atualizar estoque' });
   }
 });
+
+module.exports = router;
