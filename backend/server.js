@@ -51,9 +51,17 @@ const estoqueRoutes = require('./routes/estoque');
 
 const app = express();
 
-app.use(cors());
+// CORS DEFININDO O CAMINHO
+const corsOptions = {
+  origin: 'https://mercuriolocacoes.netlify.app',
+  methods: 'GET,POST',
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
 app.use(bodyParser.json());
 
+// ROTAS
 app.use('/api/pedidos', pedidoRoutes);
 app.use('/api/estoque', estoqueRoutes);
 
@@ -61,10 +69,3 @@ const PORT = 6543;
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
-
-const corsOptions = {
-  origin: 'https://mercuriolocacoes.netlify.app',
-  methods: 'GET,POST',
-  optionsSuccessStatus: 200
-};
-app.use(cors(corsOptions));
