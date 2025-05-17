@@ -826,8 +826,8 @@ async function criarPedido(pedido) {
           const userData = JSON.parse(localStorage.getItem("userData"));         
           if (!userData || !userData.email) {
             alert('Você precisa estar logado para usar o endereço cadastrado');
-            //btnFinalizar.disabled = false;
-            //btnFinalizar.textContent = 'Finalizar Pedido';
+            btnFinalizar.disabled = false;
+            btnFinalizar.textContent = 'Finalizar Pedido';
             return;
           }
 
