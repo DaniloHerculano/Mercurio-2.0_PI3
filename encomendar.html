@@ -760,167 +760,184 @@ async function criarPedido(pedido) {
 
    window.onload = carregarEstoque;
 
-  async function fim() {
-    try {
-        // 1. Desabilita o botão para evitar múltiplos cliques
-        const btnFinalizar = document.getElementById('open-modal');
-        btnFinalizar.disabled = true;
-        btnFinalizar.textContent = 'Processando...';
-
-        // 2. Validação dos campos obrigatórios
-        const requiredFields = ['datepickerstart', 'datepickerend', 'quantidadebancos', 'quantidadecadeiras', 'quantidademesas'];
-        for (const fieldId of requiredFields) {
-            const field = document.getElementById(fieldId);
-            if (!field.value || parseInt(field.value) < 0) {
-                throw new Error(`Por favor, preencha o campo ${fieldId.replace('-', ' ')}`);
-            }
-        }
-
-        // 3. Verifica se o estoque foi carregado
-        if (!dados) {
-            throw new Error('Estoque não carregado ainda. Tente novamente.');
-        }
-
-        // 4. Verifica se um modelo foi selecionado
-        if (!document.querySelector('input[name="opcao"]:checked')) {
-            throw new Error("Por favor, selecione um modelo");
-        }
-
-        // 5. Obtém as quantidades dos itens
-        const bancos = parseInt(document.getElementById("quantidadebancos").value);
-        const cadeiras = parseInt(document.getElementById("quantidadecadeiras").value);
-        const mesas = parseInt(document.getElementById("quantidademesas").value);
-
-        // 6. Verifica o estoque
-        if (bancos > dados.estoquebancos || cadeiras > dados.estoquecadeiras || mesas > dados.estoquemesas) {
-            throw new Error("Quantidade solicitada maior que o estoque disponível");
-        }
-
-        // 7. Processamento do endereço
-        const isEntrega = document.getElementById('entrega').checked;
-        let enderecoEntrega = '';
-        let tipoEntrega = isEntrega ? 'Entrega' : 'Retirada';
-
-        if (isEntrega) {
-            const usarEnderecoCadastrado = document.getElementById('endereco_cadastrado').checked;
-            
-            if (usarEnderecoCadastrado) {
-                // 7.1 Usa endereço cadastrado
-                const userData = JSON.parse(localStorage.getItem("userData"));
-                if (!userData || !userData.email) {
-                    throw new Error('Você precisa estar logado para usar o endereço cadastrado');
-                }
-
-                // Busca endereço no Google Sheets
-                const response = await fetch(`${SCRIPT_URL}?action=getUserData&email=${encodeURIComponent(userData.email)}`);
-                const result = await response.json();
-
-                if (result.status === "success" && result.data.endereco) {
-                    const end = result.data.endereco;
-                    enderecoEntrega = `${end.rua}, ${end.numero || 'S/N'}${end.complemento ? ' - ' + end.complemento : ''}, ${end.bairro}, ${end.cidade} - ${end.estado}, CEP: ${end.cep}`;
-                } else {
-                    throw new Error('Endereço cadastrado não encontrado ou incompleto');
-                }
-            } else {
-                // 7.2 Usa novo endereço
-                const novoCep = document.getElementById('novo-cep').value;
-                const novoRua = document.getElementById('novo-rua').value;
-                const novoNumero = document.getElementById('novo-numero').value;
-                const novoCidade = document.getElementById('novo-cidade').value;
-                const novoEstado = document.getElementById('novo-estado').value;
-                
-                if (!novoCep || !novoRua || !novoNumero || !novoCidade || !novoEstado) {
-                    throw new Error('Por favor, preencha todos os campos do endereço');
-                }
-                
-                enderecoEntrega = `${novoRua}, ${novoNumero}${document.getElementById('novo-complemento').value ? ' - ' + document.getElementById('novo-complemento').value : ''}, ${document.getElementById('novo-bairro').value}, ${novoCidade} - ${novoEstado}, CEP: ${novoCep}`;
-            }
-        } else {
-            // 7.3 Endereço para retirada
-            enderecoEntrega = 'Av. Independência, 5110 - Barra Funda, Vinhedo - SP, 13280-000 (Retirada na loja)';
-        }
-
-        // 8. Cálculo das datas e período
-        const startDate = $("#datepickerstart").datepicker("getDate");
-        const endDate = $("#datepickerend").datepicker("getDate");
-        const dias = Math.ceil(Math.abs(endDate - startDate) / (1000 * 60 * 60 * 24));
-
-        // 9. Obtém o modelo selecionado
-        const modeloRadio = document.querySelector('input[name="opcao"]:checked').value;
-        const modelo = modeloRadio === "1" ? "Conforto" : modeloRadio === "2" ? "Médio" : "Executivo";
-
-        // 10. Obtém os valores totais
-        const totalDiario = parseFloat(document.getElementById("totaldiaria").innerHTML);
-        const totalSemFrete = parseFloat(document.getElementById("totalpedido_frete").innerHTML);
-        const frete = isEntrega ? parseFloat(document.getElementById("valor_frete").innerHTML) : 0;
-        const total = parseFloat(document.getElementById("totalpedido").innerHTML);
-
-        // 11. Monta o objeto para o Google Sheets (usando URLSearchParams para evitar CORS)
-        const formData = new URLSearchParams();
-        formData.append('action', 'save_order');
-        formData.append('usuario', JSON.parse(localStorage.getItem("userData"))?.nomeUsuario || "Não identificado");
-        formData.append('data_pedido', new Date().toLocaleString('pt-BR'));
-        formData.append('nome', JSON.parse(localStorage.getItem("userData"))?.nome || "Cliente não identificado");
-        formData.append('email', JSON.parse(localStorage.getItem("userData"))?.email || "sem-email@example.com");
-        formData.append('data_inicio', startDate.toLocaleDateString('pt-BR'));
-        formData.append('data_fim', endDate.toLocaleDateString('pt-BR'));
-        formData.append('cadeiras', cadeiras);
-        formData.append('bancos', bancos);
-        formData.append('mesas', mesas);
-        formData.append('endereco', enderecoEntrega);
-        formData.append('valor_total', total.toFixed(2));
-        formData.append('status', "Confirmado");
-        formData.append('modelo', modelo);
-        formData.append('periodo', `${dias} dias`);
-        formData.append('tipo_entrega', tipoEntrega);
-        formData.append('observacoes', "Pedido criado via site");
-
-        // 12. Envia para o Google Sheets (usando x-www-form-urlencoded)
-        const sheetsResponse = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: formData
-        });
-        
-        const result = await sheetsResponse.json();
-        
-        if (result.status !== "success") {
-            throw new Error("Erro ao salvar na planilha: " + (result.message || ""));
-        }
-
-        // 13. Exibe a confirmação para o usuário
-        document.getElementById("corpo").innerHTML = `
-            <h4 style="color: #1b6222;">Pedido realizado com sucesso!</h4>
-            <p><strong>Número do Pedido:</strong> ${result.pedidoId}</p>
-            <p><strong>Itens alugados:</strong></p>
-            <p>Mesas: ${mesas}</p>
-            <p>Cadeiras: ${cadeiras}</p>
-            <p>Bancos: ${bancos}</p>
-            <p><strong>Data de locação:</strong> ${startDate.toLocaleDateString('pt-BR')}</p>
-            <p><strong>Data de devolução:</strong> ${endDate.toLocaleDateString('pt-BR')}</p>
-            <p><strong>Período:</strong> ${dias} dias</p>
-            <p><strong>${isEntrega ? 'Endereço de Entrega' : 'Local de Retirada'}:</strong><br>
-            ${enderecoEntrega.replace(/, /g, '<br>')}</p>
-            <p><strong>Total:</strong> R$${total.toFixed(2)}</p>
-            <p>Em breve entraremos em contato para confirmar.</p>
-        `;
-
-        document.getElementById("fade").style.display = "block";
-        document.getElementById("modal").style.display = "block";
-
-    } catch (error) {
-        console.error("Erro ao finalizar pedido:", error);
-        alert(`Erro ao processar pedido: ${error.message}`);
-    } finally {
-        // 14. Reabilita o botão independente do resultado
-        const btnFinalizar = document.getElementById('open-modal');
-        if (btnFinalizar) {
-            btnFinalizar.disabled = false;
-            btnFinalizar.textContent = 'Finalizar Pedido';
-        }
-    }
+   async function fim() {
+      try {
+          // 1. Desabilita o botão para evitar múltiplos cliques
+          const btnFinalizar = document.getElementById('open-modal');
+          btnFinalizar.disabled = true;
+          btnFinalizar.textContent = 'Processando...';
+  
+          // 2. Validação dos campos obrigatórios
+          const requiredFields = ['datepickerstart', 'datepickerend', 'quantidadebancos', 'quantidadecadeiras', 'quantidademesas'];
+          for (const fieldId of requiredFields) {
+              const field = document.getElementById(fieldId);
+              if (!field.value || parseInt(field.value) < 0) {
+                  throw new Error(`Por favor, preencha o campo ${fieldId.replace('-', ' ')}`);
+              }
+          }
+  
+          // 3. Verifica se o estoque foi carregado
+          if (!dados) {
+              throw new Error('Estoque não carregado ainda. Tente novamente.');
+          }
+  
+          // 4. Verifica se um modelo foi selecionado
+          if (!document.querySelector('input[name="opcao"]:checked')) {
+              throw new Error("Por favor, selecione um modelo");
+          }
+  
+          // 5. Obtém as quantidades dos itens
+          const bancos = parseInt(document.getElementById("quantidadebancos").value);
+          const cadeiras = parseInt(document.getElementById("quantidadecadeiras").value);
+          const mesas = parseInt(document.getElementById("quantidademesas").value);
+  
+          // 6. Verifica o estoque
+          if (bancos > dados.estoquebancos || cadeiras > dados.estoquecadeiras || mesas > dados.estoquemesas) {
+              throw new Error("Quantidade solicitada maior que o estoque disponível");
+          }
+  
+          // 7. Processamento do endereço
+          const isEntrega = document.getElementById('entrega').checked;
+          let enderecoEntrega = '';
+          let tipoEntrega = isEntrega ? 'Entrega' : 'Retirada';
+  
+          if (isEntrega) {
+              const usarEnderecoCadastrado = document.getElementById('endereco_cadastrado').checked;
+              
+              if (usarEnderecoCadastrado) {
+                  // 7.1 Usa endereço cadastrado
+                  const userData = JSON.parse(localStorage.getItem("userData"));
+                  if (!userData || !userData.email) {
+                      throw new Error('Você precisa estar logado para usar o endereço cadastrado');
+                  }
+  
+                  // Busca endereço no Google Sheets
+                  const response = await fetch(`${SCRIPT_URL}?action=getUserData&email=${encodeURIComponent(userData.email)}`);
+                  const result = await response.json();
+  
+                  if (result.status === "success" && result.data.endereco) {
+                      const end = result.data.endereco;
+                      enderecoEntrega = `${end.rua}, ${end.numero || 'S/N'}${end.complemento ? ' - ' + end.complemento : ''}, ${end.bairro}, ${end.cidade} - ${end.estado}, CEP: ${end.cep}`;
+                  } else {
+                      throw new Error('Endereço cadastrado não encontrado ou incompleto');
+                  }
+              } else {
+                  // 7.2 Usa novo endereço
+                  const novoCep = document.getElementById('novo-cep').value;
+                  const novoRua = document.getElementById('novo-rua').value;
+                  const novoNumero = document.getElementById('novo-numero').value;
+                  const novoCidade = document.getElementById('novo-cidade').value;
+                  const novoEstado = document.getElementById('novo-estado').value;
+                  
+                  if (!novoCep || !novoRua || !novoNumero || !novoCidade || !novoEstado) {
+                      throw new Error('Por favor, preencha todos os campos do endereço');
+                  }
+                  
+                  enderecoEntrega = `${novoRua}, ${novoNumero}${document.getElementById('novo-complemento').value ? ' - ' + document.getElementById('novo-complemento').value : ''}, ${document.getElementById('novo-bairro').value}, ${novoCidade} - ${novoEstado}, CEP: ${novoCep}`;
+              }
+          } else {
+              // 7.3 Endereço para retirada
+              enderecoEntrega = 'Av. Independência, 5110 - Barra Funda, Vinhedo - SP, 13280-000 (Retirada na loja)';
+          }
+  
+          // 8. Cálculo das datas e período
+          const startDate = $("#datepickerstart").datepicker("getDate");
+          const endDate = $("#datepickerend").datepicker("getDate");
+          const dias = Math.ceil(Math.abs(endDate - startDate) / (1000 * 60 * 60 * 24));
+  
+          // 9. Obtém o modelo selecionado
+          const modeloRadio = document.querySelector('input[name="opcao"]:checked').value;
+          const modelo = modeloRadio === "1" ? "Conforto" : modeloRadio === "2" ? "Médio" : "Executivo";
+  
+          // 10. Obtém os valores totais
+          const totalDiario = parseFloat(document.getElementById("totaldiaria").innerHTML);
+          const totalSemFrete = parseFloat(document.getElementById("totalpedido_frete").innerHTML);
+          const frete = isEntrega ? parseFloat(document.getElementById("valor_frete").innerHTML) : 0;
+          const total = parseFloat(document.getElementById("totalpedido").innerHTML);
+  
+          // 11. Monta os dados para envio na ORDEM CORRETA DA PLANILHA
+          const formData = new URLSearchParams();
+          // COLUNA 1: Usuário
+          formData.append('usuario', JSON.parse(localStorage.getItem("userData"))?.nomeUsuario || "Não identificado");
+          // COLUNA 2: Data Pedido
+          formData.append('data_pedido', new Date().toLocaleString('pt-BR'));
+          // COLUNA 3: Nome
+          formData.append('nome', JSON.parse(localStorage.getItem("userData"))?.nome || "Cliente não identificado");
+          // COLUNA 4: Email
+          formData.append('email', JSON.parse(localStorage.getItem("userData"))?.email || "sem-email@example.com");
+          // COLUNA 5: Data Início
+          formData.append('data_inicio', startDate.toLocaleDateString('pt-BR'));
+          // COLUNA 6: Data Fim
+          formData.append('data_fim', endDate.toLocaleDateString('pt-BR'));
+          // COLUNA 7: Cadeiras (número inteiro)
+          formData.append('cadeiras', cadeiras);
+          // COLUNA 8: Bancos (número inteiro)
+          formData.append('bancos', bancos);
+          // COLUNA 9: Mesas (número inteiro)
+          formData.append('mesas', mesas);
+          // COLUNA 10: Endereço
+          formData.append('endereco', enderecoEntrega);
+          // COLUNA 11: Valor Total
+          formData.append('valor_total', total.toFixed(2));
+          // COLUNA 12: Status
+          formData.append('status', "Confirmado");
+          // COLUNA 13: Modelo
+          formData.append('modelo', modelo);
+          // COLUNA 14: Período
+          formData.append('periodo', `${dias} dias`);
+          // COLUNA 15: Tipo Entrega
+          formData.append('tipo_entrega', tipoEntrega);
+          // COLUNA 16: Observações
+          formData.append('observacoes', "Pedido criado via site");
+          // Ação (sempre último parâmetro)
+          formData.append('action', 'save_order');
+  
+          // 12. Envia para o Google Sheets
+          const sheetsResponse = await fetch(SCRIPT_URL, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: formData
+          });
+          
+          const result = await sheetsResponse.json();
+          
+          if (result.status !== "success") {
+              throw new Error("Erro ao salvar na planilha: " + (result.message || ""));
+          }
+  
+          // 13. Exibe a confirmação para o usuário
+          document.getElementById("corpo").innerHTML = `
+              <h4 style="color: #1b6222;">Pedido realizado com sucesso!</h4>
+              <p><strong>Número do Pedido:</strong> ${result.pedidoId}</p>
+              <p><strong>Itens alugados:</strong></p>
+              <p>Mesas: ${mesas}</p>
+              <p>Cadeiras: ${cadeiras}</p>
+              <p>Bancos: ${bancos}</p>
+              <p><strong>Data de locação:</strong> ${startDate.toLocaleDateString('pt-BR')}</p>
+              <p><strong>Data de devolução:</strong> ${endDate.toLocaleDateString('pt-BR')}</p>
+              <p><strong>Período:</strong> ${dias} dias</p>
+              <p><strong>${isEntrega ? 'Endereço de Entrega' : 'Local de Retirada'}:</strong><br>
+              ${enderecoEntrega.replace(/, /g, '<br>')}</p>
+              <p><strong>Total:</strong> R$${total.toFixed(2)}</p>
+              <p>Em breve entraremos em contato para confirmar.</p>
+          `;
+  
+          document.getElementById("fade").style.display = "block";
+          document.getElementById("modal").style.display = "block";
+  
+      } catch (error) {
+          console.error("Erro ao finalizar pedido:", error);
+          alert(`Erro ao processar pedido: ${error.message}`);
+      } finally {
+          // 14. Reabilita o botão independente do resultado
+          const btnFinalizar = document.getElementById('open-modal');
+          if (btnFinalizar) {
+              btnFinalizar.disabled = false;
+              btnFinalizar.textContent = 'Finalizar Pedido';
+          }
+      }
   }
 
   function formatarData(dataString) {
