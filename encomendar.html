@@ -855,36 +855,33 @@ async function criarPedido(pedido) {
         const frete = isEntrega ? parseFloat(document.getElementById("valor_frete").innerHTML) : 0;
         const total = parseFloat(document.getElementById("totalpedido").innerHTML);
 
-        // 11. Monta o objeto para o Google Sheets
-        const pedidoSheets = {
-            usuario: JSON.parse(localStorage.getItem("userData"))?.nomeUsuario || "Não identificado", // Pega o nome de usuário
-            data_pedido: new Date().toLocaleString('pt-BR'), // Data formatada
-            nome: JSON.parse(localStorage.getItem("userData"))?.nome || "Cliente não identificado",
-            email: JSON.parse(localStorage.getItem("userData"))?.email || "sem-email@example.com",
-            data_inicio: startDate.toLocaleDateString('pt-BR'), // Formato DD/MM/AAAA
-            data_fim: endDate.toLocaleDateString('pt-BR'),
-            cadeiras: cadeiras.toString(), // Garante que é string
-            bancos: bancos.toString(),
-            mesas: mesas.toString(),
-            endereco: enderecoEntrega,
-            valor_total: total.toFixed(2),
-            status: "Confirmado",
-            modelo: modelo,
-            periodo: `${dias} dias`,
-            tipo_entrega: tipoEntrega,
-            observacoes: "Pedido criado via site"
-        };
+        // 11. Monta o objeto para o Google Sheets (usando URLSearchParams para evitar CORS)
+        const formData = new URLSearchParams();
+        formData.append('action', 'save_order');
+        formData.append('usuario', JSON.parse(localStorage.getItem("userData"))?.nomeUsuario || "Não identificado");
+        formData.append('data_pedido', new Date().toLocaleString('pt-BR'));
+        formData.append('nome', JSON.parse(localStorage.getItem("userData"))?.nome || "Cliente não identificado");
+        formData.append('email', JSON.parse(localStorage.getItem("userData"))?.email || "sem-email@example.com");
+        formData.append('data_inicio', startDate.toLocaleDateString('pt-BR'));
+        formData.append('data_fim', endDate.toLocaleDateString('pt-BR'));
+        formData.append('cadeiras', cadeiras);
+        formData.append('bancos', bancos);
+        formData.append('mesas', mesas);
+        formData.append('endereco', enderecoEntrega);
+        formData.append('valor_total', total.toFixed(2));
+        formData.append('status', "Confirmado");
+        formData.append('modelo', modelo);
+        formData.append('periodo', `${dias} dias`);
+        formData.append('tipo_entrega', tipoEntrega);
+        formData.append('observacoes', "Pedido criado via site");
 
-        // 12. Envia para o Google Sheets
+        // 12. Envia para o Google Sheets (usando x-www-form-urlencoded)
         const sheetsResponse = await fetch(SCRIPT_URL, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: JSON.stringify({
-                action: 'save_order',
-                ...pedidoSheets
-            })
+            body: formData
         });
         
         const result = await sheetsResponse.json();
@@ -896,7 +893,7 @@ async function criarPedido(pedido) {
         // 13. Exibe a confirmação para o usuário
         document.getElementById("corpo").innerHTML = `
             <h4 style="color: #1b6222;">Pedido realizado com sucesso!</h4>
-            <p><strong>Número do Pedido:</strong> ${sheetsResponse.pedidoId}</p>
+            <p><strong>Número do Pedido:</strong> ${result.pedidoId}</p>
             <p><strong>Itens alugados:</strong></p>
             <p>Mesas: ${mesas}</p>
             <p>Cadeiras: ${cadeiras}</p>
