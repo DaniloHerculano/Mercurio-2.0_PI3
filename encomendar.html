@@ -424,7 +424,7 @@
  <script>
 
   // URL do Google Apps Script
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwkolHsU4lbAIF0GfjX4LE6JwcxAeJUl_4dRB1gcB9DzJMXMnJELYjx5Cs09Dtgl5e/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwno2M5lvor_sisofesbOiLfCvWqUXPjVQbIJQ8fV-ftGwg0t4ln7ImEf75rd1CJ0pK/exec";
 
   //INICIANDO DADOS
    let dados = {};
@@ -864,7 +864,7 @@ async function criarPedido(pedido) {
         dias
       };
 
-      // Envio do pedido (usando o método que já funciona)
+      // Envio do pedido
       const response = await fetch('https://locacao-backend-mercurio.onrender.com/api/pedidos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -902,6 +902,26 @@ async function criarPedido(pedido) {
         btnFinalizar.textContent = 'Finalizar Pedido';
       }
     }
+  }
+
+  async function salvarPedido(pedidoData) {
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        action: 'save_order',
+        ...pedidoData
+      })
+    });
+    
+    return await response.json();
+  }
+
+  async function getPedidosCliente(email) {
+    const response = await fetch(`${SCRIPT_URL}?action=get_user_orders&email=${encodeURIComponent(email)}`);
+    return await response.json();
   }
   </script>
 </body>
