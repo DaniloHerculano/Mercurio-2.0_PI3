@@ -420,8 +420,11 @@
       </div>
     </div>
   </footer>
-
+<!------------- JAVASCRIPT ------------>
  <script>
+
+  // URL do Google Apps Script
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwkolHsU4lbAIF0GfjX4LE6JwcxAeJUl_4dRB1gcB9DzJMXMnJELYjx5Cs09Dtgl5e/exec";
 
   //INICIANDO DADOS
    let dados = {};
@@ -492,7 +495,48 @@
     document.getElementById('novo-endereco-section').style.display = show ? 'block' : 'none';
   }
 
-  // FUNÇÃO PARA BUSCAR CEP
+   function toggleAddressFields(show) {
+    document.getElementById('novo-endereco-section').style.display = show ? 'block' : 'none';
+  }
+  
+  async function carregarEnderecoCadastrado() {
+    try {
+      const userData = JSON.parse(localStorage.getItem("userData"));
+      if (!userData || !userData.email) {
+        console.log("Usuário não logado ou dados incompletos");
+        return;
+      }
+  
+      const response = await fetch(`${SCRIPT_URL}?action=getUserData&email=${encodeURIComponent(userData.email)}`);
+      const result = await response.json();
+  
+      if (result.status === "success") {
+        const endereco = result.data.endereco;
+        const enderecoCadastradoDiv = document.getElementById('endereco-cadastrado-display') || 
+            document.createElement('div');
+        enderecoCadastradoDiv.id = 'endereco-cadastrado-display';
+        enderecoCadastradoDiv.className = 'address-display';
+        
+        enderecoCadastradoDiv.innerHTML = `
+          <p><strong>Endereço Cadastrado:</strong></p>
+          <p>${endereco.rua}, ${endereco.numero}${endereco.complemento ? ' - ' + endereco.complemento : ''}</p>
+          <p>${endereco.bairro}, ${endereco.cidade} - ${endereco.estado}</p>
+          <p>CEP: ${endereco.cep}</p>
+        `;
+        
+        const enderecoCadastradoLabel = document.getElementById('endereco_cadastrado').parentNode;
+        enderecoCadastradoLabel.parentNode.insertBefore(
+          enderecoCadastradoDiv, 
+          enderecoCadastradoLabel.nextSibling
+        );
+      }
+    } catch (error) {
+      console.error("Erro ao carregar endereço:", error);
+    }
+  }
+  
+
+  // BUSCA CEP
   function buscarCEP() {
     const cep = document.getElementById('novo-cep').value.replace(/\D/g, '');
     
