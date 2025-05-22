@@ -857,16 +857,17 @@ async function criarPedido(pedido) {
 
         // 11. Monta o objeto para o Google Sheets
         const pedidoSheets = {
-            usuario: localStorage.getItem("loggedInUser") || "Não identificado",
+            usuario: JSON.parse(localStorage.getItem("userData"))?.nomeUsuario || "Não identificado", // Pega o nome de usuário
+            data_pedido: new Date().toLocaleString('pt-BR'), // Data formatada
             nome: JSON.parse(localStorage.getItem("userData"))?.nome || "Cliente não identificado",
             email: JSON.parse(localStorage.getItem("userData"))?.email || "sem-email@example.com",
-            data_inicio: startDate.toISOString().split('T')[0], // Formato YYYY-MM-DD
-            data_fim: endDate.toISOString().split('T')[0],
-            cadeiras: cadeiras,
-            bancos: bancos,
-            mesas: mesas,
+            data_inicio: startDate.toLocaleDateString('pt-BR'), // Formato DD/MM/AAAA
+            data_fim: endDate.toLocaleDateString('pt-BR'),
+            cadeiras: cadeiras.toString(), // Garante que é string
+            bancos: bancos.toString(),
+            mesas: mesas.toString(),
             endereco: enderecoEntrega,
-            valor_total: total,
+            valor_total: total.toFixed(2),
             status: "Confirmado",
             modelo: modelo,
             periodo: `${dias} dias`,
@@ -875,11 +876,21 @@ async function criarPedido(pedido) {
         };
 
         // 12. Envia para o Google Sheets
-        const sheetsResponse = await salvarPedido(pedidoSheets);
-        console.log("Resposta do Google Sheets:", sheetsResponse);
+        const sheetsResponse = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'save_order',
+                ...pedidoSheets
+            })
+        });
         
-        if (sheetsResponse.status !== "success") {
-            throw new Error("Erro ao salvar na planilha");
+        const result = await sheetsResponse.json();
+        
+        if (result.status !== "success") {
+            throw new Error("Erro ao salvar na planilha: " + (result.message || ""));
         }
 
         // 13. Exibe a confirmação para o usuário
