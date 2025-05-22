@@ -491,11 +491,21 @@
     }
   }
 
-  function toggleAddressFields(show) {
-    document.getElementById('novo-endereco-section').style.display = show ? 'block' : 'none';
+  // CONTROLE DE ENDEREÇO
+  function toggleAddress(show) {
+    document.getElementById('address-section').style.display = show ? 'block' : 'none';
+    document.getElementById('loja-info').style.display = show ? 'none' : 'block';
+    document.getElementById('frete-section').style.display = show ? 'block' : 'none';
+    
+    if (show) {
+      carregarEnderecoCadastrado();
+    } else {
+      toggleAddressFields(false);
+    }
   }
-
-   function toggleAddressFields(show) {
+  
+  // FUNÇÃO NOVO ENDEREÇO
+  function toggleAddressFields(show) {
     document.getElementById('novo-endereco-section').style.display = show ? 'block' : 'none';
   }
   
