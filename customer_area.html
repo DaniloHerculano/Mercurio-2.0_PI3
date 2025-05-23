@@ -377,26 +377,10 @@
         <!-- Seção para Estoque Atual -->
         <div style="margin-top: 30px;">
           <h3>Estoque Disponível</h3>
-          
-          <div id="estoqueConforto" style="margin-bottom: 15px; padding: 10px; background-color: #f0f8ff; border-radius: 5px;">
-            <h5>CONFORTO</h5>
-            <p>Mesas: <span id="estoqueMesasConforto">0</span></p>
-            <p>Cadeiras: <span id="estoqueCadeirasConforto">0</span></p>
-            <p>Bancos: <span id="estoqueBancosConforto">0</span></p>
-          </div>
-          
-          <div id="estoqueMedio" style="margin-bottom: 15px; padding: 10px; background-color: #fff0f5; border-radius: 5px;">
-            <h5>MÉDIO</h5>
-            <p>Mesas: <span id="estoqueMesasMedio">0</span></p>
-            <p>Cadeiras: <span id="estoqueCadeirasMedio">0</span></p>
-            <p>Bancos: <span id="estoqueBancosMedio">0</span></p>
-          </div>
-          
-          <div id="estoqueExecutivo" style="margin-bottom: 15px; padding: 10px; background-color: #f0fff0; border-radius: 5px;">
-            <h5>EXECUTIVO</h5>
-            <p>Mesas: <span id="estoqueMesasExecutivo">0</span></p>
-            <p>Cadeiras: <span id="estoqueCadeirasExecutivo">0</span></p>
-            <p>Bancos: <span id="estoqueBancosExecutivo">0</span></p>
+          <div style="margin-bottom: 15px; padding: 10px; background-color: #f0f8ff; border-radius: 5px;">
+            <p>Mesas: <span id="estoqueMesas">0</span></p>
+            <p>Cadeiras: <span id="estoqueCadeiras">0</span></p>
+            <p>Bancos: <span id="estoqueBancos">0</span></p>
           </div>
         </div>
 
@@ -523,31 +507,28 @@
 
   // Função para carregar estoque
   async function carregarEstoque() {
-      try {
-          const response = await fetch(`${SCRIPT_URL}?action=get_stock`);
-          const result = await response.json();
-          
-          if (result.status === "success") {
-              const estoque = result.estoque;
-              
-              // Atualiza estoque Conforto
-              document.getElementById('estoqueMesasConforto').textContent = estoque.conforto.mesas;
-              document.getElementById('estoqueCadeirasConforto').textContent = estoque.conforto.cadeiras;
-              document.getElementById('estoqueBancosConforto').textContent = estoque.conforto.bancos;
-              
-              // Atualiza estoque Médio
-              document.getElementById('estoqueMesasMedio').textContent = estoque.medio.mesas;
-              document.getElementById('estoqueCadeirasMedio').textContent = estoque.medio.cadeiras;
-              document.getElementById('estoqueBancosMedio').textContent = estoque.medio.bancos;
-              
-              // Atualiza estoque Executivo
-              document.getElementById('estoqueMesasExecutivo').textContent = estoque.executivo.mesas;
-              document.getElementById('estoqueCadeirasExecutivo').textContent = estoque.executivo.cadeiras;
-              document.getElementById('estoqueBancosExecutivo').textContent = estoque.executivo.bancos;
-          }
-      } catch (error) {
-          console.error("Erro ao carregar estoque:", error);
+    try {
+      const response = await fetch('https://locacao-backend-mercurio.onrender.com/api/estoque');
+      const dados = await response.json();
+      
+      if (response.ok) {
+        // Atualiza os valores na interface
+        document.getElementById('estoqueMesas').textContent = dados.estoquemesas || 0;
+        document.getElementById('estoqueCadeiras').textContent = dados.estoquecadeiras || 0;
+        document.getElementById('estoqueBancos').textContent = dados.estoquebancos || 0;
+        
+        // Guarda os dados em uma variável global para uso posterior
+        window.estoqueAtual = {
+          mesas: dados.estoquemesas || 0,
+          cadeiras: dados.estoquecadeiras || 0,
+          bancos: dados.estoquebancos || 0
+        };
+      } else {
+        console.error('Erro ao obter estoque:', dados);
       }
+    } catch (error) {
+      console.error('Erro ao buscar estoque:', error);
+    }
   }
   
   // Chamar carregarEstoque antes de usar dados em outras funções
@@ -581,20 +562,14 @@
         const pedidosContainer = document.getElementById('meusPedidos');
         pedidosContainer.innerHTML = '';
         
-        // Ordena pedidos do mais recente para o mais antigo
-        pedidos.sort((a, b) => new Date(b.dataPedido) - new Date(a.dataPedido));
-        
         pedidos.forEach(pedido => {
             const pedidoElement = document.createElement('div');
             pedidoElement.className = 'pedido-item';
             
-            // Formata a data do pedido
-            const dataPedido = formatarData(pedido.dataPedido);
-            
             pedidoElement.innerHTML = `
                 <h4>Pedido #${pedido.id} - ${pedido.status}</h4>
-                <p><strong>Data do Pedido:</strong> ${dataPedido}</p>
-                <p><strong>Período:</strong> ${pedido.periodo || 'Não informado'}</p>
+                <p><strong>Data:</strong> ${formatarData(pedido.dataPedido)}</p>
+                <p><strong>Modelo:</strong> ${pedido.modelo || 'Não informado'}</p>
                 
                 <div style="margin: 10px 0;">
                     <p><strong>Itens Alugados:</strong></p>
@@ -603,13 +578,8 @@
                     <p>Bancos: ${pedido.itens.bancos || 0}</p>
                 </div>
                 
-                <p><strong>Modelo:</strong> ${pedido.modelo || 'Não informado'}</p>
                 <p><strong>Valor Total:</strong> R$ ${pedido.valorTotal?.toFixed(2) || '0,00'}</p>
-                
-                <div class="address-section">
-                    <p><strong>${pedido.tipo_entrega === 'Retirada' ? 'Local de Retirada' : 'Endereço de Entrega'}:</strong></p>
-                    <p>${pedido.endereco.replace(/, /g, '<br>')}</p>
-                </div>
+                <!-- ... resto do código ... -->
             `;
             
             pedidosContainer.appendChild(pedidoElement);
