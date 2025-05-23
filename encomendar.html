@@ -856,56 +856,77 @@ async function criarPedido(pedido) {
           const total = parseFloat(document.getElementById("totalpedido").innerHTML);
   
           // 11. Monta os dados para envio na ORDEM CORRETA DA PLANILHA
-          const formData = new URLSearchParams();
-          // COLUNA 1: Usuário
-          formData.append('usuario', JSON.parse(localStorage.getItem("userData"))?.nomeUsuario || "Não identificado");
-          // COLUNA 2: Data Pedido
-          formData.append('data_pedido', new Date().toLocaleString('pt-BR'));
-          // COLUNA 3: Nome
-          formData.append('nome', JSON.parse(localStorage.getItem("userData"))?.nome || "Cliente não identificado");
-          // COLUNA 4: Email
-          formData.append('email', JSON.parse(localStorage.getItem("userData"))?.email || "sem-email@example.com");
-          // COLUNA 5: Data Início
-          formData.append('data_inicio', startDate.toLocaleDateString('pt-BR'));
-          // COLUNA 6: Data Fim
-          formData.append('data_fim', endDate.toLocaleDateString('pt-BR'));
-          // COLUNA 7: Cadeiras (número inteiro)
-          formData.append('cadeiras', cadeiras);
-          // COLUNA 8: Bancos (número inteiro)
-          formData.append('bancos', bancos);
-          // COLUNA 9: Mesas (número inteiro)
-          formData.append('mesas', mesas);
-          // COLUNA 10: Endereço
-          formData.append('endereco', enderecoEntrega);
-          // COLUNA 11: Valor Total
-          formData.append('valor_total', total.toFixed(2));
-          // COLUNA 12: Status
-          formData.append('status', "Confirmado");
-          // COLUNA 13: Modelo
-          formData.append('modelo', modelo);
-          // COLUNA 14: Período
-          formData.append('periodo', `${dias} dias`);
-          // COLUNA 15: Tipo Entrega
-          formData.append('tipo_entrega', tipoEntrega);
-          // COLUNA 16: Observações
-          formData.append('observacoes', "Pedido criado via site");
-          // Ação (sempre último parâmetro)
-          formData.append('action', 'save_order');
-  
-          // 12. Envia para o Google Sheets
-          const sheetsResponse = await fetch(SCRIPT_URL, {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded',
-              },
-              body: formData
-          });
-          
-          const result = await sheetsResponse.json();
-          
-          if (result.status !== "success") {
-              throw new Error("Erro ao salvar na planilha: " + (result.message || ""));
-          }
+        const formData = new URLSearchParams();
+        
+        // COLUNA A: Usuário (nome de usuário)
+        formData.append('usuario', JSON.parse(localStorage.getItem("userData"))?.nomeUsuario || "Não identificado");
+        
+        // COLUNA B: Data Pedido (formato brasileiro sem UTC)
+        const now = new Date();
+        const dataPedidoBr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        formData.append('data_pedido', dataPedidoBr);
+        
+        // COLUNA C: Nome completo (nome + sobrenome)
+        const userData = JSON.parse(localStorage.getItem("userData")) || {};
+        const nomeCompleto = `${userData.nome || ''} ${userData.sobrenome || ''}`.trim() || "Cliente não identificado";
+        formData.append('nome', nomeCompleto);
+        
+        // COLUNA D: Email (já correto)
+        formData.append('email', userData.email || "sem-email@example.com");
+        
+        // COLUNA E: Data Início (já correto)
+        formData.append('data_inicio', startDate.toLocaleDateString('pt-BR'));
+        
+        // COLUNA F: Data Fim (já correto)
+        formData.append('data_fim', endDate.toLocaleDateString('pt-BR'));
+        
+        // COLUNA G: Cadeiras (garantindo que vem como número)
+        formData.append('cadeiras', cadeiras.toString());
+        
+        // COLUNA H: Bancos (garantindo que vem como número)
+        formData.append('bancos', bancos.toString());
+        
+        // COLUNA I: Mesas (garantindo que vem como número)
+        formData.append('mesas', mesas.toString());
+        
+        // COLUNA J: Endereço (corrigindo posição)
+        formData.append('endereco', enderecoEntrega);
+        
+        // COLUNA K: Valor Total (corrigindo posição)
+        formData.append('valor_total', total.toFixed(2));
+        
+        // COLUNA L: Status (corrigindo posição)
+        formData.append('status', "Confirmado");
+        
+        // COLUNA M: Modelo (corrigindo posição)
+        formData.append('modelo', modelo);
+        
+        // COLUNA N: Período
+        formData.append('periodo', `${dias} dias`);
+        
+        // COLUNA O: Tipo Entrega
+        formData.append('tipo_entrega', tipoEntrega);
+        
+        // COLUNA P: Observações
+        formData.append('observacoes', "Pedido criado via site");
+        
+        // Ação (sempre último parâmetro)
+        formData.append('action', 'save_order');
+
+        // 12. Envia para o Google Sheets
+        const sheetsResponse = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData
+        });
+        
+        const result = await sheetsResponse.json();
+        
+        if (result.status !== "success") {
+            throw new Error("Erro ao salvar na planilha: " + (result.message || ""));
+        }
   
           // 13. Exibe a confirmação para o usuário
           document.getElementById("corpo").innerHTML = `
