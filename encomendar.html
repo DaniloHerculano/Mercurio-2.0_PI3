@@ -871,34 +871,34 @@ async function criarPedido(pedido) {
         const nomeCompleto = `${userData.nome || ''} ${userData.sobrenome || ''}`.trim() || "Cliente não identificado";
         formData.append('nome', nomeCompleto);
         
-        // COLUNA D: Email (já correto)
+        // COLUNA D: Email
         formData.append('email', userData.email || "sem-email@example.com");
         
-        // COLUNA E: Data Início (já correto)
+        // COLUNA E: Data Início
         formData.append('data_inicio', startDate.toLocaleDateString('pt-BR'));
         
-        // COLUNA F: Data Fim (já correto)
+        // COLUNA F: Data Fim
         formData.append('data_fim', endDate.toLocaleDateString('pt-BR'));
         
-        // COLUNA G: Cadeiras (garantindo que vem como número)
+        // COLUNA G: Cadeiras
         formData.append('cadeiras', cadeiras.toString());
         
-        // COLUNA H: Bancos (garantindo que vem como número)
+        // COLUNA H: Bancos
         formData.append('bancos', bancos.toString());
         
-        // COLUNA I: Mesas (garantindo que vem como número)
+        // COLUNA I: Mesas
         formData.append('mesas', mesas.toString());
         
-        // COLUNA J: Endereço (corrigindo posição)
+        // COLUNA J: Endereço
         formData.append('endereco', enderecoEntrega);
         
-        // COLUNA K: Valor Total (corrigindo posição)
+        // COLUNA K: Valor Total
         formData.append('valor_total', total.toFixed(2));
         
-        // COLUNA L: Status (corrigindo posição)
+        // COLUNA L: Status
         formData.append('status', "Confirmado");
         
-        // COLUNA M: Modelo (corrigindo posição)
+        // COLUNA M: Modelo
         formData.append('modelo', modelo);
         
         // COLUNA N: Período
