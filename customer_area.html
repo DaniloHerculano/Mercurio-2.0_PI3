@@ -445,45 +445,45 @@
 <script>
     // CONTROLE DO MENU MOBILE - VERSÃO GARANTIDA POR MIM (DANILO)... HEHE
     document.addEventListener('DOMContentLoaded', function() {
-      const menuToggle = document.getElementById('menuToggle');
-      const mainNav = document.querySelector('.sf-menu');
-      
-      // Verifica se é mobile no carregamento
-      if (window.innerWidth <= 768) {
+    // 1. Controle do Menu Mobile
+    const menuToggle = document.getElementById('menuToggle');
+    const mainNav = document.querySelector('.sf-menu');
+    
+    // Verifica se é mobile no carregamento
+    if (window.innerWidth <= 768) {
         mainNav.style.display = 'none';
-      }
-      
-      // Controle do clique no botão
-      menuToggle.addEventListener('click', function() {
+    }
+    
+    // Controle do clique no botão
+    menuToggle.addEventListener('click', function() {
         if (mainNav.style.display === 'none' || mainNav.style.display === '') {
-          mainNav.style.display = 'flex';
+            mainNav.style.display = 'flex';
         } else {
-          mainNav.style.display = 'none';
+            mainNav.style.display = 'none';
         }
-      });
-      
-      // Atualiza ao redimensionar a tela
-      window.addEventListener('resize', function() {
+    });
+    
+    // Atualiza ao redimensionar a tela
+    window.addEventListener('resize', function() {
         if (window.innerWidth > 768) {
-          mainNav.style.display = 'flex';
+            mainNav.style.display = 'flex';
         } else {
-          mainNav.style.display = 'none';
+            mainNav.style.display = 'none';
         }
-      });
+    });
+
+    // 2. Carregamento dos dados iniciais
+    carregarDadosUsuario();
+    carregarEstoque();
+    carregarPedidosCliente();
     });
   
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwkolHsU4lbAIF0GfjX4LE6JwcxAeJUl_4dRB1gcB9DzJMXMnJELYjx5Cs09Dtgl5e/exec";
-    
-    // Variável global para armazenar os dados do estoque
-    const dadosEstoque = {
-      conforto: { mesas: 0, cadeiras: 0, bancos: 0 },
-      medio: { mesas: 0, cadeiras: 0, bancos: 0 },
-      executivo: { mesas: 0, cadeiras: 0, bancos: 0 }
-    };
+    // URL do Google Apps Script
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxPrh-Rr9r-RXRZjYmOn_0FDZi7kAflYGjn3pVrx02vKeRo9MLjTxtOGAR4ovSTiU9-/exec";
 
+    // Função para carregar dados do usuário
     async function carregarDadosUsuario() {
         showLoader(true);
-
         try {
             const userData = JSON.parse(localStorage.getItem("userData"));
             if (!userData || !userData.email) {
@@ -491,10 +491,10 @@
                 window.location.href = "login.html";
                 return;
             }
-
+    
             const response = await fetch(`${SCRIPT_URL}?action=getUserData&email=${encodeURIComponent(userData.email)}`);
             const result = await response.json();
-
+    
             if (result.status === "success") {
                 exibirDadosUsuario(result.data);
             } else {
@@ -521,98 +521,133 @@
         `;
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        carregarDadosUsuario();
-
-        document.getElementById('logout').addEventListener('click', function() {
-            localStorage.removeItem('userData');
-            window.location.href = "login.html";
-        });
-    });
-
-    async function carregarEstoque() {
+  // Função para carregar estoque
+  async function carregarEstoque() {
       try {
-        console.log("Iniciando carregamento do estoque...");
-        
-        const response = await fetch(`${SCRIPT_URL}?action=get_stock&t=${Date.now()}`);
-        
-        if (!response.ok) {
-          throw new Error(`Erro HTTP: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        console.log("Dados recebidos:", result);
-        
-        // Verificação flexível da estrutura de dados
-        if (result.status === "success" && result.data) {
-          // Se vier no formato antigo (sem estoque por tipo)
-          if (result.data.mesas !== undefined) {
-            // Distribui os mesmos valores para todos os tipos (como fallback)
-            ['conforto', 'medio', 'executivo'].forEach(tipo => {
-              dadosEstoque[tipo] = {
-                mesas: result.data.mesas,
-                cadeiras: result.data.cadeiras,
-                bancos: result.data.bancos
-              };
-            });
-          } 
-          // Se vier no formato novo (com estoque por tipo)
-          else if (result.data.estoque) {
-            Object.assign(dadosEstoque, result.data.estoque);
-          } else {
-            throw new Error("Formato de dados não reconhecido");
-          }
+          const response = await fetch(`${SCRIPT_URL}?action=get_stock`);
+          const result = await response.json();
           
-          // Atualiza a interface
-          atualizarUIEstoque();
-        } else {
-          throw new Error(result.message || "Resposta sem status de sucesso");
-        }
+          if (result.status === "success") {
+              const estoque = result.estoque;
+              
+              // Atualiza estoque Conforto
+              document.getElementById('estoqueMesasConforto').textContent = estoque.conforto.mesas;
+              document.getElementById('estoqueCadeirasConforto').textContent = estoque.conforto.cadeiras;
+              document.getElementById('estoqueBancosConforto').textContent = estoque.conforto.bancos;
+              
+              // Atualiza estoque Médio
+              document.getElementById('estoqueMesasMedio').textContent = estoque.medio.mesas;
+              document.getElementById('estoqueCadeirasMedio').textContent = estoque.medio.cadeiras;
+              document.getElementById('estoqueBancosMedio').textContent = estoque.medio.bancos;
+              
+              // Atualiza estoque Executivo
+              document.getElementById('estoqueMesasExecutivo').textContent = estoque.executivo.mesas;
+              document.getElementById('estoqueCadeirasExecutivo').textContent = estoque.executivo.cadeiras;
+              document.getElementById('estoqueBancosExecutivo').textContent = estoque.executivo.bancos;
+          }
       } catch (error) {
-        console.error("Falha ao carregar estoque:", error);
-        mostrarErroEstoque(`Falha ao carregar estoque: ${error.message}`);
+          console.error("Erro ao carregar estoque:", error);
       }
-    }
+  }
+  
+  // Chamar carregarEstoque antes de usar dados em outras funções
+  document.addEventListener('DOMContentLoaded', carregarEstoque);
+  
+    // Função para carregar pedidos do cliente
+    async function carregarPedidosCliente() {
+        try {
+            const userData = JSON.parse(localStorage.getItem("userData"));
+            if (!userData || !userData.email) {
+                console.log("Usuário não logado");
+                return;
+            }
     
-    document.addEventListener('DOMContentLoaded', function() {
-      carregarDadosUsuario();
-      carregarEstoque(); // Adiciona esta linha para carregar o estoque
-      
-      document.getElementById('logout').addEventListener('click', function() {
-        localStorage.removeItem('userData');
-        window.location.href = "login.html";
-      });
-    });
-    
-    function atualizarUIEstoque() {
-      // Atualiza cada tipo de estoque
-      ['conforto', 'medio', 'executivo'].forEach(tipo => {
-        const tipoCapitalizado = tipo.charAt(0).toUpperCase() + tipo.slice(1);
-        const estoque = dadosEstoque[tipo];
-        
-        document.getElementById(`estoqueMesas${tipoCapitalizado}`).textContent = estoque.mesas;
-        document.getElementById(`estoqueCadeiras${tipoCapitalizado}`).textContent = estoque.cadeiras;
-        document.getElementById(`estoqueBancos${tipoCapitalizado}`).textContent = estoque.bancos;
-      });
+            const response = await fetch(`${SCRIPT_URL}?action=get_user_orders&email=${encodeURIComponent(userData.email)}`);
+            const result = await response.json();
+            
+            if (result.status === "success" && result.orders && result.orders.length > 0) {
+                exibirPedidosCliente(result.orders);
+            } else {
+                document.getElementById('meusPedidos').innerHTML = "<p>Nenhum pedido encontrado.</p>";
+            }
+        } catch (error) {
+            console.error("Erro ao carregar pedidos:", error);
+            document.getElementById('meusPedidos').innerHTML = "<p>Erro ao carregar pedidos. Tente novamente mais tarde.</p>";
+        }
     }
 
-    function mostrarErroEstoque(mensagem) {
-      // Mostra erro em todos os containers de estoque
-      ['Conforto', 'Medio', 'Executivo'].forEach(tipo => {
-        const container = document.getElementById(`estoque${tipo}`);
-        if (container) {
-          container.innerHTML += `
-            <div style="color: red; margin-top: 10px;">
-              ⚠️ ${mensagem}
-              <button onclick="carregarEstoque()" 
-                      style="background: none; border: none; color: blue; cursor: pointer;">
-                Tentar novamente
-              </button>
-            </div>
-          `;
-        }
-      });
+    // Função para exibir os pedidos do cliente
+    function exibirPedidosCliente(pedidos) {
+        const pedidosContainer = document.getElementById('meusPedidos');
+        pedidosContainer.innerHTML = '';
+        
+        // Ordena pedidos do mais recente para o mais antigo
+        pedidos.sort((a, b) => new Date(b.dataPedido) - new Date(a.dataPedido));
+        
+        pedidos.forEach(pedido => {
+            const pedidoElement = document.createElement('div');
+            pedidoElement.className = 'pedido-item';
+            
+            // Formata a data do pedido
+            const dataPedido = formatarData(pedido.dataPedido);
+            
+            pedidoElement.innerHTML = `
+                <h4>Pedido #${pedido.id} - ${pedido.status}</h4>
+                <p><strong>Data do Pedido:</strong> ${dataPedido}</p>
+                <p><strong>Período:</strong> ${pedido.periodo || 'Não informado'}</p>
+                
+                <div style="margin: 10px 0;">
+                    <p><strong>Itens Alugados:</strong></p>
+                    <p>Mesas: ${pedido.itens.mesas || 0}</p>
+                    <p>Cadeiras: ${pedido.itens.cadeiras || 0}</p>
+                    <p>Bancos: ${pedido.itens.bancos || 0}</p>
+                </div>
+                
+                <p><strong>Modelo:</strong> ${pedido.modelo || 'Não informado'}</p>
+                <p><strong>Valor Total:</strong> R$ ${pedido.valorTotal?.toFixed(2) || '0,00'}</p>
+                
+                <div class="address-section">
+                    <p><strong>${pedido.tipo_entrega === 'Retirada' ? 'Local de Retirada' : 'Endereço de Entrega'}:</strong></p>
+                    <p>${pedido.endereco.replace(/, /g, '<br>')}</p>
+                </div>
+            `;
+            
+            pedidosContainer.appendChild(pedidoElement);
+        });
     }
+    
+    // Função auxiliar para formatar datas
+    function formatarData(dataString) {
+        if (!dataString) return 'Data não disponível';
+        
+        try {
+            // Tenta converter de formato ISO (2023-05-22T18:05:02.885Z)
+            if (dataString.includes('T')) {
+                const date = new Date(dataString);
+                return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR');
+            }
+            
+            // Tenta converter de formato brasileiro (22/05/2023 18:05)
+            if (dataString.match(/\d{2}\/\d{2}\/\d{4}/)) {
+                const [datePart, timePart] = dataString.split(' ');
+                const [day, month, year] = datePart.split('/');
+                return `${day}/${month}/${year} ${timePart || ''}`.trim();
+            }
+            
+            return dataString;
+        } catch (e) {
+            console.error("Erro ao formatar data:", e);
+            return dataString;
+        }
+    }
+    
+    // Logout
+    document.getElementById('logout').addEventListener('click', function(e) {
+        e.preventDefault();
+        localStorage.removeItem('userData');
+        localStorage.removeItem('loggedInUser');
+        window.location.href = 'login.html';
+    });
 
     function showLoader(show) {
         const loader = document.getElementById('loading-overlay');
@@ -620,27 +655,6 @@
             loader.style.display = show ? 'flex' : 'none';
         }
     }
-
-    async function carregarPedidosUsuario(email) {
-    const pedidosDiv = document.getElementById('meusPedidos');
-    pedidosDiv.innerHTML = "Carregando...";
-
-    try {
-      const response = await fetch(`${SCRIPT_URL}?action=get_user_orders&email=${encodeURIComponent(email)}`);
-      const result = await response.json();
-
-      if (result.status === "success" && result.pedidos.length > 0) {
-        pedidosDiv.innerHTML = result.pedidos
-          .map(p => `<p><strong>Pedido #${p.id}:</strong> ${p.itens} - ${p.status}</p>`)
-          .join('');
-      } else {
-        pedidosDiv.innerHTML = "Nenhum pedido encontrado.";
-      }
-    } catch (error) {
-      pedidosDiv.innerHTML = "Erro ao carregar pedidos.";
-    }
-  }
-
 </script>
 </body>
 </html>
