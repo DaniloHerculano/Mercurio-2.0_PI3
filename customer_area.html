@@ -537,85 +537,135 @@
     // Função para carregar pedidos do cliente
     async function carregarPedidosCliente() {
         try {
+            showLoader(true);
             const userData = JSON.parse(localStorage.getItem("userData"));
-            if (!userData || !userData.email) {
+            if (!userData?.email) {
                 console.log("Usuário não logado");
                 document.getElementById('meusPedidos').innerHTML = "<p>Faça login para ver seus pedidos</p>";
                 return;
             }
     
+            console.log("Buscando pedidos para:", userData.email);
             const response = await fetch(`${SCRIPT_URL}?action=get_user_orders&email=${encodeURIComponent(userData.email)}`);
             const result = await response.json();
-            
-            if (result.status === "success" && result.orders && result.orders.length > 0) {
-                // Garante a estrutura correta dos pedidos
-                const pedidosFormatados = result.orders.map(pedido => ({
-                    id: pedido.id || 'N/A',
-                    dataPedido: pedido.dataPedido || '',
-                    status: pedido.status || 'Pendente',
-                    itens: {
-                        mesas: parseInt(pedido.mesas) || 0,
-                        cadeiras: parseInt(pedido.cadeiras) || 0,
-                        bancos: parseInt(pedido.bancos) || 0
-                    },
-                    valorTotal: parseFloat(pedido.valorTotal) || 0,
-                    modelo: pedido.modelo || '',
-                    periodo: pedido.periodo || '',
-                    tipo_entrega: pedido.tipo_entrega || 'Entrega',
-                    endereco: pedido.endereco || ''
-                }));
+            console.log("Resposta da API:", result);
+    
+            if (result?.status === "success") {
+                // Versão mais flexível para mapear os pedidos
+                const pedidosFormatados = (result.orders || result.data || []).map(pedido => {
+                    // Debug: Mostra a estrutura completa do pedido
+                    console.log("Pedido original:", pedido);
+                    
+                    // Tenta extrair os itens de diferentes formas
+                    const mesas = parseInt(
+                        pedido.mesas || 
+                        pedido.itens?.mesas || 
+                        pedido.quantidade_mesas || 
+                        0
+                    );
+                    
+                    const cadeiras = parseInt(
+                        pedido.cadeiras || 
+                        pedido.itens?.cadeiras || 
+                        pedido.quantidade_cadeiras || 
+                        0
+                    );
+                    
+                    const bancos = parseInt(
+                        pedido.bancos || 
+                        pedido.itens?.bancos || 
+                        pedido.quantidade_bancos || 
+                        0
+                    );
+    
+                    return {
+                        id: pedido.id || pedido.codigo || 'N/A',
+                        dataPedido: pedido.dataPedido || pedido.data || pedido.data_criacao || '',
+                        status: pedido.status || pedido.situacao || 'Pendente',
+                        itens: { mesas, cadeiras, bancos },
+                        valorTotal: parseFloat(
+                            pedido.valorTotal || 
+                            pedido.valor_total || 
+                            pedido.total || 
+                            0
+                        ),
+                        modelo: pedido.modelo || pedido.tipo_mobilia || 'Não informado',
+                        periodo: pedido.periodo || pedido.duracao || pedido.tempo_locacao || 'Não informado',
+                        tipo_entrega: pedido.tipo_entrega || pedido.entrega_retirada || 'Entrega',
+                        endereco: pedido.endereco || pedido.local_entrega || 'Não informado'
+                    };
+                });
+    
+                console.log("Pedidos formatados:", pedidosFormatados);
                 
-                exibirPedidosCliente(pedidosFormatados);
+                if (pedidosFormatados.length > 0) {
+                    exibirPedidosCliente(pedidosFormatados);
+                } else {
+                    document.getElementById('meusPedidos').innerHTML = "<p>Nenhum pedido encontrado.</p>";
+                }
             } else {
-                document.getElementById('meusPedidos').innerHTML = "<p>Nenhum pedido encontrado.</p>";
+                throw new Error(result?.message || "Estrutura de resposta inválida");
             }
         } catch (error) {
             console.error("Erro ao carregar pedidos:", error);
             document.getElementById('meusPedidos').innerHTML = `
-                <p>Erro ao carregar pedidos. Tente novamente mais tarde.</p>
-                <button onclick="carregarPedidosCliente()" class="btn2">Recarregar</button>
+                <div class="pedido-item" style="color: red;">
+                    <h4>Erro ao carregar pedidos</h4>
+                    <p>${error.message}</p>
+                    <button onclick="carregarPedidosCliente()" class="btn2">Tentar novamente</button>
+                </div>
             `;
+        } finally {
+            showLoader(false);
         }
     }
 
     // Função para exibir os pedidos do cliente
     function exibirPedidosCliente(pedidos) {
-    const pedidosContainer = document.getElementById('meusPedidos');
+        const pedidosContainer = document.getElementById('meusPedidos');
         pedidosContainer.innerHTML = '';
         
-        // Ordena pedidos do mais recente para o mais antigo
-        pedidos.sort((a, b) => new Date(b.dataPedido) - new Date(a.dataPedido));
-        
+        if (!pedidos || pedidos.length === 0) {
+            pedidosContainer.innerHTML = '<p>Nenhum pedido encontrado.</p>';
+            return;
+        }
+    
+        // Ordena por data (mais recente primeiro)
+        pedidos.sort((a, b) => {
+            const dateA = new Date(a.dataPedido) || 0;
+            const dateB = new Date(b.dataPedido) || 0;
+            return dateB - dateA;
+        });
+    
         pedidos.forEach(pedido => {
+            const valorTotal = typeof pedido.valorTotal === 'number' 
+                ? pedido.valorTotal 
+                : parseFloat(String(pedido.valorTotal).replace(',', '.')) || 0;
+            
             const pedidoElement = document.createElement('div');
             pedidoElement.className = 'pedido-item';
             
-            // Corrige o valorTotal (converte para número se for string)
-            const valorTotal = typeof pedido.valorTotal === 'string' 
-                ? parseFloat(pedido.valorTotal.replace(',', '.')) 
-                : pedido.valorTotal || 0;
-            
-            // Formata a data
-            const dataFormatada = formatarData(pedido.dataPedido);
-            
             pedidoElement.innerHTML = `
-                <h4>Pedido #${pedido.id} - ${pedido.status || 'Pendente'}</h4>
-                <p><strong>Data do Pedido:</strong> ${dataFormatada}</p>
-                <p><strong>Período:</strong> ${pedido.periodo || 'Não informado'}</p>
+                <h4>Pedido #${pedido.id}</h4>
+                <p><strong>Status:</strong> ${pedido.status}</p>
+                <p><strong>Data:</strong> ${formatarData(pedido.dataPedido)}</p>
+                <p><strong>Período:</strong> ${pedido.periodo}</p>
                 
-                <div style="margin: 10px 0;">
+                <div style="margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 5px;">
                     <p><strong>Itens Alugados:</strong></p>
-                    <p>Mesas: ${pedido.itens?.mesas || 0}</p>
-                    <p>Cadeiras: ${pedido.itens?.cadeiras || 0}</p>
-                    <p>Bancos: ${pedido.itens?.bancos || 0}</p>
+                    ${pedido.itens.mesas > 0 ? `<p>• Mesas: ${pedido.itens.mesas}</p>` : ''}
+                    ${pedido.itens.cadeiras > 0 ? `<p>• Cadeiras: ${pedido.itens.cadeiras}</p>` : ''}
+                    ${pedido.itens.bancos > 0 ? `<p>• Bancos: ${pedido.itens.bancos}</p>` : ''}
+                    ${pedido.itens.mesas + pedido.itens.cadeiras + pedido.itens.bancos === 0 ? 
+                      '<p>Nenhum item registrado</p>' : ''}
                 </div>
                 
-                <p><strong>Modelo:</strong> ${pedido.modelo || 'Não informado'}</p>
+                <p><strong>Modelo:</strong> ${pedido.modelo}</p>
                 <p><strong>Valor Total:</strong> R$ ${valorTotal.toFixed(2)}</p>
                 
                 <div class="address-section">
-                    <p><strong>${pedido.tipo_entrega === 'Retirada' ? 'Local de Retirada' : 'Endereço de Entrega'}:</strong></p>
-                    <p>${(pedido.endereco || 'Não informado').replace(/, /g, '<br>')}</p>
+                    <p><strong>${pedido.tipo_entrega === 'Retirada' ? 'Retirada' : 'Entrega'}:</strong></p>
+                    <p>${pedido.endereco.replace(/,/g, '<br>')}</p>
                 </div>
             `;
             
