@@ -539,7 +539,6 @@
         try {
             const userData = JSON.parse(localStorage.getItem("userData"));
             if (!userData || !userData.email) {
-                console.log("Usuário não logado");
                 document.getElementById('meusPedidos').innerHTML = "<p>Faça login para ver seus pedidos</p>";
                 return;
             }
@@ -551,17 +550,15 @@
                 // Garante a estrutura correta dos pedidos
                 const pedidosFormatados = result.orders.map(pedido => ({
                     id: pedido.id || 'N/A',
-                    dataPedido: pedido.dataPedido || '',
+                    dataPedido: pedido.dataPedido || pedido.data_pedido || '',
                     status: pedido.status || 'Pendente',
-                    itens: {
-                        mesas: parseInt(pedido.mesas) || 0,
-                        cadeiras: parseInt(pedido.cadeiras) || 0,
-                        bancos: parseInt(pedido.bancos) || 0
-                    },
-                    valorTotal: parseFloat(pedido.valorTotal) || 0,
+                    mesas: parseInt(pedido.mesas) || parseInt(pedido.itens?.mesas) || 0,
+                    cadeiras: parseInt(pedido.cadeiras) || parseInt(pedido.itens?.cadeiras) || 0,
+                    bancos: parseInt(pedido.bancos) || parseInt(pedido.itens?.bancos) || 0,
+                    valorTotal: parseFloat(pedido.valor_total || pedido.valorTotal) || 0,
                     modelo: pedido.modelo || '',
                     periodo: pedido.periodo || '',
-                    tipo_entrega: pedido.tipo_entrega || 'Entrega',
+                    tipo_entrega: pedido.tipo_entrega || (pedido.endereco.includes('Av. Independência') ? 'Retirada' : 'Entrega',
                     endereco: pedido.endereco || ''
                 }));
                 
@@ -583,39 +580,43 @@
         const pedidosContainer = document.getElementById('meusPedidos');
         pedidosContainer.innerHTML = '';
         
-        // Ordena pedidos do mais recente para o mais antigo
-        pedidos.sort((a, b) => new Date(b.dataPedido) - new Date(a.dataPedido));
-        
         pedidos.forEach(pedido => {
             const pedidoElement = document.createElement('div');
             pedidoElement.className = 'pedido-item';
             
-            // Corrige o valorTotal (converte para número se for string)
+            // Corrige o valorTotal
             const valorTotal = typeof pedido.valorTotal === 'string' 
                 ? parseFloat(pedido.valorTotal.replace(',', '.')) 
                 : pedido.valorTotal || 0;
             
-            // Formata a data
-            const dataFormatada = formatarData(pedido.dataPedido);
+            // Formata o tipo de entrega
+            const tipoEntrega = pedido.endereco.includes('Av. Independência, 5110') 
+                ? 'Retirada na loja' 
+                : 'Entrega';
+            
+            // Formata o texto do endereço
+            const textoEndereco = tipoEntrega === 'Retirada na loja' 
+                ? 'Av. Independência, 5110 - Barra Funda, Vinhedo - SP'
+                : pedido.endereco;
             
             pedidoElement.innerHTML = `
                 <h4>Pedido #${pedido.id} - ${pedido.status || 'Pendente'}</h4>
-                <p><strong>Data do Pedido:</strong> ${dataFormatada}</p>
+                <p><strong>Data do Pedido:</strong> ${formatarData(pedido.dataPedido)}</p>
                 <p><strong>Período:</strong> ${pedido.periodo || 'Não informado'}</p>
                 
                 <div style="margin: 10px 0;">
                     <p><strong>Itens Alugados:</strong></p>
-                    <p>Mesas: ${pedido.itens?.mesas || 0}</p>
-                    <p>Cadeiras: ${pedido.itens?.cadeiras || 0}</p>
-                    <p>Bancos: ${pedido.itens?.bancos || 0}</p>
+                    <p>Mesas: ${pedido.mesas || pedido.itens?.mesas || 0}</p>
+                    <p>Cadeiras: ${pedido.cadeiras || pedido.itens?.cadeiras || 0}</p>
+                    <p>Bancos: ${pedido.bancos || pedido.itens?.bancos || 0}</p>
                 </div>
                 
                 <p><strong>Modelo:</strong> ${pedido.modelo || 'Não informado'}</p>
                 <p><strong>Valor Total:</strong> R$ ${valorTotal.toFixed(2)}</p>
                 
                 <div class="address-section">
-                    <p><strong>${pedido.tipo_entrega === 'Retirada' ? 'Local de Retirada' : 'Endereço de Entrega'}:</strong></p>
-                    <p>${(pedido.endereco || 'Não informado').replace(/, /g, '<br>')}</p>
+                    <p><strong>${tipoEntrega === 'Retirada na loja' ? 'Local de Retirada' : 'Endereço de Entrega'}:</strong></p>
+                    <p>${textoEndereco.replace(/, /g, '<br>')}</p>
                 </div>
             `;
             
