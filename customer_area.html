@@ -468,24 +468,39 @@
     // Função para carregar dados do usuário
     async function carregarDadosUsuario() {
         showLoader(true);
+        
         try {
-            const userData = JSON.parse(localStorage.getItem("userData"));
-            if (!userData || !userData.email) {
-                alert("Erro ao carregar dados do usuário.");
+            // 1. Verifica localStorage
+            const userData = JSON.parse(localStorage.getItem("userData") || "null");
+            console.log("Dados do localStorage:", userData);
+            
+            if (!userData?.email) {
+                alert("Sessão expirada. Faça login novamente.");
                 window.location.href = "login.html";
                 return;
             }
     
-            const response = await fetch(`${SCRIPT_URL}?action=getUserData&email=${encodeURIComponent(userData.email)}`);
+            // 2. Busca dados na API
+            const apiUrl = `${SCRIPT_URL}?action=getUserData&email=${encodeURIComponent(userData.email)}`;
+            console.log("URL da API:", apiUrl);
+            
+            const response = await fetch(apiUrl);
             const result = await response.json();
+            console.log("Resposta da API:", result);
     
-            if (result.status === "success") {
-                exibirDadosUsuario(result.data);
+            // 3. Processa resposta
+            if (result?.status === "success") {
+                exibirDadosUsuario(result.data || result); // Tanto 'data' quanto o objeto direto
             } else {
-                alert("Erro ao carregar dados do usuário.");
+                throw new Error(result?.message || "Resposta inválida da API");
             }
+            
         } catch (error) {
-            console.error("Erro ao carregar dados:", error);
+            console.error("Falha crítica:", error);
+            document.getElementById("userInfo").innerHTML = `
+                <p style="color:red">Erro ao carregar dados: ${error.message}</p>
+                <button onclick="location.reload()" class="btn2">Tentar novamente</button>
+            `;
         } finally {
             showLoader(false);
         }
@@ -493,16 +508,29 @@
 
     function exibirDadosUsuario(data) {
         const userInfoDiv = document.getElementById('userInfo');
-        userInfoDiv.innerHTML = `
-            <p><strong>Nome:</strong> ${data.nome || 'Não informado'} ${data.sobrenome || ''}</p>
-            <p><strong>Idade:</strong> ${data.idade || 'Não informado'}</p>
-            <p><strong>Telefone:</strong> ${data.telefone || 'Não informado'}</p>
-            <p><strong>Gênero:</strong> ${data.genero || 'Não informado'}</p>
-            <p><strong>Email:</strong> ${data.email || 'Não informado'}</p>   
-            <p><strong>Endereço:</strong> ${data.endereco?.rua || 'Não informado'}, ${data.endereco?.numero || ''} 
-            ${data.endereco?.bairro || ''}, ${data.endereco?.cidade || ''} - ${data.endereco?.estado || ''}, 
-            ${data.endereco?.pais || ''} - CEP: ${data.endereco?.cep || ''}</p>
-        `;
+        if (!data) {
+            userInfoDiv.innerHTML = "<p>Erro ao carregar dados do usuário</p>";
+            return;
+        }
+        
+        try {
+            userInfoDiv.innerHTML = `
+                <div class="info-item"><strong>Nome:</strong> ${data.nome || 'Não informado'} ${data.sobrenome || ''}</div>
+                <div class="info-item"><strong>Email:</strong> ${data.email || 'Não informado'}</div>
+                <div class="info-item"><strong>Telefone:</strong> ${data.telefone || 'Não informado'}</div>
+                <div class="address-section">
+                    <div class="address-line"><strong>Endereço:</strong></div>
+                    ${data.endereco ? `
+                        <div class="address-line">${data.endereco.rua || ''}, ${data.endereco.numero || ''}</div>
+                        <div class="address-line">${data.endereco.bairro || ''}, ${data.endereco.cidade || ''} - ${data.endereco.estado || ''}</div>
+                        <div class="address-line">CEP: ${data.endereco.cep || ''}</div>
+                    ` : '<div class="address-line">Endereço não informado</div>'}
+                </div>
+            `;
+        } catch (error) {
+            console.error("Erro ao exibir dados:", error);
+            userInfoDiv.innerHTML = "<p>Erro ao formatar dados do usuário</p>";
+        }
     }
 
   // Função para carregar estoque
