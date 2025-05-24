@@ -74,7 +74,13 @@ Atualizações em index-4.html:
 
 13/05/2025 – Autor: Danilo Herculano
 - Implementada funcionalidade de recuperação de senha no login.html, permitindo que o usuário informe seu e-mail para validação. Caso o e-mail seja encontrado, a senha correspondente é retornada.
-- Adicionado um QR Code na página index-4.html (Contatos), permitindo acesso rápido e direto ao site.
 
+22/05/2025 – Autor: Danilo Herculano
+- Implementada a opção de selecionar um endereço personalizado para entrega durante o processo de locação (encomendar.html).
+- Dados do aluguel agora são enviados automaticamente para a planilha do Google Sheets, possibilitando futura recuperação na área do cliente.
+
+23/05/2025 – Autor: Danilo Herculano
+- Adicionada exibição dos itens alugados na área do cliente (customer_area.html), na seção Meus Pedidos Realizados.
+  
 Pendências e Correções Futuras
 - Ver aba "Issues" - https://github.com/DaniloHerculano/Mercurio-2.0_PI3/issues
