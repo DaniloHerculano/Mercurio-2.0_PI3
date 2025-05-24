@@ -736,31 +736,31 @@ async function carregarEstoque() {
 document.addEventListener('DOMContentLoaded', carregarEstoque);
    
   // FUNÇÃO DE ENVIO DOS DADOS DO PEDIDO PARA O BACKEND
-async function criarPedido(pedido) {
-  try {
-    const response = await fetch('https://locacao-backend-mercurio.onrender.com/api/pedidos', {
-      method: 'POST', 
-      headers: {
-        'Content-Type': 'application/json', 
-      },
-      body: JSON.stringify(pedido), 
-    });
-
-    const data = await response.json();
-    if (response.ok) {
-      alert('Pedido criado com sucesso! ID: ' + data.pedidoId);
-    } else {
-      alert('Erro ao criar pedido: ' + data.message);
+  async function criarPedido(pedido) {
+    try {
+      const response = await fetch('https://locacao-backend-mercurio.onrender.com/api/pedidos', {
+        method: 'POST', 
+        headers: {
+          'Content-Type': 'application/json', 
+        },
+        body: JSON.stringify(pedido), 
+      });
+  
+      const data = await response.json();
+      if (response.ok) {
+        alert('Pedido criado com sucesso! ID: ' + data.pedidoId);
+      } else {
+        alert('Erro ao criar pedido: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Erro de comunicação com o backend:', error);
+      alert('Erro ao enviar pedido');
     }
-  } catch (error) {
-    console.error('Erro de comunicação com o backend:', error);
-    alert('Erro ao enviar pedido');
   }
-}
-
-   window.onload = carregarEstoque;
-
-   async function fim() {
+  
+     window.onload = carregarEstoque;
+  
+     async function fim() {
       try {
           // 1. Desabilita o botão para evitar múltiplos cliques
           const btnFinalizar = document.getElementById('open-modal');
@@ -856,77 +856,107 @@ async function criarPedido(pedido) {
           const total = parseFloat(document.getElementById("totalpedido").innerHTML);
   
           // 11. Monta os dados para envio na ORDEM CORRETA DA PLANILHA
-        const formData = new URLSearchParams();
-        
-        // COLUNA A: Usuário (nome de usuário)
-        formData.append('usuario', JSON.parse(localStorage.getItem("userData"))?.nomeUsuario || "Não identificado");
-        
-        // COLUNA B: Data Pedido (formato brasileiro sem UTC)
-        const now = new Date();
-        const dataPedidoBr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-        formData.append('data_pedido', dataPedidoBr);
-        
-        // COLUNA C: Nome completo (nome + sobrenome)
-        const userData = JSON.parse(localStorage.getItem("userData")) || {};
-        const nomeCompleto = `${userData.nome || ''} ${userData.sobrenome || ''}`.trim() || "Cliente não identificado";
-        formData.append('nome', nomeCompleto);
-        
-        // COLUNA D: Email
-        formData.append('email', userData.email || "sem-email@example.com");
-        
-        // COLUNA E: Data Início
-        formData.append('data_inicio', startDate.toLocaleDateString('pt-BR'));
-        
-        // COLUNA F: Data Fim
-        formData.append('data_fim', endDate.toLocaleDateString('pt-BR'));
-        
-        // COLUNA G: Cadeiras
-        formData.append('cadeiras', cadeiras.toString());
-        
-        // COLUNA H: Bancos
-        formData.append('bancos', bancos.toString());
-        
-        // COLUNA I: Mesas
-        formData.append('mesas', mesas.toString());
-        
-        // COLUNA J: Endereço
-        formData.append('endereco', enderecoEntrega);
-        
-        // COLUNA K: Valor Total
-        formData.append('valor_total', total.toFixed(2));
-        
-        // COLUNA L: Status
-        formData.append('status', "Confirmado");
-        
-        // COLUNA M: Modelo
-        formData.append('modelo', modelo);
-        
-        // COLUNA N: Período
-        formData.append('periodo', `${dias} dias`);
-        
-        // COLUNA O: Tipo Entrega
-        formData.append('tipo_entrega', tipoEntrega);
-        
-        // COLUNA P: Observações
-        formData.append('observacoes', "Pedido criado via site");
-        
-        // Ação (sempre último parâmetro)
-        formData.append('action', 'save_order');
-
-        // 12. Envia para o Google Sheets
-        const sheetsResponse = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: formData
-        });
-        
-        const result = await sheetsResponse.json();
-        
-        if (result.status !== "success") {
-            throw new Error("Erro ao salvar na planilha: " + (result.message || ""));
-        }
+          const formData = new URLSearchParams();
+          
+          // COLUNA A: Usuário (nome de usuário)
+          formData.append('usuario', JSON.parse(localStorage.getItem("userData"))?.nomeUsuario || "Não identificado");
+          
+          // COLUNA B: Data Pedido (formato brasileiro sem UTC)
+          const now = new Date();
+          const dataPedidoBr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+          formData.append('data_pedido', dataPedidoBr);
+          
+          // COLUNA C: Nome completo (nome + sobrenome)
+          const userData = JSON.parse(localStorage.getItem("userData")) || {};
+          const nomeCompleto = `${userData.nome || ''} ${userData.sobrenome || ''}`.trim() || "Cliente não identificado";
+          formData.append('nome', nomeCompleto);
+          
+          // COLUNA D: Email
+          formData.append('email', userData.email || "sem-email@example.com");
+          
+          // COLUNA E: Data Início
+          formData.append('data_inicio', startDate.toLocaleDateString('pt-BR'));
+          
+          // COLUNA F: Data Fim
+          formData.append('data_fim', endDate.toLocaleDateString('pt-BR'));
+          
+          // COLUNA G: Cadeiras
+          formData.append('cadeiras', cadeiras.toString());
+          
+          // COLUNA H: Bancos
+          formData.append('bancos', bancos.toString());
+          
+          // COLUNA I: Mesas
+          formData.append('mesas', mesas.toString());
+          
+          // COLUNA J: Endereço
+          formData.append('endereco', enderecoEntrega);
+          
+          // COLUNA K: Valor Total
+          formData.append('valor_total', total.toFixed(2));
+          
+          // COLUNA L: Status
+          formData.append('status', "Confirmado");
+          
+          // COLUNA M: Modelo
+          formData.append('modelo', modelo);
+          
+          // COLUNA N: Período
+          formData.append('periodo', `${dias} dias`);
+          
+          // COLUNA O: Tipo Entrega
+          formData.append('tipo_entrega', tipoEntrega);
+          
+          // COLUNA P: Observações
+          formData.append('observacoes', "Pedido criado via site");
+          
+          // Ação (sempre último parâmetro)
+          formData.append('action', 'save_order');
+  
+          // 12. Envia para o Google Sheets
+          const sheetsResponse = await fetch(SCRIPT_URL, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: formData
+          });
+          
+          const result = await sheetsResponse.json();
+          
+          if (result.status !== "success") {
+              throw new Error("Erro ao salvar na planilha: " + (result.message || ""));
+          }
+  
+          // 12.5 Atualiza o estoque no backend
+          const atualizaEstoqueResponse = await fetch('https://locacao-backend-mercurio.onrender.com/api/estoque/atualizar', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                  bancos: bancos,
+                  cadeiras: cadeiras,
+                  mesas: mesas,
+                  operacao: 'baixa'
+              })
+          });
+  
+          const estoqueResult = await atualizaEstoqueResponse.json();
+  
+          if (!atualizaEstoqueResponse.ok) {
+              throw new Error("Pedido registrado, mas erro ao atualizar estoque: " + (estoqueResult.message || ""));
+          }
+  
+          // Atualiza o estoque localmente para refletir a baixa
+          dados.estoquebancos -= bancos;
+          dados.estoquecadeiras -= cadeiras;
+          dados.estoquemesas -= mesas;
+  
+          // Atualiza a exibição do estoque
+          document.getElementById('estoqueMesas').innerHTML = `Mesas: ${dados.estoquemesas}`;
+          document.getElementById('estoqueCadeiras').innerHTML = `Cadeiras: ${dados.estoquecadeiras}`;
+          document.getElementById('estoqueBancos').innerHTML = `Bancos: ${dados.estoquebancos}`;
   
           // 13. Exibe a confirmação para o usuário
           document.getElementById("corpo").innerHTML = `
