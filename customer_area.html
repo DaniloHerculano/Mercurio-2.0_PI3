@@ -326,6 +326,67 @@
       border-radius: 5px;
       margin-top: 10px;
     }
+
+    /* ESTILOS PARA AS ABAS */
+    .tabs {
+        display: flex;
+        border-bottom: 1px solid #ddd;
+        margin-bottom: 20px;
+    }
+    
+    .tab-btn {
+        padding: 10px 20px;
+        background: none;
+        border: none;
+        border-bottom: 3px solid transparent;
+        cursor: pointer;
+        font-weight: bold;
+        color: #666;
+        transition: all 0.3s;
+    }
+    
+    .tab-btn.active {
+        color: #1b6222;
+        border-bottom-color: #f0a500;
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    /* DESTAQUE PARA ALUGUÉIS ATUAIS */
+    .aluguel-atual {
+        border-left: 5px solid #1b6222;
+        background-color: #f8fff8;
+    }
+    
+    /* ESTILOS PARA STATUS */
+    .status-confirmado {
+        color: #1b6222;
+        font-weight: bold;
+    }
+    
+    .status-pendente {
+        color: #f0a500;
+        font-weight: bold;
+    }
+    
+    .status-cancelado {
+        color: #e21b1b;
+        font-weight: bold;
+    }
+    
+    /* ESTILO PARA ITENS ALUGADOS */
+    .itens-alugados {
+        margin: 10px 0;
+        padding: 10px;
+        background: #f5f5f5;
+        border-radius: 5px;
+    }
   </style>
 </head>
 <body>
@@ -535,6 +596,7 @@
   document.addEventListener('DOMContentLoaded', carregarEstoque);
   
     // Função para carregar pedidos do cliente
+    // Função para carregar pedidos do cliente
     async function carregarPedidosCliente() {
         try {
             showLoader(true);
@@ -551,38 +613,28 @@
             console.log("Resposta da API:", result);
     
             if (result?.status === "success") {
-                // Versão mais flexível para mapear os pedidos
                 const pedidosFormatados = (result.orders || result.data || []).map(pedido => {
-                    // Debug: Mostra a estrutura completa do pedido
-                    console.log("Pedido original:", pedido);
+                    // Extrai as datas de início e fim (assumindo formatos diferentes)
+                    const dataInicio = extrairData(pedido.data_inicio || pedido.dataInicio || pedido.data_criacao);
+                    const dataFim = extrairData(pedido.data_fim || pedido.dataFim || pedido.data_devolucao);
                     
-                    // Tenta extrair os itens de diferentes formas
-                    const mesas = parseInt(
-                        pedido.mesas || 
-                        pedido.itens?.mesas || 
-                        pedido.quantidade_mesas || 
-                        0
-                    );
-                    
-                    const cadeiras = parseInt(
-                        pedido.cadeiras || 
-                        pedido.itens?.cadeiras || 
-                        pedido.quantidade_cadeiras || 
-                        0
-                    );
-                    
-                    const bancos = parseInt(
-                        pedido.bancos || 
-                        pedido.itens?.bancos || 
-                        pedido.quantidade_bancos || 
-                        0
-                    );
+                    // Calcula se é um aluguel atual ou histórico
+                    const hoje = new Date();
+                    hoje.setHours(0, 0, 0, 0);
+                    const isAtual = dataFim && dataFim >= hoje;
     
                     return {
                         id: pedido.id || pedido.codigo || 'N/A',
                         dataPedido: pedido.dataPedido || pedido.data || pedido.data_criacao || '',
+                        dataInicio,
+                        dataFim,
+                        isAtual,
                         status: pedido.status || pedido.situacao || 'Pendente',
-                        itens: { mesas, cadeiras, bancos },
+                        itens: { 
+                            mesas: parseInt(pedido.mesas || pedido.itens?.mesas || pedido.quantidade_mesas || 0),
+                            cadeiras: parseInt(pedido.cadeiras || pedido.itens?.cadeiras || pedido.quantidade_cadeiras || 0),
+                            bancos: parseInt(pedido.bancos || pedido.itens?.bancos || pedido.quantidade_bancos || 0)
+                        },
                         valorTotal: parseFloat(
                             pedido.valorTotal || 
                             pedido.valor_total || 
@@ -620,58 +672,144 @@
         }
     }
 
-    // Função para exibir os pedidos do cliente
-    function exibirPedidosCliente(pedidos) {
-        const pedidosContainer = document.getElementById('meusPedidos');
-        pedidosContainer.innerHTML = '';
-        
-        if (!pedidos || pedidos.length === 0) {
-            pedidosContainer.innerHTML = '<p>Nenhum pedido encontrado.</p>';
-            return;
-        }
-    
-        // Ordena por data (mais recente primeiro)
-        pedidos.sort((a, b) => {
-            const dateA = new Date(a.dataPedido) || 0;
-            const dateB = new Date(b.dataPedido) || 0;
-            return dateB - dateA;
-        });
-    
-        pedidos.forEach(pedido => {
-            const valorTotal = typeof pedido.valorTotal === 'number' 
-                ? pedido.valorTotal 
-                : parseFloat(String(pedido.valorTotal).replace(',', '.')) || 0;
-            
-            const pedidoElement = document.createElement('div');
-            pedidoElement.className = 'pedido-item';
-            
-            pedidoElement.innerHTML = `
-                <h4>Pedido #${pedido.id}</h4>
-                <p><strong>Status:</strong> ${pedido.status}</p>
-                <p><strong>Data:</strong> ${formatarData(pedido.dataPedido)}</p>
-                <p><strong>Período:</strong> ${pedido.periodo}</p>
-                
-                <div style="margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 5px;">
-                    <p><strong>Itens Alugados:</strong></p>
-                    ${pedido.itens.mesas > 0 ? `<p>• Mesas: ${pedido.itens.mesas}</p>` : ''}
-                    ${pedido.itens.cadeiras > 0 ? `<p>• Cadeiras: ${pedido.itens.cadeiras}</p>` : ''}
-                    ${pedido.itens.bancos > 0 ? `<p>• Bancos: ${pedido.itens.bancos}</p>` : ''}
-                    ${pedido.itens.mesas + pedido.itens.cadeiras + pedido.itens.bancos === 0 ? 
-                      '<p>Nenhum item registrado</p>' : ''}
-                </div>
-                
-                <p><strong>Modelo:</strong> ${pedido.modelo}</p>
-                <p><strong>Valor Total:</strong> R$ ${valorTotal.toFixed(2)}</p>
-                
-                <div class="address-section">
-                    <p><strong>${pedido.tipo_entrega === 'Retirada' ? 'Retirada' : 'Entrega'}:</strong></p>
-                    <p>${pedido.endereco.replace(/,/g, '<br>')}</p>
-                </div>
-            `;
-            
-            pedidosContainer.appendChild(pedidoElement);
-        });
-    }
+  // Função auxiliar para extrair data de diferentes formatos
+  function extrairData(dataString) {
+      if (!dataString) return null;
+      
+      try {
+          // Formato ISO (2023-05-22T18:05:02.885Z)
+          if (dataString.includes('T')) {
+              return new Date(dataString);
+          }
+          
+          // Formato brasileiro (22/05/2023)
+          if (dataString.match(/\d{2}\/\d{2}\/\d{4}/)) {
+              const [day, month, year] = dataString.split(' ')[0].split('/');
+              return new Date(year, month-1, day);
+          }
+          
+          // Formato americano (2023-05-22)
+          if (dataString.match(/\d{4}-\d{2}-\d{2}/)) {
+              return new Date(dataString);
+          }
+          
+          return null;
+      } catch (e) {
+          console.error("Erro ao extrair data:", e);
+          return null;
+      }
+  }
+
+  // Função para exibir os pedidos do cliente com abas (será que funciona mesmo!? rss)
+  function exibirPedidosCliente(pedidos) {
+      const pedidosContainer = document.getElementById('meusPedidos');
+      pedidosContainer.innerHTML = '';
+      
+      if (!pedidos || pedidos.length === 0) {
+          pedidosContainer.innerHTML = '<p>Nenhum pedido encontrado.</p>';
+          return;
+      }
+  
+      // Ordena por data (mais recente primeiro)
+      pedidos.sort((a, b) => {
+          const dateA = new Date(a.dataPedido) || 0;
+          const dateB = new Date(b.dataPedido) || 0;
+          return dateB - dateA;
+      });
+  
+      // Separa em aluguéis atuais e históricos
+      const alugueisAtuais = pedidos.filter(pedido => pedido.isAtual);
+      const historicoAlugueis = pedidos.filter(pedido => !pedido.isAtual);
+  
+      // Cria as abas
+      pedidosContainer.innerHTML = `
+          <div class="tabs">
+              <button class="tab-btn active" data-tab="atuais">Aluguéis Atuais (${alugueisAtuais.length})</button>
+              <button class="tab-btn" data-tab="historicos">Histórico de Aluguéis (${historicoAlugueis.length})</button>
+          </div>
+          <div id="tab-atuais" class="tab-content active"></div>
+          <div id="tab-historicos" class="tab-content"></div>
+      `;
+  
+      // Adiciona os eventos das abas
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+              document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+              document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+              
+              this.classList.add('active');
+              document.getElementById(`tab-${this.dataset.tab}`).classList.add('active');
+          });
+      });
+  
+      // Exibe os aluguéis atuais
+      const atuaisContainer = document.getElementById('tab-atuais');
+      if (alugueisAtuais.length > 0) {
+          alugueisAtuais.forEach(pedido => {
+              atuaisContainer.appendChild(criarCardPedido(pedido));
+          });
+      } else {
+          atuaisContainer.innerHTML = '<p>Nenhum aluguel ativo no momento.</p>';
+      }
+  
+      // Exibe o histórico
+      const historicoContainer = document.getElementById('tab-historicos');
+      if (historicoAlugueis.length > 0) {
+          historicoAlugueis.forEach(pedido => {
+              historicoContainer.appendChild(criarCardPedido(pedido));
+          });
+      } else {
+          historicoContainer.innerHTML = '<p>Nenhum aluguel no histórico.</p>';
+      }
+  }
+
+  // Função para criar o card de um pedido
+  function criarCardPedido(pedido) {
+      const valorTotal = typeof pedido.valorTotal === 'number' 
+          ? pedido.valorTotal 
+          : parseFloat(String(pedido.valorTotal).replace(',', '.')) || 0;
+      
+      const pedidoElement = document.createElement('div');
+      pedidoElement.className = 'pedido-item';
+      
+      // Adiciona classe extra para aluguéis atuais
+      if (pedido.isAtual) {
+          pedidoElement.classList.add('aluguel-atual');
+      }
+  
+      // Formata a data de devolução
+      const dataDevolucaoFormatada = pedido.dataFim 
+          ? pedido.dataFim.toLocaleDateString('pt-BR') 
+          : 'Data não informada';
+  
+      pedidoElement.innerHTML = `
+          <h4>Pedido #${pedido.id}</h4>
+          <p><strong>Status:</strong> <span class="status-${pedido.status.toLowerCase()}">${pedido.status}</span></p>
+          <p><strong>Data do Pedido:</strong> ${formatarData(pedido.dataPedido)}</p>
+          ${pedido.dataInicio ? `<p><strong>Data de Locação:</strong> ${pedido.dataInicio.toLocaleDateString('pt-BR')}</p>` : ''}
+          ${pedido.dataFim ? `<p><strong>Data de Devolução:</strong> ${dataDevolucaoFormatada}</p>` : ''}
+          <p><strong>Período:</strong> ${pedido.periodo}</p>
+          
+          <div class="itens-alugados">
+              <p><strong>Itens Alugados:</strong></p>
+              ${pedido.itens.mesas > 0 ? `<p>• Mesas: ${pedido.itens.mesas}</p>` : ''}
+              ${pedido.itens.cadeiras > 0 ? `<p>• Cadeiras: ${pedido.itens.cadeiras}</p>` : ''}
+              ${pedido.itens.bancos > 0 ? `<p>• Bancos: ${pedido.itens.bancos}</p>` : ''}
+              ${pedido.itens.mesas + pedido.itens.cadeiras + pedido.itens.bancos === 0 ? 
+                '<p>Nenhum item registrado</p>' : ''}
+          </div>
+          
+          <p><strong>Modelo:</strong> ${pedido.modelo}</p>
+          <p><strong>Valor Total:</strong> R$ ${valorTotal.toFixed(2)}</p>
+          
+          <div class="address-section">
+              <p><strong>${pedido.tipo_entrega === 'Retirada' ? 'Retirada' : 'Entrega'}:</strong></p>
+              <p>${(pedido.endereco || '').replace(/,/g, '<br>')}</p>
+          </div>
+      `;
+      
+      return pedidoElement;
+  }
     
     // Função auxiliar para formatar datas
     function formatarData(dataString) {
