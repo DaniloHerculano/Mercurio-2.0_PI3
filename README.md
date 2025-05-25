@@ -86,6 +86,12 @@ Atualizações em index-4.html:
 
 23/05/2025 – Autor: Danilo Herculano
 - Adicionada exibição dos itens alugados na área do cliente (customer_area.html), na seção Meus Pedidos Realizados.
+
+24/05/2025 – Autor: Danilo Herculano
+- Separação Automática: Os pedidos são automaticamente classificados como:
+  - Aluguéis Atuais: Quando a data de devolução é maior ou igual à data atual
+  - Histórico de Aluguéis: Quando a data de devolução já passou
+  - Abas Interativas: O usuário pode alternar entre as duas visualizações
   
 Pendências e Correções Futuras
 - Ver aba "Issues" - https://github.com/DaniloHerculano/Mercurio-2.0_PI3/issues
