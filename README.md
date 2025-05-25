@@ -75,6 +75,11 @@ Atualizações em index-4.html:
 13/05/2025 – Autor: Danilo Herculano
 - Implementada funcionalidade de recuperação de senha no login.html, permitindo que o usuário informe seu e-mail para validação. Caso o e-mail seja encontrado, a senha correspondente é retornada.
 
+01-21/05/2025 – Autor: Fernanda Piotto
+- Criado banco de dados na plataforma Supabase, utilizando PostgreSQL para armazenamento das tabelas estoque e pedidos, integradas ao front-end por meio de APIs.
+- Estrutura de back-end organizada na pasta back-end/, contendo os arquivos db-pg.js, package.json, server.js e a subpasta routes/ com as APIs estoque.js e pedidos.js.
+- Hospedagem do front-end realizada via Netlify e do back-end via Render, ambas integradas ao repositório do GitHub para facilitar o desenvolvimento e o deploy contínuo.
+
 22/05/2025 – Autor: Danilo Herculano
 - Implementada a opção de selecionar um endereço personalizado para entrega durante o processo de locação (encomendar.html).
 - Dados do aluguel agora são enviados automaticamente para a planilha do Google Sheets, possibilitando futura recuperação na área do cliente.
